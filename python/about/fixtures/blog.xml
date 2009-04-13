@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+	<object pk="1" model="blog.category">
+		<field type="CharField" name="title">Original Barneyboots Story</field>
+		<field type="SlugField" name="slug">barneyboots-story</field>
+	</object>
+	<object pk="2" model="blog.category">
+		<field type="CharField" name="title">Original Barneyboots Where</field>
+		<field type="SlugField" name="slug">barneyboots-where</field>
+	</object>
+	<object pk="2002000000000000000000007f000001000455a06adc9f97648f" model="blog.author">
+		<field type="CharField" name="name">Henrik</field>
+	</object>
+	<object pk="2002000000000000000000007f000001000455acd862d5671977" model="blog.author">
+		<field type="CharField" name="name">Charlotte</field>
+	</object>
+	<object pk="2002000000000000000000007f000001000455acd6e9af636bb8" model="blog.author">
+		<field type="CharField" name="name">Brian</field>
+	</object>
+	<object pk="5" model="blog.post">
+		<field type="CharField" name="title">imagine</field>
+		<field type="SlugField" name="slug">imagine</field>
+		<field to="blog.author" name="author" rel="ManyToOneRel"><object pk="2002000000000000000000007f000001000455a06adc9f97648f"/></field>
+		<field type="TextField" name="body_source">
+... creating your own fairytale with princesses, priates and dragons. Then imagine doing this by putting stickers on your rubber boots.
+
+The Original Barney Boots introduces Barney Boots Island® and Barney Boots Kingdom®. The innovative way of letting the child put his or hers personal touch on boots.
+
+More than 100 stickers are hand painted to fit the two worlds. Boots and stickers are drawn by the Danish author and illustrator of children books, Pernelle Laulund. 
+
+The Original Barney Boots® stickers are NON TOXIC and 100% phthalate free, and all materials holds EU standards. Barney Boots Island® and Kingdom® are rubber boots and the material is natural rubber that makes the boot feel soft and comfortable. The sole is thick and slide-proof. </field>
+		<field type="TextField" name="body">&lt;p&gt;... creating your own fairytale with princesses, priates and dragons. Then imagine doing this by putting stickers on your rubber boots.
+&lt;/p&gt;
+&lt;p&gt;The Original Barney Boots introduces Barney Boots Island® and Barney Boots Kingdom®. The innovative way of letting the child put his or hers personal touch on boots.
+&lt;/p&gt;
+&lt;p&gt;More than 100 stickers are hand painted to fit the two worlds. Boots and stickers are drawn by the Danish author and illustrator of children books, Pernelle Laulund. 
+&lt;/p&gt;
+&lt;p&gt;The Original Barney Boots® stickers are NON TOXIC and 100% phthalate free, and all materials holds EU standards. Barney Boots Island® and Kingdom® are rubber boots and the material is natural rubber that makes the boot feel soft and comfortable. The sole is thick and slide-proof. 
+&lt;/p&gt;</field>
+		<field type="TextField" name="tease_source">... creating your own fairytale with princesses, priates and dragons. Then imagine doing this by putting stickers on your rubber boots.</field>
+		<field type="TextField" name="tease">&lt;p&gt;... creating your own fairytale with princesses, priates and dragons. Then imagine doing this by putting stickers on your rubber boots.
+&lt;/p&gt;</field>
+		<field type="CharField" name="markup">markdown</field>
+		<field type="IntegerField" name="status">2</field>
+		<field type="BooleanField" name="allow_comments">False</field>
+		<field type="DateTimeField" name="publish">2008-08-28 00:41:21</field>
+		<field type="DateTimeField" name="created">2008-08-28 00:41:26</field>
+		<field type="DateTimeField" name="modified">2008-08-28 00:56:49</field>
+		<field to="blog.category" name="category" rel="ManyToOneRel">1</field>
+		<field type="CharField" name="tags"/>
+		<field type="CharField" name="template_name">blog/post_detail.html</field>
+		<field type="CharField" name="ext_image_url"/>
+	</object>
+	<object pk="4" model="blog.post">
+		<field type="CharField" name="title">International Innovative Individual</field>
+		<field type="SlugField" name="slug">international-innovative-individual</field>
+		<field to="blog.author" name="author" rel="ManyToOneRel"><object pk="2002000000000000000000007f000001000455a06adc9f97648f"/></field>
+		<field type="TextField" name="body_source">No hand painted boots look exactly the same. Every single boot has been in the hands of an educated illustrator, who has thrown a number of boots in the bin while practicing the right strokes. The boots will never be perfect or exactly the same. It will always vary how much the tulip is bending its head or how angry the pirate is – and that is precisely what we want! 
+
+Happy colors and designs, that doesn´t look like other rubber boots/wellingtons. 
+
+There are Barney Boots for the dark autumn wardrobe as well as to the lighter summer outfit. A Barney Boot will never be colorless. They will always sparkle and there will always be a pair of boots for every outfit. </field>
+		<field type="TextField" name="body">&lt;p&gt;No hand painted boots look exactly the same. Every single boot has been in the hands of an educated illustrator, who has thrown a number of boots in the bin while practicing the right strokes. The boots will never be perfect or exactly the same. It will always vary how much the tulip is bending its head or how angry the pirate is – and that is precisely what we want! 
+&lt;/p&gt;
+&lt;p&gt;Happy colors and designs, that doesn´t look like other rubber boots/wellingtons. 
+&lt;/p&gt;
+&lt;p&gt;There are Barney Boots for the dark autumn wardrobe as well as to the lighter summer outfit. A Barney Boot will never be colorless. They will always sparkle and there will always be a pair of boots for every outfit. 
+&lt;/p&gt;</field>
+		<field type="TextField" name="tease_source">Barney Boots highly appreciates the original and individual. 
+
+</field>
+		<field type="TextField" name="tease">&lt;p&gt;Barney Boots highly appreciates the original and individual. 
+&lt;/p&gt;</field>
+		<field type="CharField" name="markup">markdown</field>
+		<field type="IntegerField" name="status">2</field>
+		<field type="BooleanField" name="allow_comments">False</field>
+		<field type="DateTimeField" name="publish">2008-08-28 00:40:22</field>
+		<field type="DateTimeField" name="created">2008-08-28 00:40:25</field>
+		<field type="DateTimeField" name="modified">2008-08-28 00:56:56</field>
+		<field to="blog.category" name="category" rel="ManyToOneRel">1</field>
+		<field type="CharField" name="tags"/>
+		<field type="CharField" name="template_name">blog/post_detail.html</field>
+		<field type="CharField" name="ext_image_url"/>
+	</object>
+	<object pk="3" model="blog.post">
+		<field type="CharField" name="title">3000 years old</field>
+		<field type="SlugField" name="slug">3000-years-old</field>
+		<field to="blog.author" name="author" rel="ManyToOneRel"><object pk="2002000000000000000000007f000001000455a06adc9f97648f"/></field>
+		<field type="TextField" name="body_source">A 3000 years old Chinese pattern has been used in Barney Boots´ autumn collection for women. The boot “Musel” has, like the rest of the new designs this season a light grey background. 
+
+The classic pattern is drawn and painted on the high boot with a clear blue color. And, as always when we see the Musel pattern, for example on porcelain, every stroke is unique and not entirely as the other – every boot, every pair of boots, has its own expression. 
+
+Unlike the other hand painted rubber boots/wellingtons for women from Barney Boots, the Musel boot has a matching buckle on the outer side. </field>
+		<field type="TextField" name="body">&lt;p&gt;A 3000 years old Chinese pattern has been used in Barney Boots´ autumn collection for women. The boot “Musel” has, like the rest of the new designs this season a light grey background. 
+&lt;/p&gt;
+&lt;p&gt;The classic pattern is drawn and painted on the high boot with a clear blue color. And, as always when we see the Musel pattern, for example on porcelain, every stroke is unique and not entirely as the other – every boot, every pair of boots, has its own expression. 
+&lt;/p&gt;
+&lt;p&gt;Unlike the other hand painted rubber boots/wellingtons for women from Barney Boots, the Musel boot has a matching buckle on the outer side. 
+&lt;/p&gt;</field>
+		<field type="TextField" name="tease_source">A 3000 years old Chinese pattern has been used in Barney Boots´ autumn collection for women. The boot “Musel” has, like the rest of the new designs this season a light grey background. </field>
+		<field type="TextField" name="tease">&lt;p&gt;A 3000 years old Chinese pattern has been used in Barney Boots´ autumn collection for women. The boot “Musel” has, like the rest of the new designs this season a light grey background. 
+&lt;/p&gt;</field>
+		<field type="CharField" name="markup">markdown</field>
+		<field type="IntegerField" name="status">2</field>
+		<field type="BooleanField" name="allow_comments">False</field>
+		<field type="DateTimeField" name="publish">2008-08-28 00:39:10</field>
+		<field type="DateTimeField" name="created">2008-08-28 00:39:13</field>
+		<field type="DateTimeField" name="modified">2008-08-28 00:57:09</field>
+		<field to="blog.category" name="category" rel="ManyToOneRel">1</field>
+		<field type="CharField" name="tags"/>
+		<field type="CharField" name="template_name">blog/post_detail.html</field>
+		<field type="CharField" name="ext_image_url"/>
+	</object>
+	<object pk="2" model="blog.post">
+		<field type="CharField" name="title">Black Pirates</field>
+		<field type="SlugField" name="slug">black-pirates</field>
+		<field to="blog.author" name="author" rel="ManyToOneRel"><object pk="2002000000000000000000007f000001000455a06adc9f97648f"/></field>
+		<field type="TextField" name="body_source">Black pirates with a scary eye patch, the pirate ship ready to sail away on new adventures. The boys have had their very own, cool boots in the autumn collection from Barney Boots. 
+
+The color is of curse pirate black and the pirates have a red or a blue scarf tied around their messy hair. 
+Like the rest of the boots from this season, the background is light grey. 
+The girls have had some orange, pink and black flowers, inspired by Chinese silk paintings, spread out on the light grey background. And they have all had yet another favorite teddy bear, which lies comfortably resting on the side of the boot.</field>
+		<field type="TextField" name="body">&lt;p&gt;Black pirates with a scary eye patch, the pirate ship ready to sail away on new adventures. The boys have had their very own, cool boots in the autumn collection from Barney Boots. 
+&lt;/p&gt;
+&lt;p&gt;The color is of curse pirate black and the pirates have a red or a blue scarf tied around their messy hair. 
+   Like the rest of the boots from this season, the background is light grey. 
+   The girls have had some orange, pink and black flowers, inspired by Chinese silk paintings, spread out on the light grey background. And they have all had yet another favorite teddy bear, which lies comfortably resting on the side of the boot.
+&lt;/p&gt;</field>
+		<field type="TextField" name="tease_source">Black pirates with a scary eye patch, the pirate ship ready to sail away on new adventures. The boys have had their very own, cool boots in the autumn collection from Barney Boots. </field>
+		<field type="TextField" name="tease">&lt;p&gt;Black pirates with a scary eye patch, the pirate ship ready to sail away on new adventures. The boys have had their very own, cool boots in the autumn collection from Barney Boots. 
+&lt;/p&gt;</field>
+		<field type="CharField" name="markup">markdown</field>
+		<field type="IntegerField" name="status">2</field>
+		<field type="BooleanField" name="allow_comments">False</field>
+		<field type="DateTimeField" name="publish">2008-08-28 00:38:29</field>
+		<field type="DateTimeField" name="created">2008-08-28 00:38:34</field>
+		<field type="DateTimeField" name="modified">2008-08-28 00:57:15</field>
+		<field to="blog.category" name="category" rel="ManyToOneRel">1</field>
+		<field type="CharField" name="tags"/>
+		<field type="CharField" name="template_name">blog/post_detail.html</field>
+		<field type="CharField" name="ext_image_url"/>
+	</object>
+	<object pk="1" model="blog.post">
+		<field type="CharField" name="title">Muddy puddles</field>
+		<field type="SlugField" name="slug">muddy-puddles</field>
+		<field to="blog.author" name="author" rel="ManyToOneRel"><object pk="2002000000000000000000007f000001000455a06adc9f97648f"/></field>
+		<field type="TextField" name="body_source">Barney Boots for children are made for hours of play in the muddy puddles. A collar keeps the fitted boot in place and the water away from the feet.
+The boot is made of breathable natural rubber, which keeps the feet warm and dry. Natural rubber is also much softer then for example PVC, which gives more flexibility and is easier to walk with – in particular for the children. 
+
+With our “puddle indicator”, which is to be found on the back of the boots, the children can measure the depth of the puddles - to the great amusement for the little ones.
+
+Barney Boots are also made for women. Everyone wants to be unique and that is something that we at Barney Boots embrace and tries to live up to in our designs. 
+
+Today, rubber boots/wellingtons are becoming trendy and are being used more and more as accessories. 
+
+They may very well have colors and attitude that supports and matches the rest of the outfit.
+
+</field>
+		<field type="TextField" name="body">&lt;p&gt;Barney Boots for children are made for hours of play in the muddy puddles. A collar keeps the fitted boot in place and the water away from the feet.
+   The boot is made of breathable natural rubber, which keeps the feet warm and dry. Natural rubber is also much softer then for example PVC, which gives more flexibility and is easier to walk with – in particular for the children. 
+&lt;/p&gt;
+&lt;p&gt;With our “puddle indicator”, which is to be found on the back of the boots, the children can measure the depth of the puddles - to the great amusement for the little ones.
+&lt;/p&gt;
+&lt;p&gt;Barney Boots are also made for women. Everyone wants to be unique and that is something that we at Barney Boots embrace and tries to live up to in our designs. 
+&lt;/p&gt;
+&lt;p&gt;Today, rubber boots/wellingtons are becoming trendy and are being used more and more as accessories. 
+&lt;/p&gt;
+&lt;p&gt;They may very well have colors and attitude that supports and matches the rest of the outfit.
+&lt;/p&gt;</field>
+		<field type="TextField" name="tease_source">Barney Boots for children are made for hours of play in the muddy puddles. A collar keeps the fitted boot in place and the water away from the feet.</field>
+		<field type="TextField" name="tease">&lt;p&gt;Barney Boots for children are made for hours of play in the muddy puddles. A collar keeps the fitted boot in place and the water away from the feet.
+&lt;/p&gt;</field>
+		<field type="CharField" name="markup">markdown</field>
+		<field type="IntegerField" name="status">2</field>
+		<field type="BooleanField" name="allow_comments">False</field>
+		<field type="DateTimeField" name="publish">2008-08-28 00:35:53</field>
+		<field type="DateTimeField" name="created">2008-08-28 00:37:59</field>
+		<field type="DateTimeField" name="modified">2008-08-28 00:57:23</field>
+		<field to="blog.category" name="category" rel="ManyToOneRel">1</field>
+		<field type="CharField" name="tags"/>
+		<field type="CharField" name="template_name">blog/post_detail.html</field>
+		<field type="CharField" name="ext_image_url"/>
+	</object>
+</django-objects>
