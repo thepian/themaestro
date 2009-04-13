@@ -1,0 +1,8 @@
+Obviously you’d want to change a few things here. someclip.avi should be the name of you movie clip file that ffmpeg will be processing.
+thumb.jpg 
+is the name of the 
+file to save the thumbnail in. 
+10 nearby the -ss option tells ffmpeg how many seconds from the start of the clip you want to skip. 
+If you want to skip a few minutes or hours, or specify a split second, then check ffmpeg manual for the syntax.
+And the last option that should be interesting for you is the -s which in my example has the value of 150×100 - the size of the image
+in pixels (X,Y).

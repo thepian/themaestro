@@ -1,0 +1,3 @@
+class IdentitySuspicious(Exception):
+    pass
+
