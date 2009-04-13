@@ -1,0 +1,5 @@
+	dd.span-1, dd.span-2, dd.span-3, dd.span-4, dd.span-5, dd.span-6, dd.span-7, dd.span-8, dd.span-9, dd.span-10, 
+	dd.span-11, dd.span-12, dd.span-13, dd.span-14, dd.span-15, dd.span-16, dd.span-17, dd.span-18, dd.span-19, dd.span-20
+	{ float:left; margin-right:10px; margin-left:0; text-indent:0; }
+	dd.last { margin-right:0; padding-right:0; } /* fix specificity rules */ 
+
