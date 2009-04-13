@@ -1,0 +1,6 @@
+	#sidebar { height:410px; background: #333; color: rgb(253,251,245); opacity:.6; filter: alpha(opacity=60); }
+	#sidebar dl { position:relative; top:5px; height:410px; }
+	#sidebar dt.ui-accordion-header { text-align:center; margin-top:4px; color:white; }
+	#sidebar dt.active { background-color: black; }
+	#sidebar dd blockquote { color: #ddd; }
+	

@@ -1,0 +1,14 @@
+body {
+	margin: 2px 0;
+	color: #6F6C6B;
+	background-color: #F1F2ED;
+	
+}
+#main h1 { color:#ddd; }
+
+#content a {
+	text-decoration:none;  color:#0040d8;
+}
+#content a:hover {
+	color: #fff;
+}

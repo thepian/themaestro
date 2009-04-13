@@ -1,0 +1,19 @@
+#latest {
+    
+    position:relative;height:250px;left:0;right:0; 
+    background:transparent url(/images/footer-background.jpg) left bottom;	
+    padding-top:10px;	
+}
+
+#latest .flickr_badge_image {
+    float:left;
+}
+
+#latest {
+    color:white;
+}
+#latest a, #latest h3, #latest h2 { color:white; }
+#latest .flickr_badge_image img {
+    border: 1px solid white;
+    margin: 0px 10px 10px 0px;
+}

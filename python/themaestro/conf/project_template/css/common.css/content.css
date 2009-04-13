@@ -1,0 +1,23 @@
+body {
+	margin: 2px 0;
+	color: #ccc;
+	background-color: #050505;
+}
+
+#content a {
+	text-decoration:none; color:#0040d8;
+}
+#content a:hover {
+	color: #ddd;
+}
+	body {
+		background: url({{ MEDIA_URL }}/images/body-header.png) repeat-x rgb(253,251,245);
+	}
+	#content { position:relative; margin-top:18px; background: url({{ MEDIA_URL }}/images/garage.png) no-repeat rgb(253,251,245); }
+	
+	#main { background: url({{ MEDIA_URL }}/images/garage4.jpeg) repeat rgb(253,251,245); }
+	
+	
+	p, table, hr, .box { margin-bottom:25px; }
+	.box p { margin-bottom:10px; }
+	

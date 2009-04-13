@@ -1,0 +1,22 @@
+/* 
+@requires "blueprint/reset.css"
+@requires "blueprint/typography.css"
+@requires "content.css"
+@requires "blueprint/grid.css"
+@requires "blueprint/dd-span.css"
+@requires "blueprint/forms.css"
+*/
+
+body { 
+border-top:5px solid #E2E3DF; 
+}
+#footer, #page {
+font-family:Constantia, "Palatino Linotype", Palatino, Georgia, "Times New Roman", Times, serif;
+}
+
+#headlines { 
+    background: url(/images/quai.jpeg) repeat transparent; height:150px; 
+    padding:1px 0;
+    border-bottom: 1px solid #e5e6e1;
+}
+	

@@ -1,0 +1,7 @@
+#navbar { color: #bbb; border-bottom: 1px solid #0f0f0f; }
+#navbar a { color: #0040d8; text-decoration:none; }
+#navbar a:hover { text-decoration:underline; color:#ddd; }
+#navbar code { font-size:18px; line-height:18px; vertical-align:bottom; }
+#navbar .breadcrumbs { margin-left:10px; }
+#navbar .login { position:absolute; right:10px; top:0; }
+

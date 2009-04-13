@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+{% block title %}{% trans "Server Error" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Server error (codename 500)" %}</h1>
+
+<p>Oops!.. Looks like there are a bug in server software or you have
+found some unfinished or buggy feature. :-)</p>
+
+<p>If server is configured like it must be configured, administrator
+will get a report about this error soon. But if you think, that there
+are troubles with mail sending, you can report about problem yourself
+- by writing mail (probably found on <a href="/about/">about</a> page)
+or by submitting ticket in the <a href="http://byteflow.su/">trac</a>.</p>
+
+<p>Sorry for inconvenience and thanks for your patience!</p>
+{% endblock %}
