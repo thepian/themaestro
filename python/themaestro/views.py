@@ -5,7 +5,7 @@ from django.views.decorators.cache import cache_control
 
 from thepian.conf import structure
 from thepian.assets import *
-from devonly.sources import CssSourceNode,JsSourceNode, combine_asset_sources 
+from themaestro.sources import CssSourceNode,JsSourceNode, combine_asset_sources 
 
 @cache_control(no_cache=True)
 def generate_css(request, file_name):

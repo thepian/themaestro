@@ -14,7 +14,7 @@ def copy_template(style, template_prefix, name, directory, other_name=''):
     # directory -- The directory to which the layout template should be copied.
     # other_name -- When copying an application layout, this should be the name
     #               of the project.
-    import devonly.conf
+    import themaestro.conf
     from thepian.conf import structure
     from thepian.utils.fs import make_writeable
     if not re.search(r'^\w+$', name): # If it's not a valid directory name.
@@ -22,7 +22,7 @@ def copy_template(style, template_prefix, name, directory, other_name=''):
 
     template_name = template_prefix + "_template"
     try:
-        template_dir = join(devonly.conf.__path__[0],template_name)
+        template_dir = join(themaestro.conf.__path__[0],template_name)
         for d, subdirs, files in fs.walk(template_dir):
             relative_dir = d[len(template_dir)+1:].replace('%s_name' % template_prefix, name)
             if relative_dir:

@@ -1,7 +1,7 @@
 from __future__ import with_statement
 import os, socket, datetime
 #from warnings import Warning
-#from devonly.conf import templates
+#from themaestro.conf import templates
 
 from thepian.conf import structure
     

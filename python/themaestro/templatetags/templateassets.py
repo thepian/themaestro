@@ -4,10 +4,10 @@ import cStringIO as StringIO
 import urlparse
 from django import template
 from django.conf import settings
-from devonly import templateassets
-from devonly.updater import get_updater
-from devonly.filter import get_filter
-from devonly.tracker import get_tracker
+from themaestro import templateassets
+from themaestro.updater import get_updater
+from themaestro.filter import get_filter
+from themaestro.tracker import get_tracker
 
 from django.template import Library, Node
 

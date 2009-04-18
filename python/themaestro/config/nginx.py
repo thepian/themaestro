@@ -5,7 +5,7 @@ from os.path import exists, dirname, join, split
 from thepian.conf import structure
 from thepian.conf.project_tree import ProjectTree
 
-from devonly.conf import templates
+from themaestro.conf import templates
 
 # proxy_intercept_errors on;
 # recursive_error_pages on;
@@ -51,7 +51,7 @@ def nginx_enabled(cluster_name=None,release_project_dir=None):
     }
     
     from django.template.loader import render_to_string
-    rendered = render_to_string('devonly/conf/nginxserver.conf', variables)
+    rendered = render_to_string('themaestro/conf/nginxserver.conf', variables)
 
     return [rendered]
     
