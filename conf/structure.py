@@ -4,11 +4,11 @@ ADMINS = (
     ('Henrik Vendelbo', 'hvendelbo.dev@googlemail.com'),
 )
 
-DEFAULT_SITE_TITLE = "themaestro Site"
+DEFAULT_SITE_TITLE = "Thepian Maestro Site"
 DEFAULT_HOSTNAME = "www.themaestro.local"
 
 CLUSTERS = {
-    'live': { 'domains': ('themaestro.com','themaestro.net','themaestro.thepia.net',), 
+    'live': { 'domains': ('themaestro.thepia.net',), 
         'media':'media.themaestro.thepia.net',
         'upstream_protocol': 'fastcgi', 'upstream_port': '8881', 
         'upstream_socket': '/tmp/themaestro', 'email_host':'localhost',
@@ -16,17 +16,18 @@ CLUSTERS = {
         'etc_user':'thepian', 'etc_group':'thepian',
         'log_user':'www-data','log_group':'adm'
         }, 
-    'staged': { 'domains': ('themaestro.staged.local',), 
-        'media':'media.themaestro.staged.local',
+    'staged': { 'domains': ('themaestro.local',), 
+        'media':'media.themaestro.local',
         'upstream_protocol': 'fastcgi', 'upstream_port': '8881', 
         'upstream_socket': '/tmp/themaestro',
         'shard_user':'thepian', 'shard_group':'thepian',
         'etc_user':'thepian', 'etc_group':'thepian',
         'log_user':'thepian','log_group':'nobody'
         },
-    'dev': { 'domains': ('themaestro.local',), 
-        'media':'media.themaestro.local',
-        'upstream_protocol': 'http', 'upstream_port': '8000', 'email_host':'smtp.ntlworld.com',
+    'dev': { 'domains': ('themaestro.dev.local',), 
+        'media':'media.themaestro.dev.local',
+        'upstream_protocol': 'http', 'upstream_port': '8000', 
+        'email_host':'smtp.ntlworld.com',
         'shard_user':'root', 'shard_group':'admin',
         'etc_user':'root', 'etc_group':'admin',
         'log_user':'root','log_group':'nobody'
