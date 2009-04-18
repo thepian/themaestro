@@ -124,18 +124,21 @@ class StructureError(Exception):
 class ProjectTree(object):
     # stub to be expanded
     
+    #TODO refactor DEVELOPING to be settings dependent
+    
     def __repr__(self):
-        return '\n'.join([
-            'project %s' % self.PROJECT_NAME,
-            'source %s' % self.SOURCE_DIR,
-            'target %s' % self.TARGET_DIR,
-            'release %s' % self.RELEASE_DIR,
-        ])
+        return """
+project %(PROJECT_NAME)s (type %(REPO_TYPE)s)        
+source %(SOURCE_DIR)s
+target %(TARGET_DIR)s
+release %(RELEASE_DIR)s
+u/d/l %(UPLOADS_DIR)s %(DOWNLOADS_DIR)s %(LOG_DIR)s
+""" % self.__dict__        
 
     def apply_basedir(self, repo_dir, basedir, repo_type):
         """Apply the directory structure found by find_basedir
         """
-
+        self.REPO_TYPE = repo_type
         if repo_type == 'single':
             self.apply_single_basedir(repo_dir,basedir)
             self.DEVELOPING = True
@@ -162,10 +165,11 @@ class ProjectTree(object):
         self.SOURCE_DIR = self.REPO_DIR
         self.TARGET_DIR = join(self.PROJECT_DIR,"target")
         self.RELEASE_DIR = join(self.PROJECT_DIR,"release")
-        self.UPLOADS_DIR = join(self.PROJECT_DIR,"uploads")
-        self.DOWNLOADS_DIR = join(self.PROJECT_DIR,"downloads")
-        self.BACKUPS_DIR = join(self.PROJECT_DIR,"backups")
-        self.LOG_DIR = join(self.PROJECT_DIR,"log")
+        self.UPLOADS_DIR = join("/var","uploads",self.PROJECT_NAME)
+        self.DOWNLOADS_DIR = join("/var","downloads",self.PROJECT_NAME)
+        self.BACKUPS_DIR = join("/var","backups",self.PROJECT_NAME)
+        self.LOG_DIR = join("/var","log",self.PROJECT_NAME)
+        self.SITES_DIR = dirname(self.PROJECT_DIR)
         self.SITES_DIR = dirname(self.PROJECT_DIR)
         self.WEBSITE_DIRS = fs.filterdirs((
             join(basedir,"root"), 
@@ -285,7 +289,7 @@ def find_basedir(basedir):
             if end in ['src','release']:
                 return git, base, end
             else:
-                return git,base, ''
+                return git,base, 'single'
         if not git and base: raise StructureError, "Command must be used from within a source or release repository"
         if git and not base: raise StructureError, "No base directory found within the repository %s"  % git
         basedir = dirname(basedir)
