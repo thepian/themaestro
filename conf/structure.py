@@ -50,14 +50,7 @@ SERVERS = (
 
 DEV_MACHINES = ('192.168.9.94', '192.168.9.95')
 
-SHARD_NAMES = ('aa','ab','ac','ad','ae','af','ag','ah','ai','aj','ak','al',)
-
-# Allows you to tie a particular affinity number to a shard name
-# By default the shard is determined by: number % len(SHARD_NAMES)
-SHARD_AFFINITY = {
-#    'aa' : (1, 2, 3, 4),
-#    'ak' : (5,77,222)
-}
+SHARD_NAMES = ('media',)
 
 AFFINITY_SECRET = 'y!tv568)ouw7ixt85)vfq#9*r7^#sr1)p%o0m45e#bmn3td0_u'
 
