@@ -44,7 +44,7 @@ MEDIA_URL = "http://media.themaestro.local"
 ADMIN_MEDIA_PREFIX = MEDIA_URL+'/admin/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = ''
+SECRET_KEY = 'y!tv568)ouw7ixt85)vfq#9*r7^#sr1)p%o0m45e#bmn3td0_u'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -86,7 +86,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'urls' #'themaestro.urls'
 #URLCONFS = {
 #    'www':'conf.urls',
-#    'media':'devonly.media_urls',
+#    'media':'themaestro.media_urls',
 #    #TODO 'aa':'theapps.assets.shard_urls',
 #} 
 
