@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from fs import symlink
 from os.path import exists
-from thepian.cmdline.base import ThepianCommand
+from themaestro.commands import DjangoCommand
 from thepian.conf import structure
 from optparse import make_option
 
@@ -11,8 +11,10 @@ from liveonly.config.nginx import symlink_local_nginx
 hosts = Replace all DOMAINS entries in /etc/hosts with fresh ones
 """
 
-class Command(ThepianCommand):
-    option_list = ThepianCommand.option_list + (
+#TODO enablelive + enabledev = enablesite, depends on settings name
+
+class Command(DjangoCommand):
+    option_list = DjangoCommand.option_list + (
         make_option('--restart', action='store_true', dest='restart', default=False,
             help='Tells Thepian to restart affected services if configuration changed.'),
     )

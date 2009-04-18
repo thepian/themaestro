@@ -1,4 +1,4 @@
-from theapps.utils.djangoextras import DjangoCommand, CommandError
+from themaestro.commands import DjangoCommand, CommandError
 from optparse import make_option
 import os
 import sys

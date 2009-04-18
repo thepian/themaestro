@@ -8,7 +8,7 @@ from random import choice
 from thepian.cmdline.base import BaseCommand
 from thepian.utils import *
 from thepian.conf import create_site_structure
-from devonly.config import copy_template
+from themaestro.config import copy_template
 
 EASYINSTALL_NAMES = ['zc.buildout','netifaces','pytz-2008e','feedparser-4.1','markdown-1.7',
                 'simplejson-1.9.2', 'textile-2.0.11','vobject-0.7.1','python_dateutil-1.4.1',
@@ -35,7 +35,7 @@ class Command(BaseCommand):
         
         structure = create_site_structure(projects[0])
         vars = { 'projectname':projects[0] }
-        from devonly.conf import templates
+        from themaestro.conf import templates
         
         sp = Popen("git init",cwd=structure.SOURCE_DIR,env=None,shell=True)
         sts = os.waitpid(sp.pid, 0)
@@ -80,6 +80,8 @@ class Command(BaseCommand):
 
         #sp = Popen("git commit -a --message='Basic Thepian Config'",cwd=structure.SOURCE_DIR,env=None,shell=True)
         #sts = os.waitpid(sp.pid,0)
+        
+        print 'use commands updateconf and enablesite to complete the project setup'
 
 
 #$ virtualenv --no-site-packages newproject

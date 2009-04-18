@@ -1,5 +1,5 @@
 import os
-from theapps.utils.djangoextras import DjangoCommand
+from themaestro.commands import DjangoCommand
 from optparse import make_option
 
 class Command(DjangoCommand):

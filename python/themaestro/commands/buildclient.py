@@ -18,9 +18,9 @@ from thepian.cmdline import BaseCommand, CommandError
 from thepian.conf import structure, dependency
 from thepian.utils import *
 from thepian.assets import *
-from devonly.sources import CssSourceNode,JsSourceNode, combine_asset_sources 
-from devonly.assets import sources
-from devonly.config.maintenance import create_maintenance
+from themaestro.sources import CssSourceNode,JsSourceNode, combine_asset_sources 
+from themaestro.assets import sources
+from themaestro.config.maintenance import create_maintenance
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (

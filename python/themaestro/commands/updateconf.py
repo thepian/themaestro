@@ -1,14 +1,14 @@
 from __future__ import with_statement
 #from thepian.cmdline.base import BaseCommand
-from theapps.utils.djangoextras import DjangoCommand, CommandError
+from themaestro.commands import DjangoCommand, CommandError
 from os.path import join, exists
 from optparse import make_option
 import sys,os
 
 from thepian.conf import structure
-from devonly.conf import templates
-from devonly.config.secrets import make_secrets
-from devonly.config.nginx import nginx_enabled
+from themaestro.conf import templates
+from themaestro.config.secrets import make_secrets
+from themaestro.config.nginx import nginx_enabled
 
 class Command(DjangoCommand):
     option_list = DjangoCommand.option_list + (
