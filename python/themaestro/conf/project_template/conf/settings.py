@@ -107,7 +107,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'conf.urls' #'{{ project_name }}.urls'
 #URLCONFS = {
 #    'www':'conf.urls',
-#    'media':'devonly.media_urls',
+#    'media':'themaestro.media_urls',
 #    #TODO 'aa':'theapps.assets.shard_urls',
 #} 
 
