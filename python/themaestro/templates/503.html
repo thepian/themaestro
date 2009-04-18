@@ -1,0 +1,32 @@
+{% extends "site_base.html" %}
+
+{% load i18n %}
+
+{% block screenstyle %}
+#main { 
+	height:510px;
+	background: url({{ MEDIA_URL }}/images/roaming.png) no-repeat rgb(253,251,245); 
+	background-color:transparent;
+}
+
+{% endblock %}
+
+
+{% block title %}Unavailable{% endblock %}
+
+{% block tab_id %}id="home_tab"{% endblock %}
+
+{% block main %}
+    {% blocktrans %}
+         
+        <p>The site is temporarily down for maintenance. It should be back again soon.</p>
+    {% endblocktrans %}
+    
+    
+{% endblock %}
+
+{% block sidebar %}
+<dl>
+	{% include "about/sidebar-text.html" %}
+</dl>
+{% endblock %}
