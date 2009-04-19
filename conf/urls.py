@@ -12,7 +12,7 @@ urlpatterns = patterns('',
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
     #url(r'^thepian/', include('theapps.about.urls')),
-    #url(r'^about/', include('about.urls')),
+    url(r'^about/', include('about.urls')),
     #url(r'^samples/', include('theapps.samples.urls')),
 )
 
@@ -20,7 +20,8 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns += patterns('',
-    (r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/(.*)', admin.site.root, name="admin"),
+    url(r'^grappelli/', include('grappelli.urls')),
 )
 

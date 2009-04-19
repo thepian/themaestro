@@ -61,6 +61,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     #"notification.context_processors.notification",
     #"announcements.context_processors.site_wide_announcements",
     #"messages.context_processors.inbox",
+    "django.core.context_processors.request",
+    "grappelli.context_processors.admin_url",
     "theapps.supervisor.context_processors.vars",
 )
 
@@ -80,7 +82,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     #'django_openidconsumer.middleware.OpenIDMiddleware',
     'theapps.supervisor.middleware.DeviceMiddleware',
-    'theapps.supervisor.middleware.StandardExceptionMiddleware',
+    'themaestro.middleware.StandardExceptionMiddleware',
 )
 
 ROOT_URLCONF = 'urls' #'themaestro.urls'
