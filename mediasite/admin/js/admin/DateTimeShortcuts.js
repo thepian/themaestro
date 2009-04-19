@@ -1,3 +1,9 @@
+// $(document).ready(function(){
+//     $('.vDateField').each(function() {
+//        $(this).prev().val(''); 
+//     });
+// });
+
 // Inserts shortcut buttons after all of the following:
 //     <input type="text" class="vDateField">
 //     <input type="text" class="vTimeField">
@@ -37,6 +43,10 @@ var DateTimeShortcuts = {
     },
     // Add clock widget to a given field
     addClock: function(inp) {
+        if (inp.previousSibling.nodeValue) {
+            inp.previousSibling.deleteData(0, inp.previousSibling.nodeValue.length); // GRAPPELLI
+        }
+        
         var num = DateTimeShortcuts.clockInputs.length;
         DateTimeShortcuts.clockInputs[num] = inp;
 
@@ -121,6 +131,10 @@ var DateTimeShortcuts = {
     },
     // Add calendar widget to a given field.
     addCalendar: function(inp) {
+        if (inp.previousSibling.nodeValue) {
+            inp.previousSibling.deleteData(0, inp.previousSibling.nodeValue.length); // GRAPPELLI
+        }
+        
         var num = DateTimeShortcuts.calendars.length;
 
         DateTimeShortcuts.calendarInputs[num] = inp;
@@ -236,7 +250,7 @@ var DateTimeShortcuts = {
         DateTimeShortcuts.calendars[num].drawNextMonth();
     },
     handleCalendarCallback: function(num) {
-        return "function(y, m, d) { DateTimeShortcuts.calendarInputs["+num+"].value = y+'-'+m+'-'+d; document.getElementById(DateTimeShortcuts.calendarDivName1+"+num+").style.display='none';}";
+        return "function(y, m, d) { DateTimeShortcuts.calendarInputs["+num+"].value = y+'-'+(m<10?'0':'')+m+'-'+(d<10?'0':'')+d; document.getElementById(DateTimeShortcuts.calendarDivName1+"+num+").style.display='none';}";
     },
     handleCalendarQuickLink: function(num, offset) {
        var d = new Date();
@@ -252,3 +266,7 @@ var DateTimeShortcuts = {
 }
 
 addEvent(window, 'load', DateTimeShortcuts.init);
+
+
+
+

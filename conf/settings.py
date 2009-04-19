@@ -108,6 +108,7 @@ INSTALLED_APPS = (
     'django.contrib.humanize',
     'django.contrib.markup',
     
+    'grappelli',
     #'theapps.about',
     #'theapps.samples',
     #'theapps.media',
