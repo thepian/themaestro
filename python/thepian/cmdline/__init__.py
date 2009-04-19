@@ -13,7 +13,8 @@ def execute_from_command_line(argv=None):
     """
     A simple method that runs a ManagementUtility.
     """
-    script_file_name=sys.argv[0]
+    from os.path import realpath
+    script_file_name=realpath(sys.argv[0])
     try:
         project_directory = find_basedir(os.getcwd())[1]
     except:
