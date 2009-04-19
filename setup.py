@@ -26,6 +26,7 @@ setup(name='themaestro',
         'console_scripts':[
             'dummy = about:dummy_cmdline',
             'maestro = thepian.cmdline:execute_from_command_line',
+            'django = django.core.management:execute_from_command_line',
         ],
       },
       classifiers=[
