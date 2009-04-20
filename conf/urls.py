@@ -21,6 +21,7 @@ admin.autodiscover()
 
 urlpatterns += patterns('',
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/filebrowser/', include('filebrowser.urls')),
     url(r'^admin/(.*)', admin.site.root, name="admin"),
     url(r'^grappelli/', include('grappelli.urls')),
 )

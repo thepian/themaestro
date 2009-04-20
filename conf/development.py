@@ -39,5 +39,8 @@ try:
     EMAIL_HOST = structure.machine.EMAIL_HOST
     SERVER_EMAIL = structure.machine.NICK + "@thepia.net"
     INTERNAL_IPS = INTERNAL_IPS + structure.DEV_MACHINES
-except:
+    FILEBROWSER_PATH_SERVER = structure.DOWNLOADS_DIR + "/"
+    print FILEBROWSER_PATH_SERVER
+    FILEBROWSER_URL_WWW = MEDIA_URL
+except Exception,e:
     pass
