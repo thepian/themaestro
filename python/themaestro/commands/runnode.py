@@ -1,5 +1,6 @@
+import sys
 from fs import makedirs
-from theapps.utils.djangoextras import DjangoCommand
+from themaestro.commands import DjangoCommand
 from thepian.conf import structure
 from optparse import make_option
 
