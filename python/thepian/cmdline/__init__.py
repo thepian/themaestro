@@ -44,6 +44,11 @@ def execute_from_command_line(argv=None):
     except ImportError:
         use_default_structure()
      
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'conf.settings'
-
+    if not 'MAESTRO_SETTINGS_MODULE' in os.environ: 
+        os.environ['MAESTRO_SETTINGS_MODULE'] = 'development' #TODO development vs production
+    if not 'DJANGO_SETTINGS_MODULE' in os.environ: 
+        os.environ['DJANGO_SETTINGS_MODULE'] = os.environ['MAESTRO_SETTINGS_MODULE']
+    from thepian.conf import use_settings
+    use_settings(os.environ['MAESTRO_SETTINGS_MODULE'])
+    
     COMMANDS.execute(argv)

@@ -1,0 +1,3 @@
+DEVELOPING = False
+
+TUPLE_STRUCTURE = ()

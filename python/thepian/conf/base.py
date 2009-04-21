@@ -7,6 +7,7 @@ from subprocess import Popen
 from thepian.utils import *
 
 import global_structure
+import global_settings
 from sites import *
 from project_tree import ProjectTree
 
@@ -424,3 +425,22 @@ class Dependency(object):
                 self.MODULE_PATHS[mn] = pathname
             except ImportError:
                 return None
+
+class Settings(object):
+    def __init__(self):
+        # update this dict from global structure (but only for ALL_CAPS settings)
+        for name in dir(global_structure):
+            if name == name.upper():
+                setattr(self, name, getattr(global_structure, name))
+
+    def blend(self, mod):
+        """Blend a module into the structure, usually used to blend conf.development or conf.production into thepian.conf.settings"""
+        # Copy module attributes to self
+        # Settings that should be converted into tuples if they're mistakenly entered
+        # as strings.
+        for name in dir(mod):
+            if name == name.upper():
+                value = getattr(mod, name)
+                if name in self.TUPLE_STRUCTURE and type(value) == str:
+                    value = (value,) # In case the user forgot the comma.
+                setattr(self, name, value)

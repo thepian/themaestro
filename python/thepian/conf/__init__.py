@@ -6,7 +6,7 @@ It can be used independent of Django
 import os
 from os.path import dirname,abspath,join,split,exists,expanduser,isfile
 
-from thepian.conf.base import FileArea, Feature, Machine, Structure, Dependency
+from thepian.conf.base import FileArea, Feature, Machine, Structure, Dependency, Settings
 from thepian.conf.project_tree import find_basedir, make_project_tree    
 
 dependency = Dependency()
@@ -114,5 +114,12 @@ def create_site_structure(site_name,structure_name="structure"):
     _already_imported[k] = struct
     return struct
 
+settings = Settings()
+
+def use_settings(mod):
+    if isinstance(mod,basestring):
+        mod = __import__(mod, {}, {}, [])
+    settings.blend(mod)
+
 __all__ = [ 'structure', 'use_structure', 'import_structure', 'adopt_structure', 'create_structure',
-            'create_site_structure','dependency']
+            'create_site_structure','dependency', 'use_dependency', 'settings', 'use_settings']
