@@ -1,0 +1,3 @@
+[submodule "extras/jsspec"]
+	path = extras/jsspec
+	url = /repositories/jsspec
