@@ -1,6 +1,6 @@
 .Python
 *.pyc
-*.tmproj
+#*.tmproj
 .svn
 .DS_Store
 .installed.cfg
@@ -16,5 +16,6 @@ target/
 release/
 repos/
 src/
+devdb
 testdb
 .mr.developer.cfg
