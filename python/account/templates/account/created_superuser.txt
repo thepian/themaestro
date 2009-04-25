@@ -1,0 +1,2 @@
+{{ user.username }} was created as a superuser in the {{ structure.DEFAULT_HOSTNAME }} project.
+kodeord: {{ new_password }}

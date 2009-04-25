@@ -1,0 +1,28 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+
+{% block title %}{% blocktrans %}Profile for {% endblocktrans %}{{ profile }}{% endblock %}
+
+{% block main %}
+    
+    <div class="right_panel">
+    </div>
+    
+    <h1>{% blocktrans %}Profile for {% endblocktrans %}{{ profile }}</h1>
+
+	<h2>Private Information</h2>
+	<dl>
+		<dt>Real Name</dt><dd>{{ user.get_full_name }}</dd>
+		{% if user.openid %}<dt>OpenID</dt><dd>{{ user.openid }}</dd>{% endif %}
+	</dl>
+	
+	<h2>Public Information</h2>
+	<dl>
+		<dt>Public Name</dt><dd>{{ profile.name}}</dd>
+		<dt>Nick Name</dt><dd>{{ profile.nick }}</dd>
+	</dl>
+    
+
+{% endblock %}

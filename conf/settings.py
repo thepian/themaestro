@@ -126,12 +126,12 @@ INSTALLED_APPS = (
     #'theapps.blog',
     
     'about',
-    #'theapps.account',
+    'account',
     # openidconsumer openidserver recapcha debug
 )
 
-#AUTH_USER_MODULE = 'theapps.account.user_model.User'
-#AUTH_PROFILE_MODELS = ('retail.Partner',)
+AUTH_USER_MODULE = 'account.user_model.User'
+AUTH_PROFILE_MODELS = ('account.Profile',)
 #AUTH_PROFILE_MODULE = 'account.Profile'
 
 EMAIL_HOST = 'localhost'

@@ -1,0 +1,49 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+
+
+{% block title %}{% trans "Login" %}{% endblock %}
+
+{% block breadcrumbs %}
+	<li>At <a href="/">Home</a> <code>&rang;</code></li>
+	<li> <a href="/account">Account</a> <code>&rang;</code><ul><li><a>Profile</a></li><li><a>Log Out</a></li></ul></li>
+	<li><a href="">Log In</a> <code>&rang;</code></li>
+{% endblock %}
+
+
+{% block main %}
+    <h1>{% trans "Log In" %}</h1>
+    
+    {% if user.is_authenticated %}
+        <p><span class="warning">{% trans "Note" %}</span>: {% blocktrans %}you are already logged in as {{ user }}.{% endblocktrans %}</p>
+    {% else %}
+        {% url acct_signup as signup_url %}
+        <p>{% blocktrans %}Don't have an account? <a href="{{ signup_url }}">Sign up</a>!{% endblocktrans %}</p>
+    {% endif %}
+    
+    <form class="login" method="POST" action="">
+        <dl>
+            {{ form.as_dl }}
+            <dd><a href="{% url acct_passwd_reset %}">{% trans "Forgot password?" %}</a></dd>
+            <dd><input type="submit" value="{% trans "Log in &raquo;" %}" /></dd>
+        </dl>
+    </form>
+    
+    {% if not openid %}
+        <p>{% trans "Or sign in with your OpenID" %}:</p>
+        <form class="login" action="{ % url django_openidconsumer.views.begin %}" method="POST">
+            <dl>
+                <dt>{% trans "OpenID Identifier" %}: </dt><dd><input class="openid" type="text" name="openid_url"></dd>
+                <dd><input type="submit" value="{% trans "Log in &raquo;" %}" /></dd>
+            </dl>
+        </form>
+    {% endif %}
+    <p>{% blocktrans %}If you have any trouble logging in to your account, contact us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.{% endblocktrans %}</p>
+{% endblock %}
+
+{% block bodyscripts %}
+<script>
+    $("#id_username").focus();
+</script>
+{% endblock %}
