@@ -40,6 +40,7 @@ SERVERS = (
     { 'mac':'1cb374a89f', 'pool_ip':'192.168.9.104', 'own_ip':'192.168.9.94', 'cluster':'dev', 'nick': "imac2", },
     { 'mac':'1b639c1367', 'pool_ip':'192.168.9.104', 'own_ip':'192.168.9.94', 'cluster':'dev', 'nick': "imac", },
     { 'mac':'1b63aa4556', 'pool_ip':'192.168.9.105', 'own_ip':'192.168.9.95', 'cluster':'dev', 'nick': "tinkerbell", },
+    { 'mac':'16a45', 'pool_ip':'192.168.9.105', 'own_ip':'192.168.9.95', 'cluster':'dev', 'nick': "tinkerbell", },
 
     { 'mac':'1e8c6bd607', 'pool_ip':'83.170.98.113', 'own_ip':'83.170.93.136', 'cluster':'live', 'nick': "s1", 'shards': ('aa','ab','ac','ad','ae','af','ag','ah','ai','aj','ak','al',) },
     { 'mac':'1b639c13??1', 'pool_ip':'192.168.9.61', 'own_ip':'192.168.9.51', 'cluster':'test', 'nick': "test1", 'shards': ('aa','ab','ac','ad','ae','af',) },
