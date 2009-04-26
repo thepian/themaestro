@@ -6,8 +6,8 @@ from django.contrib.syndication.views import feed as feed_view
 urlpatterns = patterns('',
     url(r'^$', direct_to_template, {"template": "homepage.html"}, name="home"),
     
-    #url(r'^account/', include('account.urls')),
-    #url(r'^users/', include('account.users_urls')),
+    url(r'^account/', include('account.urls')),
+    url(r'^users/', include('account.users_urls')),
     #url(r'^comments/', include('threadedcomments.urls')),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
