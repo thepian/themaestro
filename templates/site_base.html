@@ -15,56 +15,12 @@
 
 {% block tabs %}
    	<a href="{% url home %}">{% trans "Home" %}</a>
-    / <a href="{ % url collection %}">{% trans "Collection" %}</a>
-    / <a href="{ % url press %}">{% trans "Press" %}</a>
-    / <a href="{% url blog_index %}">{% trans "Blog" %}</a>
-    / <a href="{% url contact %}">{% trans "Contact" %}</a>
-{% endblock %}
-
-{% block sidebar %}
-
-<ul style="background:red;color:#ddd;padding:.5em;list-style:none;">
-<li style="font-size:2em;line-height:1.3em;">REPORT A BUG</li>
-<li style="font-size:1.70em;line-height:1.3em;">&thinsp;LEAVE FEEDBACK</li>
-<li style="font-size:1.4em;line-height:1.4em;">MAKE A SUGGESTION</li>
-</ul>
-{% endblock %}
-
-{% block latest %}
-<div id="flickr" class="column span-9">
-	<h3>F&thinsp;L&thinsp;I&thinsp;C&thinsp;K&thinsp;R</h3>
-	<div id="flickr_img_wrap" class="clear">
-	<script type="text/javascript" src="http://www.flickr.com/badge_code_v2.gne?count=8&amp;display=latest&amp;size=s&amp;layout=x&amp;source=user&amp;user=24248122%40N02"></script>
-	</div>
-</div>
-
-
-<div id="latest-work" class="column span-8">
-	<h3>L&thinsp;A&thinsp;T&thinsp;E&thinsp;S&thinsp;T&thinsp; &thinsp;W&thinsp;O&thinsp;R&thinsp;K</h3>
-	
-	<p><a href="http://anthonyshort.com.au/portfolio/">View Portfolio</a> | <a href="http://anthonyshort.com.au/about/">Contact Me</a></p>
-</div>
-
-<div id="elsewhere" class="column span-7 last">
-
-	<h3>E&thinsp;L&thinsp;S&thinsp;E&thinsp;W&thinsp;H&thinsp;E&thinsp;R&thinsp;E</h3>
-	<script type="text/javascript" src="http://del.icio.us/feeds/js/hvendelbo?count=6"></script>
-</div>
-
 {% endblock %}
 
 {% block footer %}
 <div class="legal">
-    &copy; 2008 
-	<a href="{% url about %}">{% trans "About" %}</a>
-	| <a href="{% url advertise %}">{% trans "Advertise" %}</a>
-    | <a href="{% url blog_index %}">{% trans "Blog" %}</a>
-    | <a href="{% url terms %}">{% trans "Terms of Service" %}</a>
-    | <a href="{% url privacy %}">{% trans "Privacy Policy" %}</a>
-	<!-- Design Forum | T Shirt Blog | Graphic Design Portfolio | Free Clipart
-	Urban Art and Design | Online Printing    -->
-	
-	{% trans "&lt;company&gt;" %}.
+    &copy; 2008 {% trans "Thepian" %}.
+	<a href="{% url about %}">{% trans "About" %}</a> | <a href="{% url terms %}">{% trans "Terms of Service" %}</a>
 	{% trans "Design by" %} <a href="#" target="new" title="Henrik Vendelbo">Henrik Vendelbo &#8448;</a>
 </div>
 {% endblock %}
