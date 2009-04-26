@@ -358,7 +358,7 @@ class IdentityAccess(object):
         else:
             self._generate()
             self.generated = True
-        from conf import secrets
+        import secrets
         self.secret = secrets.VERIFICATION_SECRET[self.identity.number][0]
             
     def _generate(self):

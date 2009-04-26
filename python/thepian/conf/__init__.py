@@ -19,7 +19,7 @@ structure = Structure()
 def use_default_structure():
     """Used by the thepian shell script to save name and more ...
     """
-    structure.apply_basedir(*find_basedir(abspath(script_file_name)))
+    structure.apply_basedir(*find_basedir(abspath(structure.SCRIPT_PATH)))
     structure.determine_installation()
 
 def use_structure(mod):

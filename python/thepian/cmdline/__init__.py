@@ -23,16 +23,16 @@ def execute_from_command_line(argv=None):
         from os.path import dirname
         project_directory = dirname(dirname(script_file_name))
         
-    importer = MetaImporter()
-    importer.alternates['conf'] = [project_directory]
-    sys.meta_path.insert(0,importer)
-    from thepian.conf import use_dependency
-    try:
-        import conf.dependency
-        importer.alternates.update(conf.dependency.MODULES)
-        use_dependency(conf.dependency)
-    except ImportError:
-        pass
+#    importer = MetaImporter()
+#    importer.alternates['conf'] = [project_directory]
+#    sys.meta_path.insert(0,importer)
+#    from thepian.conf import use_dependency
+#    try:
+#        import conf.dependency
+#        importer.alternates.update(conf.dependency.MODULES)
+#        use_dependency(conf.dependency)
+#    except ImportError:
+#        pass
 
     from thepian.conf import structure, use_structure, use_default_structure
     structure.SCRIPT_PATH = script_file_name
