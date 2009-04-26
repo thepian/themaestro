@@ -12,6 +12,9 @@ DATABASE_PASSWORD = ''
 DATABASE_HOST = ''
 DATABASE_PORT = ''
 
+DOMAINS = ('themaestro.dev.local',)
+MEDIA_DOMAIN = 'media.themaestro.dev.local'
+
 from settings import *
 
 MEDIA_URL = 'http://media.themaestro.dev.local'

@@ -13,6 +13,8 @@ from django.core.urlresolvers import reverse
 
 from thepian.conf import structure
 
+from theapps.supervisor.sites import Site
+
 # favour django-mailer but fall back to django.core.mail
 try:
     from mailer import send_mail
@@ -139,7 +141,7 @@ class EmailConfirmationManager(models.Manager):
     def send_confirmation(self, email_address):
         salt = hashlib.sha1(str(random())).hexdigest()[:5]
         confirmation_key = hashlib.sha1(salt + email_address.email).hexdigest()
-        site = structure.machine.get_default_site()
+        site = Site.objects.get_default_site()
         activate_url = u"http://%s%s" % (
             site.domain,
             reverse("acct_confirm_email", args=(confirmation_key,))

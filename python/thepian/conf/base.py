@@ -8,7 +8,6 @@ from thepian.utils import *
 
 import global_structure
 import global_settings
-from sites import *
 from project_tree import ProjectTree
 
 class FileArea(object):
@@ -139,9 +138,6 @@ class Machine(object):
         self.log_area = FileArea(self.props['log_user'],self.props['log_group'])
         self.backups_area = FileArea(self.props['log_user'],self.props['log_group'])
 
-        # Map of Site instances
-        self.sites = {}
-
     def __getitem__(self,index):
         #print 'looking up machine[%s]' % index
         return self.props[index]
@@ -160,24 +156,6 @@ class Machine(object):
         if s[0] in ['media','www']: #TODO improve test to work off configuration
             del s[0]
         return ".".join(s)
-
-    def get_default_site(self):
-        return self.get_site('www.' + self.props['domains'][0])
-
-    def get_site(self,host):
-        site = self.sites.get(host)
-        if site: 
-            return site
-        #TODO consider domain redirection rules
-        #TODO validate against props['domains'] ?
-        site = Site()
-        site.domain = host
-        site.cluster = self.props['cluster']
-        #TODO site.root_domain = self.get_root_domain(host)
-        #TODO site.name = cluster title 
-        site.name = self.props.get('title',self.structure.DEFAULT_SITE_TITLE)
-        self.sites[host] = site
-        return site
 
 
 class Structure(ProjectTree):

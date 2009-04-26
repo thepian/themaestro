@@ -15,5 +15,7 @@ DATABASE_PASSWORD = 'thepian'
 DATABASE_HOST = ''
 DATABASE_PORT = ''    
 
+DOMAINS = ('themaestro.thepia.net',)
+MEDIA_DOMAIN = 'media.themaestro.thepia.net'
 
 from settings *
