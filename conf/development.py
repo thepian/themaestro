@@ -43,7 +43,8 @@ try:
     SERVER_EMAIL = structure.machine.NICK + "@thepia.net"
     INTERNAL_IPS = INTERNAL_IPS + structure.DEV_MACHINES
     FILEBROWSER_PATH_SERVER = structure.DOWNLOADS_DIR + "/"
-    print FILEBROWSER_PATH_SERVER
+    #print FILEBROWSER_PATH_SERVER
     FILEBROWSER_URL_WWW = MEDIA_URL
+    #SUBDOMAINS = structure.SHARD_NAMES + ('www','media')
 except Exception,e:
     pass

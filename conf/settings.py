@@ -26,6 +26,7 @@ LANGUAGE_CODE = 'en-uk'
 
 SITE_TITLE = 'Thepian Maestro Site'
 
+
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
 USE_I18N = True
@@ -91,6 +92,10 @@ ROOT_URLCONF = 'urls' #'themaestro.urls'
 #    'media':'themaestro.media_urls',
 #    #TODO 'aa':'theapps.assets.shard_urls',
 #} 
+
+FILEBROWSER_URL_ADMIN = '/admin/filebrowser/'
+FILEBROWSER_URL_HOME = '/admin/'
+FILEBROWSER_URL_WWW = '/media/uploads/'
 
 APPEND_SLASH = True
 
