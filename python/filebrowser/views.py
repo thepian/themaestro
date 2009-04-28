@@ -572,7 +572,8 @@ def rename(request, dir_name=None, file_name=None):
 rename = staff_member_required(never_cache(rename))
 
 
-# def snipshot_callback(request, dir_name=None):
+def snipshot_callback(request, dir_name=None):
+    return ''
 #     ''' Get file from snipshot and save it over existing file (also change thumbnail)
 #     '''
 #     
@@ -621,7 +622,8 @@ rename = staff_member_required(never_cache(rename))
 #snipshot_callback = staff_member_required(never_cache(snipshot_callback))
 
 
-# def picnik_callback(request, dir_name=None):
+def picnik_callback(request, dir_name=None):
+    return ''
 #     ''' Get file from snipshot and save it over existing file (also change thumbnail)
 #     '''
 #     
