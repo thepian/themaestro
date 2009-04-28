@@ -18,8 +18,13 @@ from theapps.utils.forms import Form
 from models import EmailAddress
 from fields import *
 
-from timezones import TIMEZONE_CHOICES
-
+try:
+    #TODO reintroduce django timezones
+    from timezones import TIMEZONE_CHOICES
+except ImportError:
+    print 'Failed to import timezones, using blank choices'
+    TIMEZONE_CHOICES = ()
+    
 class LoginForm(Form):
     
     username = forms.CharField(label=_("Username"), max_length=30, widget=forms.TextInput())
