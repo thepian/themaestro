@@ -41,6 +41,8 @@ class DjangoCommand(BaseCommand):
         make_option('--cluster', help='The name of the active cluster'),
         )
         
+    requires_machine = True
+        
     def execute(self,*args,**options):
         add_themaestro()
         super(DjangoCommand,self).execute(*args,**options)

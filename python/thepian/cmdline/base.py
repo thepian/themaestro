@@ -403,9 +403,16 @@ class Cmds(object):
                     sys.exit(1)
             else:
                 wrapper = self[subcommand]
+                if getattr(wrapper.cmd,'requires_machine',False):
+                    from thepian.conf import structure
+                    if not structure.machine.known:
+                        sys.stderr.write('Machine is not known (mac %s), cannot execute %s\n' % (structure.machine.props['mac'],repr(wrapper.cmd)))
+                        return
+                        #TODO return error code
                 wrapper.run_from_argv(argv)
 
         except CommandError, e:
             sys.stderr.write("%s\nType '%s help' for usage\n" % (e.message,os.path.basename(argv[0])))
+            #TODO return error code
 
 
