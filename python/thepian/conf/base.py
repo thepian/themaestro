@@ -100,7 +100,7 @@ class Machine(object):
     public_acces = False
 
     def __init__(self,structure,server=None,cluster=None):
-        self.structure = structure
+        #self.structure = structure
         if server:
             self.props = server.copy()
             _cluster = self.CLUSTER = cluster or structure.CLUSTERS[server.get('cluster')] or structure.CLUSTERS.get('live',structure.FALLBACK_CLUSTER)
@@ -125,8 +125,8 @@ class Machine(object):
             self.MEDIA_DOMAIN = self.props.get('media',"media.%s" % self.DOMAINS[0])
             self.MEDIA_URL = 'http://' + self.MEDIA_DOMAIN
             self.EMAIL_HOST = self.props.get('email_host',None)
-            self.NICK = self.props['nick']
-            self.MACHINE_EMAIL = self.props['nick'] + "@" + self.DOMAINS[0]
+            self.NICK = self.props['NICK']
+            self.MACHINE_EMAIL = self.props['NICK'] + "@" + self.DOMAINS[0]
             
 
         self.effective_uid = os.getuid()
@@ -330,7 +330,6 @@ class Structure(ProjectTree):
                 #print 'set_cluster', cluster, server, self
                 self._machine = Machine(self, server=server, cluster=cluster)
                 return
-        #print 'set_cluster', cluster, self
         self._machine = Machine(self,cluster=cluster)
         
     def describe(self):
@@ -340,7 +339,7 @@ class Structure(ProjectTree):
         macs = self.get_macs()
         for server in self.SERVERS:
             if server['mac'] in macs:
-                self._machine = Machine(self, server)
+                self._machine = Machine(self, server=server)
                 self.CLUSTER = self._machine.CLUSTER
                 return self._machine
         print "Warning: machine not recognised"    
