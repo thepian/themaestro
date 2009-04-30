@@ -14,7 +14,7 @@ def execute_from_command_line(argv=None):
     A simple method that runs a ManagementUtility.
     """
     from os.path import realpath
-    script_file_name=realpath(sys.argv[0])
+    script_file_name=realpath((argv or sys.argv)[0])
     try:
         project_directory = find_basedir(os.getcwd())[1]
     except:
@@ -37,8 +37,8 @@ def execute_from_command_line(argv=None):
     from thepian.conf import structure, use_structure, use_default_structure
     structure.SCRIPT_PATH = script_file_name
     try:
-        import conf.structure
-        use_structure(conf.structure)
+        import structure as conf_structure
+        use_structure(conf_structure)
         import site
         site.addsitedir(structure.PYTHON_DIR)
     except ImportError:
