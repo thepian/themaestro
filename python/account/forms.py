@@ -19,11 +19,11 @@ from models import EmailAddress
 from fields import *
 
 try:
-    #TODO reintroduce django timezones
-    from timezones import TIMEZONE_CHOICES
+    import pytz
+    TIMEZONE_CHOICES = zip(pytz.common_timezones, pytz.common_timezones)
 except ImportError:
-    print 'Failed to import timezones, using blank choices'
-    TIMEZONE_CHOICES = ()
+    print 'Failed to import pytz, no timezone choices available'
+    TIMEZONE_CHOICES = {'UTC':'UTC'}
     
 class LoginForm(Form):
     
