@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from os.path import exists
+import fs
 from themaestro.commands import DjangoCommand
 from thepian.conf import structure,settings
 from optparse import make_option
@@ -21,6 +21,7 @@ class Command(DjangoCommand):
     
     def handle(self, *modulenames, **options):
         try:
+            fs.symlink(structure.SCRIPT_PATH,'/usr/local/bin/maestro',replace=True)
             #TODO create <project>/log dir for nginx 
             structure.machine.uploads_area.require_directory(structure.UPLOADS_DIR)
             structure.machine.downloads_area.require_directory(structure.DOWNLOADS_DIR)
@@ -32,7 +33,8 @@ class Command(DjangoCommand):
             #os.chmod(sock_dir,0777)
 
             if settings.DEVELOPING:
-                from os.path import join
+                #TODO link in User Sites directory
+                from os.path import join,exists
                 hosts = updated_hosts(change_file=True)
     
                 dev_name = join(structure.CONF_DIR,"dev.nginx.conf")
