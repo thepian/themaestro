@@ -333,8 +333,8 @@ class Cmds(object):
                     try:
                         cmd_and_wrapper = [(name,CommandWrapper(base=mod,name=name)) for name in find_commands(get_mod_path(mod))]
                         self.cache.update(dict(cmd_and_wrapper))
-                    except ImportError:
-                        pass
+                    except ImportError,e:
+                        print "Error while checking module '%s'" % mod, e
                 
         return self.cache
     
