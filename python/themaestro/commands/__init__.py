@@ -1,11 +1,17 @@
 from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
 
-#TODO consider calling:
-#from django.core.management import setup_environ
-#from conf import settings
-#setup_environ(settings)
-
+#TODO move to django command class 
+try:
+    if 'DJANGO_SETTINGS_MODULE' not in os.environ:
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    from thepian.conf import settings
+    from django.conf import settings as django_settings
+    #TODO is configured already?
+    django_settings.configure(**settings.__dict__)
+except Exception,e:
+    pass
+    
     
 def tweak_django():
     tweak_django_conf()
