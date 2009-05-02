@@ -6,7 +6,7 @@ EMAIL_DEBUG = DEBUG
 TRACE = DEBUG
 
 DATABASE_ENGINE = 'sqlite3'
-DATABASE_NAME = '/Users/hvendelbo/Sites/themaestro/devdb'
+DATABASE_NAME = '/Sites/themaestro/devdb'
 DATABASE_USER = ''
 DATABASE_PASSWORD = ''
 DATABASE_HOST = ''
@@ -23,7 +23,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    '/Users/hvendelbo/Sites/themaestro/templates',
+    '/Sites/themaestro/templates',
 )
 EMAIL_HOST = 'smtp.ntlworld.com'
 SERVER_EMAIL = "tinkerbell@thepia.net"

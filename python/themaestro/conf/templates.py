@@ -241,11 +241,11 @@ WORK_SINGLE_CONFIG = """
 	fetch = +refs/heads/*:refs/remotes/sources/*
 
 [remote "imac"]
-	url = ssh://hvendelbo@192.168.9.94/Users/hvendelbo/Sites/%(projectname)s
+	url = ssh://hvendelbo@192.168.9.94/Sites/%(projectname)s
 	fetch = +refs/heads/*:refs/remotes/imac/*
 
 [remote "macbook"]
-	url = ssh://henrikvendelbo@192.168.9.93/Users/henrikvendelbo/Sites/%(projectname)s
+	url = ssh://henrikvendelbo@192.168.9.93//Sites/%(projectname)s
 	fetch = +refs/heads/*:refs/remotes/macbook/*
 
 [branch "master"]
