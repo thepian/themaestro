@@ -34,7 +34,8 @@ class Command(DjangoCommand):
 
             if settings.DEVELOPING:
                 #TODO link in User Sites directory
-                from os.path import join,exists
+                from os.path import join,exists,expanduser
+                fs.symlink(structure.PROJECT_DIR,join(expanduser("~/Sites"),structure.PROJECT_NAME))
                 hosts = updated_hosts(change_file=True)
     
                 dev_name = join(structure.CONF_DIR,"dev.nginx.conf")
