@@ -1,0 +1,16 @@
+Prerequisites
+
+Nginx
+Spread
+Memcached
+Python 2.6
+py26-ipython
+py26-setuptools
+py26-virtualenv
+
+Install
+
+python2.6 bootstrap.py
+bin/buildout
+sudo maestro enablesite
+bin/django syncdb
