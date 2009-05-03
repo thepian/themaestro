@@ -21,7 +21,7 @@ setup(name='themaestro',
       include_package_data=True,
       zip_safe=False,
       setup_requires=['setuptools',],
-      install_requires= ['Django','theapps','thepian-lib','docutils'],
+      install_requires= ['Django','theapps','thepian-lib','docutils','ipython'],
       entry_points= {
         'console_scripts':[
             'dummy = about:dummy_cmdline',
