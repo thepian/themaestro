@@ -1,4 +1,4 @@
-import os,sys
+import os,sys,site
 
 from thepian.conf.project_tree import find_basedir
 from thepian.cmdline import determine_settings_module
@@ -19,9 +19,10 @@ def execute_from_command_line(argv=None):
     from thepian.conf import structure, use_structure, use_default_structure
     structure.SCRIPT_PATH = script_file_name
     try:
+        from os.path import join
+        sys.path.insert(0,join(project_directory,"conf")) #TODO too simplistic, use real project tree
         import structure as conf_structure
         use_structure(conf_structure)
-        import site
         site.addsitedir(structure.PYTHON_DIR)
     except ImportError:
         use_default_structure()

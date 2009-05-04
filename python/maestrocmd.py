@@ -1,5 +1,4 @@
-import os
-import sys
+import os, sys, site
 
 from thepian.cmdline import COMMANDS, determine_settings_module
 from thepian.cmdline.importer import MetaImporter
@@ -16,8 +15,6 @@ def execute_from_command_line(argv=None):
         project_directory = find_basedir(os.getcwd())[1]
     except Exception,e:
         print e, ':: will use Thepian Maestro as project'
-        #TODO rather than fail if used outside a project, use thepian.config as project?
-        #TODO exlude project based commands
         from os.path import dirname
         project_directory = dirname(dirname(script_file_name))
         
@@ -35,9 +32,10 @@ def execute_from_command_line(argv=None):
     from thepian.conf import structure, use_structure, use_default_structure
     structure.SCRIPT_PATH = script_file_name
     try:
+        from os.path import join
+        sys.path.insert(0,join(project_directory,"conf")) #TODO too simplistic, use real project tree
         import structure as conf_structure
         use_structure(conf_structure)
-        import site
         site.addsitedir(structure.PYTHON_DIR)
     except ImportError:
         use_default_structure()
