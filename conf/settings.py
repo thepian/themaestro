@@ -133,6 +133,7 @@ INSTALLED_APPS = (
     
     'about',
     'account',
+    'themaestro.app',
     # openidconsumer openidserver recapcha debug
 )
 
