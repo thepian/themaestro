@@ -116,10 +116,11 @@ INSTALLED_APPS = (
     'django.contrib.markup',
     
     'grappelli',
+    'filebrowser',
     #'theapps.about',
     #'theapps.samples',
     #'theapps.media',
-    #'theapps.sitemaps',
+    'theapps.sitemaps',
     
     #'mailer',
     #'django_openid',
