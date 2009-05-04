@@ -1,12 +1,10 @@
 import os
 import sys
 
-from base import BaseCommand, CommandError, Cmds, determine_settings_module
-from importer import MetaImporter
+from thepian.cmdline import COMMANDS, determine_settings_module
+from thepian.cmdline.importer import MetaImporter
 
 from thepian.conf.project_tree import find_basedir
-
-COMMANDS = Cmds()
 
 def execute_from_command_line(argv=None):
     """
@@ -44,7 +42,11 @@ def execute_from_command_line(argv=None):
     except ImportError:
         use_default_structure()
      
-    from thepian.conf import use_settings
+    
+    structure.COMMAND_VARIABLE_PREFIX = "MAESTRO" 
+    from thepian.conf import use_settings, settings
     use_settings(determine_settings_module(argv or sys.argv))
+    import django.conf 
+    django.conf.settings.configure(**settings.__dict__)
 
     COMMANDS.execute(argv)

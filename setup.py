@@ -25,7 +25,7 @@ setup(name='themaestro',
       entry_points= {
         'console_scripts':[
             'dummy = about:dummy_cmdline',
-            'maestro = thepian.cmdline:execute_from_command_line',
+            'maestro = maestrocmd:execute_from_command_line',
             'django = djangocmd:execute_from_command_line',
         ],
       },

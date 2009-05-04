@@ -220,6 +220,9 @@ class Structure(ProjectTree):
     
     CLUSTER = None
 
+    # Prefix that makes up the name of the os.environ variable which points to the settings.py to use
+    COMMAND_VARIABLE_PREFIX = "THEPIAN"
+    
     def __init__(self):
         # update this dict from global structure (but only for ALL_CAPS settings)
         for name in dir(global_structure):

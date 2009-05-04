@@ -1,5 +1,8 @@
 import os,sys
 
+from thepian.conf.project_tree import find_basedir
+from thepian.cmdline import determine_settings_module
+
 def execute_from_command_line(argv=None):
     """
     A simple method that runs a ManagementUtility.
@@ -22,17 +25,14 @@ def execute_from_command_line(argv=None):
         site.addsitedir(structure.PYTHON_DIR)
     except ImportError:
         use_default_structure()
-     
-    if not 'MAESTRO_SETTINGS_MODULE' in os.environ: 
-        os.environ['MAESTRO_SETTINGS_MODULE'] = 'development' #TODO development vs production
-    #os.environ['DJANGO_SETTINGS_MODULE'] = 'thepian.conf.settings'
+
+    structure.COMMAND_VARIABLE_PREFIX = "MAESTRO" 
+    settings_module = determine_settings_module(argv or sys.argv)
     from thepian.conf import use_settings, settings
-    use_settings(os.environ['MAESTRO_SETTINGS_MODULE'])
-    
-    from django.core.management import setup_environ, execute_from_command_line
-    
-    from django.conf import settings as django_settings
-    django_settings.configure(**settings.__dict__)
-    #setup_environ(settings)
-    execute_from_command_line(argv)
+    use_settings(settings_module)
+
+    import django.conf
+    django.conf.settings.configure(**settings.__dict__)
+    import django.core.management
+    django.core.management.execute_from_command_line(argv)
 

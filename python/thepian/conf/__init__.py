@@ -120,6 +120,21 @@ def use_settings(mod):
     if isinstance(mod,basestring):
         mod = __import__(mod, {}, {}, [])
     settings.blend(mod)
+    
+def handle_default_options(options):
+    """
+    Include any default options that all commands should accept
+    here so that ManagementUtility can handle them before searching
+    for user commands.
+    """
+    if options.cluster:
+        use_cluster(options.cluster)
+    if options.settings:
+        os.environ['%s_SETTINGS_MODULE' % structure.COMMAND_VARIABLE_PREFIX] = options.settings
+    if options.pythonpath:
+        sys.path.insert(0, options.pythonpath)
+
+    
 
 __all__ = [ 'structure', 'use_structure', 'import_structure', 'adopt_structure', 'create_structure',
-            'create_site_structure','dependency', 'use_dependency', 'settings', 'use_settings']
+            'create_site_structure','dependency', 'use_dependency', 'settings', 'use_settings', 'handle_default_options']

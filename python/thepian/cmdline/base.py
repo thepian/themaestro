@@ -9,7 +9,7 @@ import select, socket
 from optparse import make_option, OptionParser
 
 from thepian.cmdline.color import color_style
-from thepian.conf import use_cluster
+from thepian.conf import handle_default_options
 from thepian.utils import *
 from os.path import join, abspath, expanduser, exists, isdir, dirname
 
@@ -19,25 +19,36 @@ class ImproperlyConfigured(Exception):
 class CommandError(Exception):
     pass
 
-def handle_default_options(options):
+def determine_settings_module(argv):
+    """Parse command line options to determine what settings module to use.
+    In the absense of an option use environment variable MAESTRO_SETTINGS_MODULE, or guess based
+    on machine recognition 
     """
-    Include any default options that all commands should accept
-    here so that ManagementUtility can handle them before searching
-    for user commands.
-    """
-    if options.cluster:
-        use_cluster(options.cluster)
-    if options.settings:
-        os.environ['DJANGO_SETTINGS_MODULE'] = options.settings
-    if options.pythonpath:
-        sys.path.insert(0, options.pythonpath)
+    # Preprocess options to extract --settings and --pythonpath.
+    # These options could affect the commands that are available, so they
+    # must be processed early.
+    import thepian
+    parser = LaxOptionParser(version=thepian.get_version(), option_list=BaseCommand.option_list) #TODO should the option_list be a param?
+    try:
+        options, args = parser.parse_args(argv)
+        handle_default_options(options)
+    except:
+        if options.traceback:
+            import traceback
+            print >>sys.stderr, 'couldn\'t handle default options failed'
+            traceback.print_exc()
+    from thepian.conf import structure
+    if not '%s_SETTINGS_MODULE' % structure.COMMAND_VARIABLE_PREFIX in os.environ: 
+        os.environ['%s_SETTINGS_MODULE' % structure.COMMAND_VARIABLE_PREFIX] = 'development' #TODO development vs production
+    return os.environ['%s_SETTINGS_MODULE' % structure.COMMAND_VARIABLE_PREFIX]
 
+    
 class BaseCommand(object):
     # Metadata about this command.
     option_list = (
         make_option('--cluster', dest="cluster", help='The name of the active cluster'),
         make_option('--settings',
-            help='The Python path to a settings module, e.g. "myproject.settings.main". If this isn\'t provided, the DJANGO_SETTINGS_MODULE environment variable will be used.'),
+            help='The Python path to a settings module, e.g. "myproject.settings.main". If this isn\'t provided, the MAESTRO_SETTINGS_MODULE environment variable will be used.'),
         make_option('--pythonpath',
             help='A directory to add to the Python path, e.g. "/home/djangoprojects/myproject".'),
         make_option('--traceback', action='store_true',
@@ -303,6 +314,11 @@ class CommandWrapper(object):
             return self.cmd.handle(*args,**options)    
         print 'cannot execute command' #TODO raise?
 
+class HelpWrapper(CommandWrapper):
+    """Not sure if this should replace the special help handling"""
+    #TODO
+    pass
+    
 class Cmds(object):
     cache = None
     load_user_commands = True
@@ -323,10 +339,7 @@ class Cmds(object):
         calls.
         """
         if self.cache is None:
-            self.cache = {}
-            #from thepian import cmdline
-            #self.cache = dict([(name, CommandWrapper(base='thepian.cmdline',name=name)) for name in find_commands(cmdline.__path__[0])])
-
+            self.cache = { 'help' : HelpWrapper() }
             if self.load_user_commands:
                 # Add any top level packages with commands submodules
                 for mod in find_command_modules():
@@ -374,20 +387,6 @@ class Cmds(object):
         argv = argv or sys.argv[:]
         prog_name = os.path.basename(argv[0])
         
-        # Preprocess options to extract --settings and --pythonpath.
-        # These options could affect the commands that are available, so they
-        # must be processed early.
-        import thepian
-        parser = LaxOptionParser(version=thepian.get_version(), option_list=BaseCommand.option_list)
-        try:
-            options, args = parser.parse_args(argv)
-            handle_default_options(options)
-        except:
-            if options.traceback:
-                import traceback
-                print >>sys.stderr, 'couldn\'t handle default options failed'
-                traceback.print_exc()
-
         try:
             subcommand = argv[1]
         except IndexError:
@@ -396,6 +395,9 @@ class Cmds(object):
         
         try:
             if subcommand == 'help':
+                import thepian
+                parser = LaxOptionParser(version=thepian.get_version(), option_list=BaseCommand.option_list)
+                options, args = parser.parse_args(argv)
                 if len(args) > 2:
                     self[args[2]].print_help(prog_name, args[2])
                 else:
