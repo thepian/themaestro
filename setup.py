@@ -25,8 +25,8 @@ setup(name='themaestro',
       entry_points= {
         'console_scripts':[
             'dummy = about:dummy_cmdline',
-            'maestro = maestrocmd:execute_from_command_line',
-            'django = djangocmd:execute_from_command_line',
+            'maestro = themaestro.commands:maestro_execute_from_command_line',
+            'django = themaestro.commands:django_execute_from_command_line',
         ],
       },
       classifiers=[
