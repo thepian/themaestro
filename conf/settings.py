@@ -121,6 +121,7 @@ INSTALLED_APPS = (
     #'theapps.samples',
     #'theapps.media',
     'theapps.sitemaps',
+    'theapps.supervisor',
     
     #'mailer',
     #'django_openid',
