@@ -32,6 +32,13 @@ class Command(BaseCommand):
         if len(projects) == 0:
             self.style.ERROR("You must specify project name")
             return
+        from os.path import join
+        from thepian.conf import structure
+        sp = Popen("git clone git://github.com/thepian/skeleton %s" % projects[0],cwd=join(structure.SITES_DIR,projects[0]),env=None,shell=True)
+        sts = os.waitpid(sp.pid, 0)
+        return
+        
+        
         
         structure = create_site_structure(projects[0])
         vars = { 'projectname':projects[0] }
