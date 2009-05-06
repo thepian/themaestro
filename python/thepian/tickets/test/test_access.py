@@ -9,7 +9,7 @@ type = "http"
 domain = "www.idolyzed.local"
 path = "/some/path"
 path2 = "/some"
-path3 = "/somewhere/else
+path3 = "/somewhere/else"
 request_meta = { 'HTTP_HOST':"www.idolyzed.local" }
 identity = Identity(encoded='2002000000000000000000007f00000100045e41adf14c581662') #'2002000000000000000000007f00000100045e41adf14c581662b637d715a8e39efdcd37061bd243d4313eedf744'
 
