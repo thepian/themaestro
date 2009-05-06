@@ -1,3 +1,5 @@
+#TODO https://launchpad.net/lamson
+
 import os, sys, site
 
 from base import BaseCommand, CommandError, Cmds, determine_settings_module
