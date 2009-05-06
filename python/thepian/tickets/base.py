@@ -295,16 +295,21 @@ class Affinity(Identity):
         subdomain
     """
     
-    def __init__(self,request_meta,**kwargs):
+    def __init__(self,**kwargs):
         """
-
+        meta - META dictionary from the request object
+        ip4 - request ip4
         """
+        if 'meta' in kwargs:
+            request_meta = kwargs['meta']
+            del kwargs['meta']
         super(Affinity,self).__init__(**kwargs)
             
         self.cookie_expiry = structure.AFFINITY_EXPIRY
         self.cookie_domain = structure.machine.to_cookie_domain(request_meta.get('HTTP_HOST',structure.machine.DOMAINS[0]))
         self.base_domain = structure.get_base_domain(request_meta)
         
+    # used in context processor
     def _get_domain(self):
         return self.subdomain + self.base_domain
     domain = property(_get_domain)
@@ -322,6 +327,18 @@ class Affinity(Identity):
         )
         return u"".join([u"<dt>%s</dt><dd>%s</dd>" % (k,v) for k,v in entries])
     
+
+def old_new_affinity(meta,old_affinity=None):
+    ip4 = meta.get('HTTP_X_FORWARDED_FOR') or meta.get('HTTP_X_REAL_IP') or meta.get('REMOTE_ADDR') or '127.0.0.1'
+
+    affinity = Affinity(meta=meta,ip4=ip4)
+    if old_affinity:
+        affinity.replaced = True
+        affinity.old = old_affinity
+    else:
+        affinity.replaced = False
+    return affinity
+
     
 class IdentityAccess(object):
     """Manage access permissions list
