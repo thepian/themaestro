@@ -3,15 +3,15 @@
 
 import os,sys, site
 from optparse import make_option
-from thepian.cmdline.base import NoArgsCommand
-from thepian.conf import import_structure
+from themaestro.commands import DjangoCommand
+from thepian.conf import structure
 
-class Command(NoArgsCommand):
+class Command(DjangoCommand):
     option_list = NoArgsCommand.option_list + (
         make_option('--noreload', action='store_false', dest='use_reloader', default=True,
             help='Tells Thepian to NOT use the auto-reloader.'),
-        make_option('--cluster', dest='cluster', default='',
-            help='Specifies which cluster to spawn a node for.'),
+        #make_option('--cluster', dest='cluster', default='',
+        #    help='Specifies which cluster to spawn a node for.'),
         make_option('--daemonize', dest='daemonize', default=False,
             help='Specifies which cluster to spawn a node for.'),
     )
@@ -21,76 +21,64 @@ class Command(NoArgsCommand):
     # Validation is called explicitly each time the server is reloaded.
     requires_model_validation = False
 
-    def handle_noargs(self, addrport='', **options):
-        structure = import_structure(os.getcwd()) #TODO support release
-        site.addsitedir(structure.PYTHON_DIR)
-        if structure.DEVELOPING:
-            site.addsitedir(structure.LIB_DIR)
-        try:
-            from conf import settings
-        except ImportError:
-            sys.stderr.write("""Error: Can't find the file 'settings.py' in the conf directory of %r. It appears you've customized things. 
-    You'll have to run django-admin.py, passing it your settings module.
-    (If the file settings.py does indeed exist, it's causing an ImportError somehow.)\n"""  % __file__)
-            sys.exit(1)
-
-        import django
-        from django.core.management import setup_environ
-        setup_environ(settings)
+    def handle(self, *args, **options):
         
-        from django.core.servers.basehttp import run, AdminMediaHandler, WSGIServerException
-        from django.core.handlers.wsgi import WSGIHandler
+        from spawning import run_controller
+        sock = None
 
-        if not addrport:
-            addr = ''
-            port = '8000'
+        if options.restart_args:
+            restart_args = simplejson.loads(options.restart_args)
+            factory = restart_args['factory']
+            factory_args = restart_args['factory_args']
+
+            start_delay = restart_args.get('start_delay')
+            if start_delay is not None:
+                factory_args['start_delay'] = start_delay
+                print "(%s) delaying startup by %s" % (os.getpid(), start_delay)
+                time.sleep(start_delay)
+
+            fd = restart_args.get('fd')
+            if fd is not None:
+                sock = socket.fromfd(restart_args['fd'], socket.AF_INET, socket.SOCK_STREAM)
+                ## socket.fromfd doesn't result in a socket object that has the same fd.
+                ## The old fd is still open however, so we close it so we don't leak.
+                os.close(restart_args['fd'])
         else:
-            try:
-                addr, port = addrport.split(':')
-            except ValueError:
-                addr, port = '', addrport
-        if not addr:
-            addr = '127.0.0.1'
+            ## We're starting up for the first time.
+            ## Become a process group leader.
+            os.setpgrp()
+            ## Fork off the thing that watches memory for this process group.
+            controller_pid = os.getpid()
+            if (options.max_memory or options.max_age) and not os.fork():
+                env = environ()
+                from spawning import memory_watcher
+                basedir, cmdname = os.path.split(memory_watcher.__file__)
+                if cmdname.endswith('.pyc'):
+                    cmdname = cmdname[:-1]
 
-        if not port.isdigit():
-            raise CommandError("%r is not a valid port number." % port)
+                os.chdir(basedir)
+                command = [
+                    'python',
+                    cmdname,
+                    '--max-age', str(options.max_age),
+                    str(controller_pid),
+                    str(options.max_memory)]
+                os.execve(sys.executable, command, env)
 
-        use_reloader = options.get('use_reloader', True)
-        admin_media_path = options.get('admin_media_path', '')
-        shutdown_message = options.get('shutdown_message', '')
-        quit_command = (sys.platform == 'win32') and 'CTRL-BREAK' or 'CONTROL-C'
+            factory = options.factory
+            factory_args = {
+                'verbose': options.verbose,
+                'host': options.host,
+                'port': options.port,
+                'num_processes': options.processes,
+                'processpool_workers': options.workers,
+                'threadpool_workers': options.threads,
+                'watch': options.watch,
+                'dev': not options.release,
+                'deadman_timeout': options.deadman_timeout,
+                'access_log_file': options.access_log_file,
+                'coverage': options.coverage,
+                'args': positional_args,
+            }
 
-        def inner_run():
-            from django.conf import settings
-            print "Validating models..."
-            self.validate(display_num_errors=True)
-            print "\nDjango version %s, using settings %r" % (django.get_version(), settings.SETTINGS_MODULE)
-            print "Development server is running at http://%s:%s/" % (addr, port)
-            print "Quit the server with %s." % quit_command
-            try:
-                path = admin_media_path or django.__path__[0] + '/contrib/admin/media'
-                handler = AdminMediaHandler(WSGIHandler(), path)
-                run(addr, int(port), handler)
-            except WSGIServerException, e:
-                # Use helpful error messages instead of ugly tracebacks.
-                ERRORS = {
-                    13: "You don't have permission to access that port.",
-                    98: "That port is already in use.",
-                    99: "That IP address can't be assigned-to.",
-                }
-                try:
-                    error_text = ERRORS[e.args[0].args[0]]
-                except (AttributeError, KeyError):
-                    error_text = str(e)
-                sys.stderr.write(self.style.ERROR("Error: %s" % error_text) + '\n')
-                # Need to use an OS exit because sys.exit doesn't work in a thread
-                os._exit(1)
-            except KeyboardInterrupt:
-                if shutdown_message:
-                    print shutdown_message
-                sys.exit(0)
-        if use_reloader:
-            from django.utils import autoreload
-            autoreload.main(inner_run)
-        else:
-            inner_run()
+        run_controller(factory, factory_args, sock)
