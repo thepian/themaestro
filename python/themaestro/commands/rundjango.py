@@ -21,7 +21,7 @@ class Command(DjangoCommand):
         from django.core.servers.basehttp import run, AdminMediaHandler, WSGIServerException
         from django.core.handlers.wsgi import WSGIHandler
         if args:
-            raise CommandError('Usage is runserver %s' % self.args)
+            raise CommandError('Usage is rundjango %s' % self.args)
         if not addrport:
             addr = ''
             port = '8000'

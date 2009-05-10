@@ -12,9 +12,9 @@ from themaestro.config.nginx import nginx_enabled
 
 class Command(DjangoCommand):
     option_list = DjangoCommand.option_list + (
-        make_option('--verbosity', action='store', dest='verbosity', default='1',
-            type='choice', choices=['0', '1', '2'],
-            help='Verbosity level; 0=minimal output, 1=normal output, 2=all output'),
+        #make_option('--verbosity', action='store', dest='verbosity', default='1',
+        #    type='choice', choices=['0', '1', '2'],
+        #    help='Verbosity level; 0=minimal output, 1=normal output, 2=all output'),
         make_option('--nochange', action='store_true', dest='nochange', default=False,
             help='Tells Thepian to NOT make changes of any kind.'),
     )

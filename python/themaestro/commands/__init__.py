@@ -86,7 +86,7 @@ def django_execute_from_command_line(argv=None):
 
 
 from optparse import make_option
-from django.core.management.base import BaseCommand, CommandError
+from thepian.cmdline.base import BaseCommand, CommandError
 
 def tweak_django():
     tweak_django_conf()
@@ -104,8 +104,8 @@ def add_themaestro():
     from thepian.conf import structure
 
     print 'Enabling maestro development'
-    if 'themaestro' not in settings.INSTALLED_APPS:
-        settings.INSTALLED_APPS = list(settings.INSTALLED_APPS) + ['themaestro']
+    if 'themaestro.app' not in settings.INSTALLED_APPS:
+        settings.INSTALLED_APPS = list(settings.INSTALLED_APPS) + ['themaestro.app']
     if not hasattr(settings,'URLCONFS'):            
         settings.URLCONFS = { 'www': settings.ROOT_URLCONF }
     if 'media' not in settings.URLCONFS:
@@ -118,12 +118,33 @@ def add_themaestro():
     
  
 class DjangoCommand(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--cluster', help='The name of the active cluster'),
-        )
+    #option_list = BaseCommand.option_list + (
+    #    make_option('--cluster', help='The name of the active cluster'),
+    #    )
         
     requires_machine = True
         
-    def execute(self,*args,**options):
+    def validate(self, app=None, display_num_errors=False):
+        """
+        Validates the given app, raising CommandError for any errors.
+        
+        If app is None, then this will validate all installed apps.
+        
+        """
+        from django.core.management.validation import get_validation_errors
+        try:
+            from cStringIO import StringIO
+        except ImportError:
+            from StringIO import StringIO
+        s = StringIO()
+        num_errors = get_validation_errors(s, app)
+        if num_errors:
+            s.seek(0)
+            error_text = s.read()
+            raise CommandError("One or more models did not validate:\n%s" % error_text)
+        if display_num_errors:
+            print "%s error%s found" % (num_errors, num_errors != 1 and 's' or '')
+
+    def __call__(self,*args,**options):
         add_themaestro()
-        super(DjangoCommand,self).execute(*args,**options)
+        super(DjangoCommand,self).__call__(*args,**options)
