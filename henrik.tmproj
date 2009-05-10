@@ -7,14 +7,10 @@
 	<key>documents</key>
 	<array>
 		<dict>
-			<key>expanded</key>
-			<true/>
 			<key>name</key>
 			<string>themaestro</string>
 			<key>regexFolderFilter</key>
 			<string>!.*/(\.[^/]*|CVS|_darcs|_MTN|\{arch\}|blib|.*~\.nib|.*\.(framework|app|pbproj|pbxproj|xcode(proj)?|bundle))$</string>
-			<key>selected</key>
-			<true/>
 			<key>sourceDirectory</key>
 			<string></string>
 		</dict>
@@ -26,13 +22,13 @@
 			<key>filename</key>
 			<string>setup.py</string>
 			<key>lastUsed</key>
-			<date>2009-05-03T11:02:53Z</date>
+			<date>2009-05-10T20:19:04Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>buildout.cfg</string>
 			<key>lastUsed</key>
-			<date>2009-05-03T10:52:29Z</date>
+			<date>2009-05-10T19:26:30Z</date>
 		</dict>
 		<dict>
 			<key>name</key>
@@ -61,6 +57,8 @@
 			<string>python</string>
 		</dict>
 		<dict>
+			<key>expanded</key>
+			<true/>
 			<key>name</key>
 			<string>templates</string>
 			<key>regexFolderFilter</key>
@@ -121,8 +119,6 @@
 			<string>repos/thepian-lib</string>
 		</dict>
 		<dict>
-			<key>expanded</key>
-			<true/>
 			<key>name</key>
 			<string>theapps</string>
 			<key>regexFolderFilter</key>
@@ -142,7 +138,7 @@
 			<key>filename</key>
 			<string>.gitignore</string>
 			<key>lastUsed</key>
-			<date>2009-05-01T18:03:53Z</date>
+			<date>2009-05-10T18:25:09Z</date>
 		</dict>
 	</array>
 	<key>fileHierarchyDrawerWidth</key>
@@ -168,9 +164,9 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>9</integer>
 				<key>line</key>
-				<integer>36</integer>
+				<integer>28</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -196,14 +192,30 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>8</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>49</integer>
+				<integer>17</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>4</integer>
+			<integer>0</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>14</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>17</integer>
+			</dict>
 		</dict>
 		<key>conf/settings.py</key>
 		<dict>
@@ -217,21 +229,37 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>118</integer>
+			<integer>124</integer>
 		</dict>
 		<key>conf/structure.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>101</integer>
+				<integer>51</integer>
 				<key>line</key>
-				<integer>45</integer>
+				<integer>13</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>15</integer>
+			<integer>7</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>47</integer>
+				<key>line</key>
+				<integer>13</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>57</integer>
+				<key>line</key>
+				<integer>13</integer>
+			</dict>
 		</dict>
 		<key>conf/urls.py</key>
 		<dict>
@@ -241,48 +269,6 @@
 				<integer>30</integer>
 				<key>line</key>
 				<integer>9</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>docs/conf.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>123</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>147</integer>
-		</dict>
-		<key>docs/howto/index.rst</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>35</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>docs/index.rst</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -375,20 +361,6 @@
 				<integer>27</integer>
 			</dict>
 		</dict>
-		<key>python/account/templatetags/account_tags.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>12</integer>
-				<key>line</key>
-				<integer>8</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>python/account/urls.py</key>
 		<dict>
 			<key>caret</key>
@@ -431,20 +403,6 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>python/djangocmd.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>35</integer>
-				<key>line</key>
-				<integer>36</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>python/filebrowser/views.py</key>
 		<dict>
 			<key>caret</key>
@@ -459,77 +417,63 @@
 			<key>firstVisibleLine</key>
 			<integer>568</integer>
 		</dict>
-		<key>python/themaestro/__init__.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>3</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
 		<key>python/themaestro/commands/__init__.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>32</integer>
+				<integer>38</integer>
 				<key>line</key>
-				<integer>9</integer>
+				<integer>103</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>94</integer>
 		</dict>
-		<key>python/themaestro/commands/buildclient.py</key>
+		<key>python/themaestro/commands/rundjango.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>0</integer>
+				<integer>52</integer>
 				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-		</dict>
-		<key>python/themaestro/commands/enablesite.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>29</integer>
-				<key>line</key>
-				<integer>24</integer>
+				<integer>20</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>5</integer>
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
-				<integer>21</integer>
+				<integer>49</integer>
 				<key>line</key>
-				<integer>24</integer>
+				<integer>20</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
-				<integer>29</integer>
+				<integer>52</integer>
 				<key>line</key>
-				<integer>24</integer>
+				<integer>20</integer>
 			</dict>
+		</dict>
+		<key>python/themaestro/commands/spawnnode.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>39</integer>
+				<key>line</key>
+				<integer>23</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
 		</dict>
 		<key>python/themaestro/commands/thepianuser.py</key>
 		<dict>
@@ -539,6 +483,20 @@
 				<integer>0</integer>
 				<key>line</key>
 				<integer>60</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>python/themaestro/commands/updateconf.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>9</integer>
+				<key>line</key>
+				<integer>16</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
@@ -559,35 +517,19 @@
 			<key>firstVisibleLine</key>
 			<integer>61</integer>
 		</dict>
-		<key>python/thepian/cmdline/__init__.py</key>
+		<key>python/themaestro/middleware.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>54</integer>
+				<integer>0</integer>
 			</dict>
-			<key>columnSelection</key>
-			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>12</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>51</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>54</integer>
-			</dict>
+			<integer>0</integer>
 		</dict>
 		<key>python/thepian/cmdline/base.py</key>
 		<dict>
@@ -601,7 +543,7 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>305</integer>
+			<integer>35</integer>
 		</dict>
 		<key>python/thepian/conf/__init__.py</key>
 		<dict>
@@ -645,33 +587,75 @@
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
 		</dict>
-		<key>repos/theapps/theapps/supervisor/middleware.py</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>38</integer>
-				<key>line</key>
-				<integer>88</integer>
-			</dict>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>67</integer>
-		</dict>
-		<key>repos/theapps/theapps/utils/forms.py</key>
+		<key>repos/theapps/theapps/openuser/__init__.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>27</integer>
+				<integer>0</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
 			<integer>0</integer>
+		</dict>
+		<key>repos/theapps/theapps/openuser/models.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>0</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>repos/theapps/theapps/openuser/templatetags/__init__.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>0</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>repos/theapps/theapps/openuser/templatetags/openuser_tags.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>43</integer>
+				<key>line</key>
+				<integer>22</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>0</integer>
+		</dict>
+		<key>repos/theapps/theapps/supervisor/middleware.py</key>
+		<dict>
+			<key>caret</key>
+			<dict>
+				<key>column</key>
+				<integer>17</integer>
+				<key>line</key>
+				<integer>88</integer>
+			</dict>
+			<key>firstVisibleColumn</key>
+			<integer>0</integer>
+			<key>firstVisibleLine</key>
+			<integer>119</integer>
 		</dict>
 		<key>repos/thepiandjango/django/conf/__init__.py</key>
 		<dict>
@@ -687,67 +671,37 @@
 			<key>firstVisibleLine</key>
 			<integer>35</integer>
 		</dict>
-		<key>repos/thepiandjango/docs/contents.txt</key>
+		<key>repos/thepiandjango/django/core/management/base.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>17</integer>
+				<integer>0</integer>
 				<key>line</key>
-				<integer>22</integer>
+				<integer>256</integer>
 			</dict>
 			<key>columnSelection</key>
 			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>209</integer>
 			<key>selectFrom</key>
 			<dict>
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>selectTo</key>
-			<dict>
-				<key>column</key>
-				<integer>17</integer>
-				<key>line</key>
-				<integer>35</integer>
-			</dict>
-		</dict>
-		<key>repos/thepiandjango/docs/howto/index.txt</key>
-		<dict>
-			<key>caret</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
-			</dict>
-			<key>columnSelection</key>
-			<false/>
-			<key>firstVisibleColumn</key>
-			<integer>0</integer>
-			<key>firstVisibleLine</key>
-			<integer>0</integer>
-			<key>selectFrom</key>
-			<dict>
-				<key>column</key>
-				<integer>0</integer>
-				<key>line</key>
-				<integer>0</integer>
+				<integer>235</integer>
 			</dict>
 			<key>selectTo</key>
 			<dict>
 				<key>column</key>
 				<integer>0</integer>
 				<key>line</key>
-				<integer>35</integer>
+				<integer>256</integer>
 			</dict>
 		</dict>
-		<key>repos/thepiandjango/docs/index.txt</key>
+		<key>repos/thepiandjango/django/db/models/loading.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
@@ -759,14 +713,14 @@
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>0</integer>
+			<integer>157</integer>
 		</dict>
 		<key>setup.py</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>77</integer>
+				<integer>78</integer>
 				<key>line</key>
 				<integer>23</integer>
 			</dict>
@@ -821,35 +775,29 @@
 	<key>openDocuments</key>
 	<array>
 		<string>.gitignore</string>
-		<string>python/thepian/cmdline/__init__.py</string>
-		<string>python/themaestro/__init__.py</string>
-		<string>python/djangocmd.py</string>
 		<string>conf/development.py</string>
-		<string>python/themaestro/commands/buildclient.py</string>
+		<string>repos/theapps/theapps/openuser/__init__.py</string>
+		<string>repos/theapps/theapps/openuser/models.py</string>
+		<string>repos/theapps/theapps/openuser/templatetags/__init__.py</string>
+		<string>repos/theapps/theapps/openuser/templatetags/openuser_tags.py</string>
 		<string>python/themaestro/commands/__init__.py</string>
-		<string>repos/theapps/theapps/utils/forms.py</string>
+		<string>repos/thepiandjango/django/core/management/base.py</string>
 		<string>conf/structure.py</string>
+		<string>python/thepian/cmdline/base.py</string>
 		<string>python/thepian/conf/base.py</string>
-		<string>python/account/templatetags/account_tags.py</string>
 		<string>python/filebrowser/views.py</string>
 		<string>python/account/forms.py</string>
-		<string>buildout.cfg</string>
-		<string>setup.py</string>
-		<string>docs/conf.py</string>
-		<string>repos/thepiandjango/docs/index.txt</string>
-		<string>repos/thepiandjango/docs/contents.txt</string>
-		<string>docs/index.rst</string>
-		<string>repos/thepiandjango/docs/howto/index.txt</string>
-		<string>docs/howto/index.rst</string>
 		<string>conf/dev.nginx.conf</string>
+		<string>repos/thepiandjango/django/db/models/loading.py</string>
 		<string>instance-log.txt</string>
 		<string>python/account/models.py</string>
 		<string>repos/theapps/theapps/supervisor/middleware.py</string>
-		<string>python/themaestro/commands/enablesite.py</string>
+		<string>python/themaestro/middleware.py</string>
+		<string>conf/settings.py</string>
 	</array>
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{8, 110}, {941, 763}}</string>
+	<string>{{569, 302}, {1067, 866}}</string>
 </dict>
 </plist>
