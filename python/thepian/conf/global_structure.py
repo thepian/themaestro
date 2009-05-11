@@ -61,6 +61,7 @@ SHARD_AFFINITY = {
 #    'ak' : (5,77,222)
 }
 
+#TODO factor out
 AFFINITY_EXPIRY = "Mdy, 01-Jan-2038 00:00:00 GMT"
 
 # Used to encode affinity checksum, this must be overridden in structure.py for anything going live
