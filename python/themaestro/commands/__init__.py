@@ -100,12 +100,14 @@ def tweak_django_auth():
     pass
     
 def add_themaestro():
-    from django.conf import settings
+    from django.conf import settings #TODO patch thepian.conf.settings instead ?
     from thepian.conf import structure
 
     print 'Enabling maestro development'
     if 'themaestro.app' not in settings.INSTALLED_APPS:
         settings.INSTALLED_APPS = list(settings.INSTALLED_APPS) + ['themaestro.app']
+    if 'themaestro.middleware.StandardExceptionMiddleware' in settings.MIDDLEWARE_CLASSES:
+        settings.MIDDLEWARE_CLASSES = list(settings.MIDDLEWARE_CLASSES) + ['themaestro.middleware.StandardExceptionMiddleware']
     if not hasattr(settings,'URLCONFS'):            
         settings.URLCONFS = { 'www': settings.ROOT_URLCONF }
     if 'media' not in settings.URLCONFS:

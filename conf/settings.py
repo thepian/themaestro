@@ -83,7 +83,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     #'django_openidconsumer.middleware.OpenIDMiddleware',
     'theapps.supervisor.middleware.DeviceMiddleware',
-    'themaestro.middleware.StandardExceptionMiddleware',
 )
 
 ROOT_URLCONF = 'urls' #'themaestro.urls'
