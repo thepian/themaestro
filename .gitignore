@@ -25,6 +25,7 @@ lib/python2.6
 repos/
 src/
 docs/html/
+man/
 devdb
 testdb
 .mr.developer.cfg
