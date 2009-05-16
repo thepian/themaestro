@@ -1,3 +1,15 @@
 [submodule "extras/jsspec"]
 	path = extras/jsspec
 	url = /repositories/jsspec
+[submodule "src/thepiandjango"]
+	path = src/thepiandjango
+	url = git@github.com:thepian/django.git
+[submodule "src/theapps"]
+	path = src/theapps
+	url = git@github.com:thepian/theapps.git
+[submodule "src/thepian-lib"]
+	path = src/thepian-lib
+	url = git@github.com:thepian/thepian-lib.git
+[submodule "src/pyfacebook"]
+	path = src/pyfacebook
+	url = git://github.com/sciyoshi/pyfacebook.git

@@ -14,6 +14,14 @@ downloads/
 build/
 target/
 release/
+src/thepian-lib
+src/theapps
+src/geopy
+src/pyfacebook
+src/thepiandjango
+docs/_build
+include/python2.6
+lib/python2.6
 repos/
 src/
 devdb
