@@ -6,6 +6,7 @@
 .installed.cfg
 *.egg-info
 instance-log.txt
+pip-log.txt
 bin/
 develop-eggs/
 eggs/
