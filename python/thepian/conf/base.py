@@ -122,11 +122,7 @@ class Machine(object):
         if self.props['log_user'] == '~': self.props['log_user'] = structure.PROJECT_NAME
         self.DOMAINS = [name.strip('.') for name in self.props['domains']]  
         if self.known:
-            self.MEDIA_DOMAIN = self.props.get('media',"media.%s" % self.DOMAINS[0])
-            self.MEDIA_URL = 'http://' + self.MEDIA_DOMAIN
-            self.EMAIL_HOST = self.props.get('email_host',None)
             self.NICK = self.props['NICK']
-            self.MACHINE_EMAIL = self.props['NICK'] + "@" + self.DOMAINS[0]
             
 
         self.effective_uid = os.getuid()
@@ -144,7 +140,7 @@ class Machine(object):
 
     def get(self,index,d=None):
         return self.props.get(index,d)
-
+        
     def describe(self):
         return [
             u'cluster=%s mac=%s nick=%s pool=%s own=%s' % (self.props['cluster'],self.props['mac'],self.props['nick'],self.props['pool_ip'],self.props['own_ip']),
@@ -165,6 +161,10 @@ class Structure(ProjectTree):
     {sites_dir}/{project_dir}/../conf - conf_dir
     {sites_dir}/{project_dir}/../website - root_dir & root_dirs
     """
+    
+    __file__ = None
+    __package__ = None
+    __doc__ = None
 
     # Name of the structure module used as the basis for conf.structure
     STRUCTURE_MODULE = None
@@ -302,6 +302,11 @@ class Structure(ProjectTree):
         # Copy module attributes to self
         # Settings that should be converted into tuples if they're mistakenly entered
         # as strings.
+        self.__file__ = mod.__file__
+        self.__package__ = mod.__package__
+        self.__doc__ = mod.__doc__
+        if hasattr(mod,'__path__'):
+            self.__path__ = mod.__path__
         for name in dir(mod):
             if name == name.upper():
                 value = getattr(mod, name)
@@ -407,14 +412,30 @@ class Dependency(object):
                 return None
 
 class Settings(object):
+    """Used to hold settings in thepian.conf.settings
+    
+    >>> import global_settings
+    >>> global_settings.DEFAULT_SETTING = 'some value'
+    >>> settings = Settings()
+    >>> settings.DEFAULT_SETTING
+    some value
+    """
+    
+    __file__ = None
+    
     def __init__(self):
         # update this dict from global structure (but only for ALL_CAPS settings)
-        for name in dir(global_structure):
+        for name in dir(global_settings):
             if name == name.upper():
-                setattr(self, name, getattr(global_structure, name))
+                setattr(self, name, getattr(global_settings, name))
 
     def blend(self, mod):
         """Blend a module into the structure, usually used to blend conf.development or conf.production into thepian.conf.settings"""
+        self.__file__ = mod.__file__
+        self.__package__ = mod.__package__
+        self.__doc__ = mod.__doc__
+        if hasattr(mod,'__path__'):
+            self.__path__ = mod.__path__
         # Copy module attributes to self
         # Settings that should be converted into tuples if they're mistakenly entered
         # as strings.

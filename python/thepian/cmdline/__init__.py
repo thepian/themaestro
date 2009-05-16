@@ -1,3 +1,9 @@
+"""Thepian command line
+
+Allows easy implementation of commands with a subcommand structure.
+It scans top level packages for submodules named `commands`. Any modules in `commands` are expected to implement a Command class.
+
+"""
 #TODO https://launchpad.net/lamson
 
 import os, sys, site

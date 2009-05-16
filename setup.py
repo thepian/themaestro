@@ -24,7 +24,7 @@ setup(name='themaestro',
       install_requires= ['Django','theapps','thepian-lib','docutils','ipython'],
       entry_points= {
         'console_scripts':[
-            'dummy = about:dummy_cmdline',
+            'syspath = about:dummy_cmdline',
             'maestro = themaestro.commands:maestro_execute_from_command_line',
             'django = themaestro.commands:django_execute_from_command_line',
         ],

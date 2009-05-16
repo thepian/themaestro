@@ -170,7 +170,6 @@ u/d/l %(UPLOADS_DIR)s %(DOWNLOADS_DIR)s %(LOG_DIR)s
         self.BACKUPS_DIR = join("/var","backups",self.PROJECT_NAME)
         self.LOG_DIR = join("/var","log",self.PROJECT_NAME)
         self.SITES_DIR = dirname(self.PROJECT_DIR)
-        self.SITES_DIR = dirname(self.PROJECT_DIR)
         self.WEBSITE_DIRS = fs.filterdirs((
             join(basedir,"root"), 
             join(basedir,"website"), 

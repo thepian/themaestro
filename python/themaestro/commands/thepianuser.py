@@ -31,7 +31,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         username = options.get('username', None) or 'thepian'
         email = options.get('email', None) or structure.THEPIAN_EMAIL
-        from_email = structure.machine.MACHINE_EMAIL
+        from_email = settings.SERVER_EMAIL
         password = User.objects.make_random_password()
 
         try:

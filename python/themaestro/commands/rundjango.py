@@ -43,8 +43,6 @@ class Command(DjangoCommand):
 
         def inner_run():
             from django.conf import settings
-            #from devonly import inject_devonly
-            #inject_devonly(settings)
             
             from django.utils import translation
             print "Validating models..."

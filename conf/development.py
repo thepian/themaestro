@@ -34,13 +34,10 @@ try:
     from os.path import join
 
     DATABASE_NAME = join(structure.PROJECT_DIR,'devdb')
-    MEDIA_URL = structure.machine.MEDIA_URL
     TEMPLATE_DIRS = (
         structure.TEMPLATES_DIR,
         # structure.SAMPLE_TEMPLATES_DIR,
     )
-    EMAIL_HOST = structure.machine.EMAIL_HOST
-    SERVER_EMAIL = structure.machine.NICK + "@thepia.net"
     INTERNAL_IPS = INTERNAL_IPS + structure.DEV_MACHINES
     FILEBROWSER_PATH_SERVER = structure.DOWNLOADS_DIR + "/"
     #print FILEBROWSER_PATH_SERVER

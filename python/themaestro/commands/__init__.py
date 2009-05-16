@@ -103,7 +103,7 @@ def add_themaestro():
     from django.conf import settings #TODO patch thepian.conf.settings instead ?
     from thepian.conf import structure
 
-    print 'Enabling maestro development'
+    print 'Enabling maestro environment'
     if 'themaestro.app' not in settings.INSTALLED_APPS:
         settings.INSTALLED_APPS = list(settings.INSTALLED_APPS) + ['themaestro.app']
     if 'themaestro.middleware.StandardExceptionMiddleware' in settings.MIDDLEWARE_CLASSES:
@@ -113,6 +113,14 @@ def add_themaestro():
     if 'media' not in settings.URLCONFS:
         settings.URLCONFS['media'] = 'themaestro.media_urls'
     #TODO if more shards add     
+    for setting in settings.MACHINE_SETTINGS:
+        if setting in structure.machine:
+            setattr(settings,setting,structure.machine[setting])
+    if structure.CLUSTER:
+        settings.DOMAINS = structure.CLUSTER.get('domains',settings.DOMAINS)
+        settings.MEDIA_DOMAIN = structure.CLUSTER.get('media',"media.%s" % settings.DOMAINS[0])
+    settings.MEDIA_URL = 'http://' + settings.MEDIA_DOMAIN
+
     import django.views.debug
     import themaestro.debug
     django.views.debug.technical_404_response = themaestro.debug.technical_404_response
