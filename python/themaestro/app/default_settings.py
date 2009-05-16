@@ -50,3 +50,6 @@ ASSETS_EXPIRE = False
 #       "cache"         using Django's caching framework
 #       "model"         using a dedicated model for this purpose
 TRACK_ASSETS = False
+
+# yui filter
+YUI_COMPRESSOR_PATH = None

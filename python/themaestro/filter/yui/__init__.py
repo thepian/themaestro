@@ -16,16 +16,17 @@ For more information, see:
 """
 
 import os, subprocess
-from theapps.assets.conf import settings
+from django.conf import settings
 
 def _get_yui_path():
     path = getattr(settings, 'YUI_COMPRESSOR_PATH', None)
     if not path:
         path = os.environ.get('YUI_COMPRESSOR_PATH')
-        if not path:
-            raise EnvironmentError('YUI Compressor was not found on '
-                'your system. Define a YUI_COMPRESSOR_PATH setting or '
-                'environment variable.')
+        #TODO can't fail during import, will be tripped by nosetests
+        #if not path:
+        #    raise EnvironmentError('YUI Compressor was not found on '
+        #        'your system. Define a YUI_COMPRESSOR_PATH setting or '
+        #        'environment variable.')
     return path
 
 def _get_java_path():

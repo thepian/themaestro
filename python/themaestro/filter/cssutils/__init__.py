@@ -16,7 +16,7 @@ from django.conf import settings
 if not settings.DEBUG:
     log = logging.getLogger('assets.cssutils')
     log.addHandler(logging.handlers.MemoryHandler(10))
-    cssutils.log.setlog(log)
+    cssutils.log.setLog(log)
 
 def apply(_in, out):
     sheet = cssutils.parseString(_in.read())
