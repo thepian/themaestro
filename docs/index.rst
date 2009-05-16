@@ -1,7 +1,7 @@
 .. _contents:
 
 =============================
-Django documentation contents
+Thepian Maestro documentation contents
 =============================
 
 .. toctree::
@@ -23,6 +23,14 @@ Indices, glossary and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`glossary`
+
+Modules
+=======
+.. toctree::
+   :maxdepth: 2
+   
+   modules/cmdline
+   modules/model
 
 Deprecated/obsolete documentation
 =================================

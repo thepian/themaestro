@@ -33,3 +33,9 @@ you quickly accomplish common tasks.
     how-to material.
 
     .. _django community aggregator: http://www.djangoproject.com/community/
+
+
+running tests
+=============
+
+env DJANGO_SETTINGS_MODULE=testing nosetests -c=./nose.cfg --with-coverage python/thepian/conf/

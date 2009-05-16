@@ -24,6 +24,7 @@ include/python2.6
 lib/python2.6
 repos/
 src/
+docs/html/
 devdb
 testdb
 .mr.developer.cfg
