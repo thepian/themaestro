@@ -1,0 +1,4 @@
+#!/Sites/themaestro/bin/python
+import sys
+print '\n'.join(sys.path)
+import themaestro.test
