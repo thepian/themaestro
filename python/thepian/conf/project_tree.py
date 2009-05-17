@@ -258,6 +258,14 @@ def is_basedir(basedir):
     """ Returns (git_dir,basedir) if this is a basedir otherwise an ('','')
     If it is a basedir but not within a repository ('',basedir) is returned
     If it is a repository but not a basedir (basedir,'') is returned
+
+    ** Usage **
+    >>> import thepian.conf
+    >>> import os
+    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'simple_sample'))
+    ('/Sites/themaestro/python/thepian/conf/test/simple_sample', '/Sites/themaestro/python/thepian/conf/test/simple_sample')
+    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'no_repo_sample'))
+    ('', '/Sites/themaestro/python/thepian/conf/test/no_repo_sample')
     """
     conf_dir = join(basedir, "conf")
     python_dir = join(basedir, "python")

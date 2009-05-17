@@ -1,14 +1,22 @@
-import os, imp
+import os, imp, net, fs
 from os.path import dirname,abspath,join,split,exists,expanduser,isfile,isdir
 from pwd import getpwnam,getpwuid
 from grp import getgrnam
 from subprocess import Popen
 
-from thepian.utils import *
-
 import global_structure
 import global_settings
 from project_tree import ProjectTree
+
+from UserDict import UserDict
+
+import stat
+
+def require_directory(path, uid, gid, mod = stat.S_IRUSR+stat.S_IWUSR+stat.S_IXUSR+stat.S_IRGRP+stat.S_IWGRP+stat.S_IXGRP+stat.S_IROTH+stat.S_IXOTH):
+    """default mod = user:rwx group:rwx other:rx"""
+    fs.makedirs(path)
+    os.chown(path, uid, gid)
+    os.chmod(path, mod)
 
 class FileArea(object):
     """Area on filesystem with particular access requirements
@@ -95,56 +103,56 @@ class DjangoWebFeature(Feature):
 
 
 
-class Machine(object):
+class Machine(UserDict):
 
     public_acces = False
 
     def __init__(self,structure,server=None,cluster=None):
         #self.structure = structure
         if server:
-            self.props = server.copy()
+            self.data = server.copy()
             _cluster = self.CLUSTER = cluster or structure.CLUSTERS[server.get('cluster')] or structure.CLUSTERS.get('live',structure.FALLBACK_CLUSTER)
             self.known = True
             self.public_access = server.get('domains',False)
         else:
-            self.props = {
-                'mac' : get_mac_address_hex(),
-                'pool_ip' : get_ip4_address(),
-                'own_ip' : get_ip4_address(),
+            self.data = {
+                'mac' : net.get_mac_address_hex(),
+                'pool_ip' : net.get_ip4_address(),
+                'own_ip' : net.get_ip4_address(),
                 'nick' : 'unknown',
             }
             _cluster = self.CLUSTER = cluster or structure.CLUSTERS.get('live',structure.FALLBACK_CLUSTER)
             self.known = False
-        self.props.update(_cluster)
+        self.data.update(_cluster)
 
-        if self.props['shard_user'] == '~': self.props['shard_user'] = structure.PROJECT_NAME
-        if self.props['etc_user'] == '~': self.props['etc_user'] = structure.PROJECT_NAME
-        if self.props['log_user'] == '~': self.props['log_user'] = structure.PROJECT_NAME
-        self.DOMAINS = [name.strip('.') for name in self.props['domains']]  
+        if self.data['shard_user'] == '~': self.data['shard_user'] = structure.PROJECT_NAME
+        if self.data['etc_user'] == '~': self.data['etc_user'] = structure.PROJECT_NAME
+        if self.data['log_user'] == '~': self.data['log_user'] = structure.PROJECT_NAME
+        self.DOMAINS = [name.strip('.') for name in self.data['domains']]  
         if self.known:
-            self.NICK = self.props['NICK']
+            self.NICK = self.data['NICK']
             
 
         self.effective_uid = os.getuid()
         self.effective_user = getpwuid(self.effective_uid)[0]
-        self.uploads_area = FileArea(self.props['shard_user'],self.props['shard_group'])
-        self.downloads_area = FileArea(self.props['shard_user'],self.props['shard_group'])
-        self.etc_area = FileArea(self.props['etc_user'],self.props['etc_group'])
-        self.pid_area = FileArea(self.props['log_user'],self.props['log_group'])
-        self.log_area = FileArea(self.props['log_user'],self.props['log_group'])
-        self.backups_area = FileArea(self.props['log_user'],self.props['log_group'])
+        self.uploads_area = FileArea(self.data['shard_user'],self.data['shard_group'])
+        self.downloads_area = FileArea(self.data['shard_user'],self.data['shard_group'])
+        self.etc_area = FileArea(self.data['etc_user'],self.data['etc_group'])
+        self.pid_area = FileArea(self.data['log_user'],self.data['log_group'])
+        self.log_area = FileArea(self.data['log_user'],self.data['log_group'])
+        self.backups_area = FileArea(self.data['log_user'],self.data['log_group'])
 
-    def __getitem__(self,index):
-        #print 'looking up machine[%s]' % index
-        return self.props[index]
+    #def __getitem__(self,index):
+    #    print 'looking up machine[%s]' % index
+    #    return self.data[index]
 
-    def get(self,index,d=None):
-        return self.props.get(index,d)
+    #def get(self,index,d=None):
+    #    return self.data.get(index,d)
         
     def describe(self):
         return [
-            u'cluster=%s mac=%s nick=%s pool=%s own=%s' % (self.props['cluster'],self.props['mac'],self.props['nick'],self.props['pool_ip'],self.props['own_ip']),
-            u'domains: %s' % self.props['domains']
+            u'cluster=%s mac=%s nick=%s pool=%s own=%s' % (self.data['cluster'],self.data['mac'],self.data['nick'],self.data['pool_ip'],self.data['own_ip']),
+            u'domains: %s' % self.data['domains']
         ]
 
     def to_cookie_domain(self,http_host):
@@ -160,6 +168,14 @@ class Structure(ProjectTree):
     {sites_dir}/{project_dir}/../conf/structure.py
     {sites_dir}/{project_dir}/../conf - conf_dir
     {sites_dir}/{project_dir}/../website - root_dir & root_dirs
+    
+    
+    >>> import global_structure
+    >>> global_structure.DEFAULT_SETTING = 'some value'
+    >>> structure = Structure()
+    >>> structure.DEFAULT_SETTING
+    'some value'
+    
     """
     
     __file__ = None
@@ -233,8 +249,8 @@ class Structure(ProjectTree):
         if self._machine:
             if hasattr(self._machine,name):
                 return getattr(self._machine,name)
-            if name in self._machine.props:
-                return self._machine.props[name]
+            if name in self._machine:
+                return self._machine[name]
         raise AttributeError('Attribute "%s" not found' % name)
 
     def __getitem__(self,index):
@@ -245,7 +261,7 @@ class Structure(ProjectTree):
     def determine_installation(self):
         """Determine nginx, logrotate, spread toolkit, memcached, postgresql
         """
-        self.USR_BIN_DIR = first_exists(('/usr/local/bin','/usr/bin'))
+        self.USR_BIN_DIR = fs.first_exists(('/usr/local/bin','/usr/bin'))
         self.features = {}
         hosts = HostsFeature(self)
         if hosts.found:
@@ -328,7 +344,7 @@ class Structure(ProjectTree):
 
     def get_macs(self):
         """return a list of mac adresses found on this machine as 8 hex digits"""
-        return [mac.replace(':','').lstrip("0") for mac in get_mac_addresses()]
+        return [mac.replace(':','').lstrip("0") for mac in net.get_mac_addresses()]
         
     def set_cluster(self,cluster):
         self.CLUSTER = cluster
@@ -418,7 +434,7 @@ class Settings(object):
     >>> global_settings.DEFAULT_SETTING = 'some value'
     >>> settings = Settings()
     >>> settings.DEFAULT_SETTING
-    some value
+    'some value'
     """
     
     __file__ = None

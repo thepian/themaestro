@@ -1,3 +1,5 @@
+__test__ = False
+
 from theapps.sitemaps.urls.defaults import *
 from django.conf import settings
 from theapps.sitemaps import views as sitemap_views
