@@ -9,7 +9,7 @@ try:
     
     _sources = []
     for app in settings.INSTALLED_APPS:
-        if app != "devonly":
+        if app != "themaestro.app":
             try:
                 mod = __import__(app + ".assets", {}, {}, ['assets'])
                 _sources.append(mod)
