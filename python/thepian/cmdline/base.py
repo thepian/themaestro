@@ -408,7 +408,7 @@ class Cmds(object):
                 if getattr(wrapper.cmd,'requires_machine',False):
                     from thepian.conf import structure
                     if not structure.machine.known:
-                        sys.stderr.write('Machine is not known (mac %s), cannot execute %s\n' % (structure.machine.props['mac'],repr(wrapper.cmd)))
+                        sys.stderr.write('Machine is not known (mac %s), cannot execute %s\n' % (structure.machine['mac'],repr(wrapper.cmd)))
                         return
                         #TODO return error code
                 wrapper.run_from_argv(argv)
