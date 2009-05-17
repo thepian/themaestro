@@ -10,9 +10,9 @@ from math import sqrt
 from time import time,sleep, gmtime
 from datetime import datetime
 import calendar
+import net
 from thepian.conf import structure 
 from thepian.exceptions import IdentitySuspicious
-from thepian.utils import ip4_to_ip6
 
 def common_get_secret(self):
     """Default get secret method"""
@@ -139,7 +139,7 @@ class Identity(object):
                 #TODO remote_addr = ?
             if ip4:
                 self.remote_addr = ip4
-                self.remote_ip6 = ip4_to_ip6(ip4)
+                self.remote_ip6 = net.ip4_to_ip6(ip4)
             number = number if number is not None else random.randint(0,structure.AFFINITY_NUMBER_MAX-1)
             now = datetime.utcnow()
             now = long(calendar.timegm(now.utctimetuple()) * 1000000) + now.microsecond

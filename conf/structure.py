@@ -42,8 +42,6 @@ SERVERS = (
         'NICK': "imac", 'EMAIL_HOST':'localhost', 'SERVER_EMAIL':'imac@thepia.net'},
     { 'mac':'1b63aa4556', 'pool_ip':'192.168.9.105', 'own_ip':'192.168.9.95', 'cluster':'dev', 
         'NICK': "tinkerbell", 'EMAIL_HOST':'localhost', 'SERVER_EMAIL':'tinkerbell@thepia.net' },
-    { 'mac':'16a45', 'pool_ip':'192.168.9.105', 'own_ip':'192.168.9.95', 'cluster':'dev', 
-        'NICK': "tinkerbell", 'EMAIL_HOST':'localhost', 'SERVER_EMAIL':'tinkerbell@thepia.net' },
 
     { 'mac':'1e8c6bd607', 'pool_ip':'83.170.98.113', 'own_ip':'83.170.93.136', 'cluster':'live', 
         'NICK': "s1",'EMAIL_HOST':'smtp.ntlworld.com', 'SERVER_EMAIL':'s1@thepia.net' },

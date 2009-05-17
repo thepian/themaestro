@@ -1,7 +1,6 @@
 from thepian.cmdline.base import BaseCommand
 from optparse import make_option
-import sys,os
-from thepian.utils import *
+import sys,os,net
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -15,10 +14,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from thepian.conf import structure
         
-        print get_mac_addresses()
-        print 'mac  '+get_mac_address_hex()
-        print 'ip   '+get_ip4_address()
+        print net.get_mac_addresses()
+        print 'mac  '+net.get_mac_address_hex()
+        print 'ip   '+net.get_ip4_address()
         if structure.machine.known:
             machine = structure.machine
-            print 'name '+machine['nick'] + ' in ' + machine['cluster']
+            print 'name '+machine['NICK'] + ' in ' + machine['cluster']
             print 'as   '+ ' '.join(machine['domains'] or [])
