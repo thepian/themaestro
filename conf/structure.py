@@ -29,7 +29,15 @@ CLUSTERS = {
         'upstream_protocol': 'http', 'upstream_port': '8000', 
         'shard_user':'root', 'shard_group':'admin',
         'etc_user':'root', 'etc_group':'admin',
-        'log_user':'root','log_group':'nobody'
+        'log_user':'root','log_group':'nobody',
+        'additional_nginx_conf':"""
+        location /admin/maestrodocs/ {
+            alias /Sites/themaestro/docs/_build/html/;
+        }    
+        location /admin/djangodocs/ {
+            alias /Sites/themaestro/src/thepiandjango/docs/_build/html/;
+        }
+        """
         }, 
 }
 
