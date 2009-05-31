@@ -35,6 +35,11 @@ KNOWN_TYPES = {
 }
 # 'unsupported' if not in dictionary
 
+PIL_TYPE = {
+    'image/png' : 'PNG',
+    'image/jpeg' : 'JPEG',
+    'image/gif' : 'GIF'
+}
 
 class AssetException(Exception):
     pass
@@ -115,13 +120,15 @@ class AssetFile(object):
         #print "make...", category
         #TODO if more than twice the width of 480 / floor(width/640)
         if category == "image":
-            tp = mimetype == "image/png" and "PNG" or "JPEG"
+            tp = PIL_TYPE.get(mimetype,"JPEG")
             try:
                 original.image_data.save(self.file_path, tp, optimize=1)
             except IOError:
                 try:
                     original.image_data.save(self.file_path, tp)
                 except IOError, detail:
+                    import traceback
+                    traceback.print_exc(detail)
                     raise AssetException(detail)
         elif category == "video":
             print 'video asset: %s ' % original.file_path
