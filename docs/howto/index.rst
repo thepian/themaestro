@@ -11,7 +11,8 @@ you quickly accomplish common tasks.
 .. toctree::
    :maxdepth: 1
 
-   apache-auth
+   projecttree
+   media
    auth-remote-user
    custom-management-commands
    custom-model-fields

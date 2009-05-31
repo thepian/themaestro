@@ -3,13 +3,14 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD = /Sites/themaestro/bin/sphinx-build
+SPHINXBUILD   = sphinx-build
 PAPER         =
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d /Sites/themaestro/docs/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) /Sites/themaestro/parts/sphinx
+#ALLSPHINXOPTS   = -d /Sites/themaestro/docs/_build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) /Sites/themaestro/parts/sphinx
+ALLSPHINXOPTS   = -d _build/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 .PHONY: help clean html web pickle htmlhelp latex changes linkcheck
 
@@ -27,49 +28,49 @@ clean:
 	-rm -rf /Sites/themaestro/docs/*
 
 html:
-	mkdir -p /Sites/themaestro/docs/html /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) /Sites/themaestro/docs/html
+	mkdir -p _build/html _build/doctrees
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	@echo
-	@echo "Build finished. The HTML pages are in /Sites/themaestro/docs/html."
+	@echo "Build finished. The HTML pages are in /Sites/themaestro/docs/_build/html."
 
 pickle:
-	mkdir -p /Sites/themaestro/docs/pickle /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) /Sites/themaestro/docs/pickle
+	mkdir -p /Sites/themaestro/docs/pickle /Sites/themaestro/docs/_build/doctrees
+	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) /Sites/themaestro/docs/_build/pickle
 	@echo
 	@echo "Build finished; now you can process the pickle files."
 
 web: pickle
 
 json:
-	mkdir -p /Sites/themaestro/docs/json /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) /Sites/themaestro/docs/json
+	mkdir -p /Sites/themaestro/docs/_build/json /Sites/themaestro/docs/_build/doctrees
+	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) /Sites/themaestro/docs/_build/json
 	@echo
 	@echo "Build finished; now you can process the JSON files."
 
 htmlhelp:
-	mkdir -p /Sites/themaestro/docs/htmlhelp /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) /Sites/themaestro/docs/htmlhelp
+	mkdir -p /Sites/themaestro/docs/_build/htmlhelp /Sites/themaestro/docs/_build/doctrees
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) /Sites/themaestro/docs/_build/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
-	      ".hhp project file in /Sites/themaestro/docs/htmlhelp."
+	      ".hhp project file in /Sites/themaestro/docs/_build/htmlhelp."
 
 latex:
-	mkdir -p /Sites/themaestro/docs/latex /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) /Sites/themaestro/docs/latex
+	mkdir -p /Sites/themaestro/docs/_build/latex /Sites/themaestro/docs/_build/doctrees
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) /Sites/themaestro/docs/_build/latex
 	@echo
-	@echo "Build finished; the LaTeX files are in /Sites/themaestro/docs/latex."
+	@echo "Build finished; the LaTeX files are in /Sites/themaestro/docs/_build/latex."
 	@echo "Run \`make all-pdf' or \`make all-ps' in that directory to" \
 	      "run these through (pdf)latex."
 
 changes:
-	mkdir -p /Sites/themaestro/docs/changes /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) /Sites/themaestro/docs/changes
+	mkdir -p /Sites/themaestro/docs/_build/changes /Sites/themaestro/docs/_build/doctrees
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) /Sites/themaestro/docs/_build/changes
 	@echo
-	@echo "The overview file is in /Sites/themaestro/docs/changes."
+	@echo "The overview file is in /Sites/themaestro/docs/_build/changes."
 
 linkcheck:
-	mkdir -p /Sites/themaestro/docs/linkcheck /Sites/themaestro/docs/doctrees
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) /Sites/themaestro/docs/linkcheck
+	mkdir -p /Sites/themaestro/docs/_build/linkcheck /Sites/themaestro/docs/_build/doctrees
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) /Sites/themaestro/docs/_build/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
-	      "or in /Sites/themaestro/docs/linkcheck/output.txt."
+	      "or in /Sites/themaestro/docs/_build/linkcheck/output.txt."
