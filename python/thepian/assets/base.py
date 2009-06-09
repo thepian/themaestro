@@ -178,13 +178,21 @@ class Asset(Identity):
         self.upload_directory = structure.UPLOADS_DIR + str(self.path)
         self.download_directory = structure.DOWNLOADS_DIR + str(self.path)
         if self.generated:
-            makedirs(self.upload_directory)
+            makedirs(self.upload_directory) #TODO make conditional
             makedirs(self.download_directory)
     
     def __unicode__(self):
         return unicode(self.path)
+
+    def to_json(self):
+        return {
+            'path':self.path,
+            'parent': self.parent.to_json(),
+            #'caption':self.caption
+        }
         
     def build_upload_file(self,upload_file_name):
+        """Used to construct file uploaded to the site"""
         return AssetFile(self,join(self.upload_directory,upload_file_name))
     def build_download_file(self,download_file_name):
         return AssetFile(self,join(self.download_directory,download_file_name))
