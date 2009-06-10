@@ -2,7 +2,7 @@ from thepian.tickets import Identity, IdentityPath
 from thepian.conf import structure
 
 from os.path import join
-from fs import walk, listdir, makedirs
+from fs import walk, listdir, makedirs, filters
 
 class AssetManager(object):
     
@@ -45,6 +45,17 @@ class AssetEntity(Identity):
         self.download_directory = structure.DOWNLOADS_DIR + str(self.path)
         makedirs(self.download_directory)
 
+    @classmethod
+    def entities(cls,path):
+        r = []
+        for top in listdir(structure.UPLOADS_DIR,filters=(filters.only_directories,)): #TODO restrict mediasite and only known media files
+            for middle in listdir(join(structure.UPLOADS_DIR,top),filters=(filters.only_directories,)):
+                for ipnumber in listdir(join(structure.UPLOADS_DIR,top,middle),filters=(filters.only_directories,)):
+                    entity = StaticEntity(IdentityPath(top,middle,ipnumber))
+                    #TODO verify entity
+                    r.append(entity)
+        return r
+
     def get_uploaded_assets(self):
         from base import Asset 
         return [Asset(parent=self,encoded=e) for e in listdir(self.upload_directory)]
@@ -56,6 +67,17 @@ class StaticEntity(object):
         makedirs(self.upload_directory)
         self.download_directory = structure.DOWNLOADS_DIR + str(self.path)
         makedirs(self.download_directory)
+        
+    @classmethod
+    def entities(cls,path):
+        r = []
+        for middle in listdir(structure.MEDIASITE_DIRS[0],filters=(filters.only_directories,)): #TODO exclude js,css,embed
+            if middle in ('images',): 
+                for ipnumber in listdir(join(structure.MEDIASITE_DIRS[0],middle),filters=(filters.only_directories,)):
+                    entity = StaticEntity(IdentityPath("static",middle,ipnumber))
+                    #TODO verify entity
+                    r.append(entity)
+        return r
         
     def get_uploaded_assets(self):
         from static import Static
@@ -93,6 +115,16 @@ class AssetQuery(object):
                     r.append(IdentityPath(top,middle,ipnumber))
         return r
         
+    def list_entities_as_paths(self):
+        r = []
+        if self.paths[0].static_path:
+            base = join(structure.MEDIASITE_DIRS[0],self.paths[0].path[1])
+        else:
+            base = join(structure.UPLOADS_DIR, self.paths[0].path[0], self.paths[0].path[1])
+        for name in listdir(base,filters=(filters.only_directories,)):
+            r.append(IdentityPath(self.paths[0].path[0], self.paths[0].path[1],  name ))
+        return r
+        
     def __load(self):
         from base import Asset
         from static import Static
@@ -100,6 +132,10 @@ class AssetQuery(object):
 
         self.assets = []
         for path in paths:
+            if len(path) == 2:
+                klass = path.static_path and StaticEntity or AssetEntity
+                for entity in klass.entities(path):
+                    self.assets.extend(entity.get_uploaded_assets())
             if len(path) == 3:
                 klass = path.static_path and StaticEntity or AssetEntity
                 self.assets.extend(klass(path=path).get_uploaded_assets())

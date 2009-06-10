@@ -61,6 +61,13 @@ class Static(object):
     def __unicode__(self):
         return unicode(self.path)
         
+    def to_json(self):
+        return {
+            'path':self.path,
+            'parent':"/".join(self.path.split("/")[:-1]),
+            'caption':self.caption
+        }
+        
     def build_upload_file(self,upload_file_name):
         return AssetFile(self,join(self.upload_directory,upload_file_name))
     def build_download_file(self,download_file_name):
