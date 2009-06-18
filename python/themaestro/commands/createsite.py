@@ -2,13 +2,14 @@ from __future__ import with_statement
 import sys,os,re,fs
 from optparse import make_option
 from subprocess import Popen
-from os.path import dirname,abspath,join,split,exists,expanduser,isfile
+from os.path import dirname,abspath,join,split,exists,expanduser,isfile, isdir
 from random import choice
 
 from thepian.cmdline.base import BaseCommand
 from thepian.utils import *
 from thepian.conf import create_site_structure
 from themaestro.config import copy_template
+from themaestro.conf import templates
 
 EASYINSTALL_NAMES = ['zc.buildout','netifaces','pytz-2008e','feedparser-4.1','markdown-1.7',
                 'simplejson-1.9.2', 'textile-2.0.11','vobject-0.7.1','python_dateutil-1.4.1',
@@ -32,20 +33,18 @@ class Command(BaseCommand):
         if len(projects) == 0:
             self.style.ERROR("You must specify project name")
             return
-        from os.path import join
-        from thepian.conf import structure
-        sp = Popen("git clone git://github.com/thepian/skeleton %s" % projects[0],cwd=join(structure.SITES_DIR,projects[0]),env=None,shell=True)
+
+        if isdir("/Sites/skeleton"):
+            skeleton_path = "/Sites/skeleton"
+        else:
+            skeleton_path = "git://github.com/thepian/skeleton"
+        project_path = join("/Sites",projects[0])
+        sp = Popen("git clone %s %s" % (skeleton_path,project_path),cwd="/Sites",env=None,shell=True)
         sts = os.waitpid(sp.pid, 0)
-        return
-        
-        
-        
+
         structure = create_site_structure(projects[0])
         vars = { 'projectname':projects[0] }
-        from themaestro.conf import templates
-        
-        sp = Popen("git init",cwd=structure.SOURCE_DIR,env=None,shell=True)
-        sts = os.waitpid(sp.pid, 0)
+
         with open(join(structure.SOURCE_DIR,'.gitignore'),"w") as g:
             g.write(templates.SINGLE_IGNORE % vars)
             g.flush()
@@ -53,17 +52,8 @@ class Command(BaseCommand):
             c.write(templates.WORK_SINGLE_CONFIG % vars)
             c.flush()
             
-        if exists(join(structure.SOURCE_DIR,"bin","easy_install")):
-            for name in EASYINSTALL_NAMES:
-                sp = Popen("bin/easy_install %s" % name,cwd=structure.SOURCE_DIR,env=None,shell=True)
-                sts = os.waitpid(sp.pid,0)
+        #copy_template(self.style,'single',projects[0],structure.SOURCE_DIR)
 
-        if exists(join(structure.SOURCE_DIR,"bin","buildout")):
-            sp = Popen("bin/buildout",cwd=structure.SOURCE_DIR,env=None,shell=True)
-            sts = os.waitpid(sp.pid,0)
-
-        copy_template(self.style,'single',projects[0],structure.SOURCE_DIR)
-        
         # Create a random AFFINITY_SECRET hash, and put it in the main structure.
         main_structure_file = join(structure.CONF_DIR, 'structure.py')
         structure_contents = open(main_structure_file, 'r').read()
@@ -79,9 +69,25 @@ class Command(BaseCommand):
             secret_key = ''.join([choice('abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)') for i in range(50)])
             settings_contents = re.sub(r"(?<=SECRET_KEY = ')'", secret_key + "'", settings_contents)
             fp.write(settings_contents)
-            
+
         sp = Popen("git add .",cwd=structure.SOURCE_DIR,env=None,shell=True)
         sts = os.waitpid(sp.pid,0)
+
+        return
+        
+        
+        
+        sp = Popen("git init",cwd=structure.SOURCE_DIR,env=None,shell=True)
+        sts = os.waitpid(sp.pid, 0)
+            
+        if exists(join(structure.SOURCE_DIR,"bin","easy_install")):
+            for name in EASYINSTALL_NAMES:
+                sp = Popen("bin/easy_install %s" % name,cwd=structure.SOURCE_DIR,env=None,shell=True)
+                sts = os.waitpid(sp.pid,0)
+
+        if exists(join(structure.SOURCE_DIR,"bin","buildout")):
+            sp = Popen("bin/buildout",cwd=structure.SOURCE_DIR,env=None,shell=True)
+            sts = os.waitpid(sp.pid,0)
 
         #TODO make_executable(bin/activate bin/thepian)
 

@@ -36,20 +36,27 @@ CLUSTERS = {
 
 #? simple division shard= subdomain, cluster = domain, site = tld ?? sites = ('net','com', 'co.uk')
 SERVERS = (
-    { 'mac':'1cb374a89f', 'pool_ip':'192.168.9.104', 'own_ip':'192.168.9.94', 'cluster':'dev', 'nick': "imac2", },
-    { 'mac':'1b639c1367', 'pool_ip':'192.168.9.104', 'own_ip':'192.168.9.94', 'cluster':'dev', 'nick': "imac", },
-    { 'mac':'1b63aa4556', 'pool_ip':'192.168.9.105', 'own_ip':'192.168.9.95', 'cluster':'dev', 'nick': "tinkerbell", },
+    { 'mac':'1cb374a89f', 'pool_ip':'192.168.9.104', 'own_ip':'192.168.9.94', 'cluster':'dev', 
+        'NICK': "imac2", 'EMAIL_HOST':'localhost', 'SERVER_EMAIL':'imac2@thepia.net'},
+    { 'mac':'1b639c1367', 'pool_ip':'192.168.9.104', 'own_ip':'192.168.9.94', 'cluster':'dev', 
+        'NICK': "imac", 'EMAIL_HOST':'localhost', 'SERVER_EMAIL':'imac@thepia.net'},
+    { 'mac':'1b63aa4556', 'pool_ip':'192.168.9.105', 'own_ip':'192.168.9.95', 'cluster':'dev', 
+        'NICK': "tinkerbell", 'EMAIL_HOST':'localhost', 'SERVER_EMAIL':'tinkerbell@thepia.net' },
 
-    { 'mac':'1e8c6bd607', 'pool_ip':'83.170.98.113', 'own_ip':'83.170.93.136', 'cluster':'live', 'nick': "s1", 'shards': ('aa','ab','ac','ad','ae','af','ag','ah','ai','aj','ak','al',) },
-    { 'mac':'1b639c13??1', 'pool_ip':'192.168.9.61', 'own_ip':'192.168.9.51', 'cluster':'test', 'nick': "test1", 'shards': ('aa','ab','ac','ad','ae','af',) },
-    { 'mac':'1b639c13??2', 'pool_ip':'192.168.9.62', 'own_ip':'192.168.9.52', 'cluster':'test', 'nick': "test2", 'shards': ('ag','ah','ai','aj','ak','al',) },
-    { 'mac':'1b639c13??3', 'pool_ip':'192.168.9.63', 'own_ip':'192.168.9.53', 'cluster':'test', 'nick': "test3", 'shards': ('aa','ab','ac','ad','ae','af',) },
-    { 'mac':'1b639c13??4', 'pool_ip':'192.168.9.64', 'own_ip':'192.168.9.54', 'cluster':'test', 'nick': "test4", 'shards': ('ag','ah','ai','aj','ak','al',) },
+    { 'mac':'1e8c6bd607', 'pool_ip':'83.170.98.113', 'own_ip':'83.170.93.136', 'cluster':'live', 
+        'NICK': "s1",'EMAIL_HOST':'smtp.ntlworld.com', 'SERVER_EMAIL':'s1@thepia.net' },
+    { 'mac':'1b639c13??1', 'pool_ip':'192.168.9.61', 'own_ip':'192.168.9.51', 'cluster':'test', 
+        'NICK': "test1",'EMAIL_HOST':'smtp.ntlworld.com', 'SERVER_EMAIL':'test1@thepia.net'
+     },
+    { 'mac':'1b639c13??2', 'pool_ip':'192.168.9.62', 'own_ip':'192.168.9.52', 'cluster':'test', 
+        'NICK': "test2",'EMAIL_HOST':'smtp.ntlworld.com', 'SERVER_EMAIL':'test2@thepia.net'
+     },
 )
 
 DEV_MACHINES = {{ dev_machines }}
 
-SHARD_NAMES = ('aa','ab','ac','ad','ae','af','ag','ah','ai','aj','ak','al',)
+# SHARD_NAMES = ('aa','ab','ac','ad','ae','af','ag','ah','ai','aj','ak','al',)
+SHARD_NAMES = ('media',)
 
 # Allows you to tie a particular affinity number to a shard name
 # By default the shard is determined by: number % len(SHARD_NAMES)

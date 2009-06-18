@@ -101,7 +101,7 @@ def create_site_structure(site_name,structure_name="structure"):
     """
     import hashlib
 
-    directory = expanduser(join("~","Sites",site_name))
+    directory = expanduser(join("/Sites",site_name))
     release_directory = join("/Sites",site_name)
     k = hashlib.sha1(structure_name + ":" + directory).hexdigest()
     if k in _already_imported:
