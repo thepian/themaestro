@@ -3,10 +3,12 @@ Facilities to build css and JavaScript source from multiple files
 """
 from __future__ import with_statement
 import fs
-from fs.filters import fnmatch
+from fs.filters import fnmatch, only_directories
 from os.path import join,isdir
 import fileinput, re
 from distutils.dep_util import newer_group
+
+from thepian.conf import structure
 
 include_statement = re.compile('@requires [^"]*"([^"]*)"')
 
@@ -115,6 +117,21 @@ def combine_asset_sources(src,basedir,source_node=SourceNode):
         lines.append(u"/* %s */\n" % s.path[len(basedir)+1:]) #TODO asset type dependent comment
         lines.extend(s.lines)
         lines.append(u"\n")
-	
+    
     return lines
 
+def source_paths():
+    """Iterate url paths for css and js sources"""
+    for name in fs.listdir(structure.CSS_DIR, filters=(only_directories,fnmatch("*.css"))):
+        yield join("css",name)
+    for name in fs.listdir(strucure.JS_DIR, filters=(only_directories,fnmatch("*.js"))):
+        yield join("js",name)
+        
+def source_exists(path):
+    if path.startswith("css/") and isdir(structure.CSS_DIR,path[4:]):
+        return True
+    if path.startswith("js/") and isdir(structure.JS_DIR,path[3:]):
+        return True
+    return False
+     
+    

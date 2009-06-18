@@ -51,6 +51,7 @@ SECRET_KEY = 'y!tv568)ouw7ixt85)vfq#9*r7^#sr1)p%o0m45e#bmn3td0_u'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
     'django.template.loaders.app_directories.load_template_source',
+    'themaestro.loaders.sources.load_template_source',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (

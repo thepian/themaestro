@@ -14,6 +14,8 @@ urlpatterns = patterns('',
     #url(r'^thepian/', include('theapps.about.urls')),
     url(r'^about/', include('about.urls')),
     #url(r'^samples/', include('theapps.samples.urls')),
+    
+    url(r'^test(?P<template>\w+/\w+\.\w+)', direct_to_template),
 )
 
 from django.contrib import admin
