@@ -36,7 +36,7 @@ def load_template_source(template_name, template_dirs=None):
         target = safe_join(structure.MEDIASITE_DIRS[-1],"js",template_name[3:])
         if isdir(src):
             if newer_assets(src,target):
-                lines = combine_asset_sources(src,structure.JS_DIR,source_node=JSSourceNode)	
+                lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)	
                 with open(target,"w") as f:
                     f.write(''.join(lines))
             try:
