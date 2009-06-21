@@ -10,12 +10,14 @@ from distutils.dep_util import newer_group
 
 from thepian.conf import structure
 
-include_statement = re.compile('@requires [^"]*"([^"]*)"')
+requires_statement = re.compile(r'@requires [^"]*"([^"]+)"')
+include_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*\)\s*;')
 
 class SourceNode(object):
     used = False
     def __init__(self,path,basedir):
         self.path = path
+        self.basedir = basedir
         try:
             self._lines = [line for line in fileinput.FileInput(files=(self.path,))]
         except IOError:
@@ -23,7 +25,7 @@ class SourceNode(object):
             print "failed to load Asset Source: %s" % self.path
         includes = []
         for line in self._lines[:25]:
-            m = include_statement.search(line)
+            m = requires_statement.search(line)
             if m:
                 includes.extend(m.groups())
         self.includes = [join(basedir,i) for i in includes]
@@ -31,10 +33,6 @@ class SourceNode(object):
     def __repr__(self):
         return self.path
         
-    def get_lines(self):
-        return self._lines
-    lines = property(get_lines)
-    
     @classmethod
     def list_dependencies(cls,src,full_path=True):
         """Naive implementation returning all files in the directory"""
@@ -70,6 +68,23 @@ class JsSourceNode(SourceNode):
     def list_sources(cls,src,full_path=True):
         return fs.listdir(src,full_path=True,recursed=False,filters=(fnmatch("*.js"),))
         
+    def get_lines(self):
+        return [self.expand(l) for l in self._lines]
+    lines = property(get_lines)
+    
+    def expand(self,line):
+        m = include_statement.search(line)
+        if m:
+            include = '/* %s not found */' % m.group(1)
+            try:
+                full_path = join(self.basedir,m.group(1))
+                with open(full_path,"r") as f:
+                    include = f.read()
+            except IOError:
+                pass
+            return line[:m.start(0)] + include + line[m.end(0):]
+        return line
+
     
 def newer_assets(src,target,source_node=SourceNode):
     """
