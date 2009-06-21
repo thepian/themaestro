@@ -121,6 +121,8 @@ def add_themaestro():
         settings.MEDIA_DOMAIN = structure.CLUSTER.get('media',"media.%s" % settings.DOMAINS[0])
     settings.MEDIA_URL = 'http://' + settings.MEDIA_DOMAIN
 
+    structure.ensure_target_dirs()
+
     import django.views.debug
     import themaestro.debug
     django.views.debug.technical_404_response = themaestro.debug.technical_404_response

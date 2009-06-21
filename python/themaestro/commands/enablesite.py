@@ -23,6 +23,7 @@ class Command(DjangoCommand):
         try:
             fs.symlink(structure.SCRIPT_PATH,'/usr/local/bin/maestro',replace=True)
             #TODO create <project>/log dir for nginx 
+            structure.ensure_target_dirs()
             structure.machine.uploads_area.require_directory(structure.UPLOADS_DIR)
             structure.machine.downloads_area.require_directory(structure.DOWNLOADS_DIR)
             structure.machine.log_area.require_directory(structure.LOG_DIR)
