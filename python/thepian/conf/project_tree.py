@@ -118,6 +118,9 @@ EXTENDED_DIRECTORY_STRUCTURE = (
     join('release','website'),
 )
 
+# Name of the hidden directory managed by git, overridden in some tests
+GIT_DIR_NAME = ".git"
+
 class StructureError(Exception):
     pass
 
@@ -258,28 +261,37 @@ def is_basedir(basedir):
     """ Returns (git_dir,basedir) if this is a basedir otherwise an ('','')
     If it is a basedir but not within a repository ('',basedir) is returned
     If it is a repository but not a basedir (basedir,'') is returned
+    
+    conf and python directories and setup.py are used to identify basedir, one or the other must exist.
 
     ** Usage **
     >>> import thepian.conf
     >>> import os
-    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'simple_sample'))
-    ('/Sites/themaestro/python/thepian/conf/test/simple_sample', '/Sites/themaestro/python/thepian/conf/test/simple_sample')
-    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'no_repo_sample'))
-    ('', '/Sites/themaestro/python/thepian/conf/test/no_repo_sample')
+    >>> import thepian.conf.project_tree
+    >>> thepian.conf.project_tree.GIT_DIR_NAME = "git"
+    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'samples', 'single_sample'))
+    ('/Sites/themaestro/python/thepian/conf/test/samples/single_sample', '/Sites/themaestro/python/thepian/conf/test/samples/single_sample')
+    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'samples','no_repo_sample'))
+    ('', '/Sites/themaestro/python/thepian/conf/test/samples/no_repo_sample')
+    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'samples', 'simple_sample','src'))
+    ('/Sites/themaestro/python/thepian/conf/test/samples/simple_sample/src', '/Sites/themaestro/python/thepian/conf/test/samples/simple_sample/src')
+    >>> is_basedir(os.path.join(os.path.dirname(thepian.conf.test.__file__),'samples', 'simple_sample','src','conf'))
+    ('', '')
     """
     conf_dir = join(basedir, "conf")
     python_dir = join(basedir, "python")
-    if exists(conf_dir) and exists(python_dir):
-        if exists(join(basedir,".git")):
+    setup_py = join(basedir, "setup.py")
+    if exists(conf_dir) or exists(python_dir) or exists(setup_py):
+        if exists(join(basedir,GIT_DIR_NAME)):
             return (basedir,basedir)
         above = dirname(basedir)
-        if exists(join(above,".git")):
+        if exists(join(above,GIT_DIR_NAME)):
             return (above,basedir)
         else:
             return ('',basedir)
     else:
-        if exists(join(basedir,".git")):
-            if exists(join(basedir,"main","conf")) and exists(join(basedir,"main","python")):
+        if exists(join(basedir,GIT_DIR_NAME)):
+            if exists(join(basedir,"main","conf")) or exists(join(basedir,"main","python")):
                 return (basedir,join(basedir,"main"))
             return (basedir,'')
         else:
@@ -287,7 +299,7 @@ def is_basedir(basedir):
     
 def find_basedir(basedir):
     """Finds the git and base directories in basedir or ancestor
-    return (git,base,type) type being 'src'/'release'/'' 
+    return (git,base,type) type being 'single'/'src'/'release'/'' 
     """
     while len(basedir) > 0 and not basedir is "/":
         git,base = is_basedir(basedir)

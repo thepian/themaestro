@@ -1,4 +1,10 @@
-from thepian.conf.project_tree import ProjectTree
+import thepian.conf.project_tree
+from thepian.conf.project_tree import *
+
+from os.path import join,dirname
+no_repo_sample = join(dirname(__file__),"samples","no_repo_sample")
+simple_sample = join(dirname(__file__),"samples","simple_sample")
+single_sample = join(dirname(__file__),"samples","single_sample")
 
 def test_tree():
     tree = ProjectTree()
@@ -22,4 +28,38 @@ def test_tree():
     #self.LOG_DIR = join("/var","log",self.PROJECT_NAME)
     #self.TOOLS_DIR = expanduser("~/Sites/tools")
     #self.PID_DIR = join("/var/run",self.PROJECT_NAME)
+    
+def test_find_basedir():
+    thepian.conf.project_tree.GIT_DIR_NAME = "git"
+
+    # Root of single project
+    repo,base,t = find_basedir(single_sample)
+    assert single_sample == repo
+    assert single_sample == base
+    assert "single" == t
+    
+    # Subdir of single project
+    repo,base,t = find_basedir(join(single_sample,"conf"))
+    assert single_sample == repo
+    assert single_sample == base
+    assert "single" == t
+
+    # src root of simple project
+    repo,base,t = find_basedir(join(simple_sample,"src"))
+    assert join(simple_sample,"src") == repo
+    assert join(simple_sample,"src") == base
+    assert t == "src"
+    
+    # Subdir of src root of simple project
+    repo,base,t = find_basedir(join(simple_sample,"src","conf"))
+    assert join(simple_sample,"src") == repo
+    assert join(simple_sample,"src") == base
+    assert t == "src"
+    
+    # release root of simple project
+    repo,base,t = find_basedir(join(simple_sample,"release"))
+    assert join(simple_sample,"release") == repo
+    assert join(simple_sample,"release") == base
+    assert t == "release"
+    
     
