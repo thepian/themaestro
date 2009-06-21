@@ -1,5 +1,7 @@
+## pip install --environment=. --requirement=./maestroenv.txt
+##
 BeautifulSoup==3.1.0.1
-Django==1.1-beta-1
+#Django==1.1-beta-1
 Markdown==2.0
 Numeric==24.2
 PIL==1.1.6
@@ -7,7 +9,7 @@ PasteDeploy==1.3.3
 ScientificPython==2.6
 Spawning==0.8.10
 coverage==2.85
-cssutils==0.9.6a4
+cssutils==0.9.6b1
 django-debug-toolbar==0.7.0
 docutils==0.5
 elementtree==1.2.7-20070827-preview
@@ -26,12 +28,12 @@ python-dateutil==1.4.1
 python-openid==2.2.4
 python-twitter==0.5
 python-yadis==1.1.0
-pytz==2009g
+pytz==2009a
 simplejson==2.0.9
 textile==2.1.3
-theapps==0.1
-themaestro==0.1dev
-thepian-lib==0.1
+#theapps==0.1
+#themaestro==0.1dev
+#thepian-lib==0.1
 virtualenv==1.3.2
-virtualenvwrapper==1.12
+#virtualenvwrapper==1.12
 wsgiref==0.1.2
