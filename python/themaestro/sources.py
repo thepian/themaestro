@@ -48,6 +48,11 @@ def css_fetcher(url):
     return None, u"/* imported */" + unicode(read)
             
 class CssSourceNode(SourceNode):
+    
+    @classmethod
+    def list_sources(cls,src,full_path=True):
+        return fs.listdir(src,full_path=True,recursed=False,filters=(fnmatch("*.css"),))
+        
     def get_lines(self):
         import cssutils
         css = u''.join(self._lines)
@@ -60,7 +65,11 @@ class CssSourceNode(SourceNode):
     lines = property(get_lines)
        
 class JsSourceNode(SourceNode):
-    pass
+    
+    @classmethod
+    def list_sources(cls,src,full_path=True):
+        return fs.listdir(src,full_path=True,recursed=False,filters=(fnmatch("*.js"),))
+        
     
 def newer_assets(src,target,source_node=SourceNode):
     """
@@ -90,7 +99,7 @@ def combine_asset_sources(src,basedir,source_node=SourceNode):
     
     including external files vs ordering internal files
     """
-    sources = fs.listdir(src,full_path=True,recursed=False,filters=(fnmatch("*.css"),))
+    sources = source_node.list_sources(src)
     m = {}    	        
     bases = []
     for path in sources:
