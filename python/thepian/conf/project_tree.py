@@ -2,6 +2,27 @@ import re
 import os,fs
 from os.path import dirname,abspath,join,split,exists,expanduser,isfile
 
+TARGET_DIRECTORY_STRUCTURE = (
+    join('target','website','css'),
+    join('target','website','js'),
+    join('target','mediasite','css'),
+    join('target','mediasite','js'),
+    join('target','mediasite','images'),
+    join('target','mediasite','fonts'),
+    join('target','mediasite','objects'),
+    join('target','mediasite','renderings'),
+)
+
+RELEASE_DIRECTORY_STRUCTURE = (
+    join('release','bin'),
+    join('release','conf'),
+    join('release','dist'),
+    join('release','python'),
+    join('release','templates'),
+    join('release','website'),
+    join('release','mediasite'),
+)
+
 SITE_DIRECTORY_STRUCTURE = (
     'bin',
     'as',
@@ -11,17 +32,7 @@ SITE_DIRECTORY_STRUCTURE = (
     'website',
     'mediasite',
     'templates',
-
-    join('target','website','css'),
-    join('target','website','js'),
-    join('target','mediasite','css'),
-    join('target','mediasite','js'),
-    join('target','mediasite','images'),
-    join('target','mediasite','fonts'),
-    join('target','mediasite','objects'),
-    join('target','mediasite','renderings'),
-
-)
+) + TARGET_DIRECTORY_STRUCTURE
 
 DIRECTORY_STRUCTURE = (
     join('src','main','as'),
@@ -36,30 +47,13 @@ DIRECTORY_STRUCTURE = (
     
     join('src','lib','python'),
 
-    join('target','website','css'),
-    join('target','website','js'),
-    join('target','mediasite','css'),
-    join('target','mediasite','js'),
-    join('target','mediasite','images'),
-    join('target','mediasite','fonts'),
-    join('target','mediasite','objects'),
-    join('target','mediasite','renderings'),
-
-    join('release','bin'),
-    join('release','conf'),
-    join('release','dist'),
-    join('release','python'),
-    join('release','templates'),
-    join('release','website'),
-    join('release','mediasite'),
-
     'uploads',
     'downloads',
     'data',
     'design',
     'log',
     
-)
+) + TARGET_DIRECTORY_STRUCTURE + RELEASE_DIRECTORY_STRUCTURE
 
 SIMPLE_DIRECTORY_STRUCTURE = (
     join('src','as'),
@@ -72,30 +66,13 @@ SIMPLE_DIRECTORY_STRUCTURE = (
     join('src','python'),
     join('src','templates'),
     
-    join('target','website','css'),
-    join('target','website','js'),
-    join('target','mediasite','css'),
-    join('target','mediasite','js'),
-    join('target','mediasite','images'),
-    join('target','mediasite','fonts'),
-    join('target','mediasite','objects'),
-    join('target','mediasite','renderings'),
-
-    join('release','bin'),
-    join('release','conf'),
-    join('release','dist'),
-    join('release','python'),
-    join('release','templates'),
-    join('release','website'),
-    join('release','mediasite'),
-
     'uploads',
     'downloads',
     'data',
     'design',
     'log',
     
-)
+) + TARGET_DIRECTORY_STRUCTURE + RELEASE_DIRECTORY_STRUCTURE
 
 EXTENDED_DIRECTORY_STRUCTURE = (
     join('src','main','cpp'),
@@ -125,10 +102,48 @@ class StructureError(Exception):
     pass
 
 class ProjectTree(object):
-    # stub to be expanded
+    """Defines a project as a directory tree on disk. 
+    It is a representation independent of the actual
+    file structure.
+    """
     
     #TODO refactor DEVELOPING to be settings dependent
     
+    # Enclosing project directory or ? ()
+    PROJECT_DIR = None
+
+    REPO_DIR = None
+
+    # Source directory on dev machine, or base directory in production
+    SOURCE_DIR = None
+
+    # Target directory on dev machine, or base directory in production
+    TARGET_DIR = None
+
+    # Release directory on dev machine, or base directory in production
+    RELEASE_DIR = None
+
+    # Uploads directory on dev machine under project, or /var/uploads in production
+    UPLOADS_DIR = None
+
+    # Downloads directory on dev machine under project, or /var/downloads in production
+    DOWNLOADS_DIR = None
+
+    # Workspace directory on dev machine, or sites directory in production
+    SITES_DIR = None
+
+    # Configuration directory where structure.py is located
+    CONF_DIR = None
+
+    PYTHON_DIR = None
+    TEMPLATES_DIR = None
+
+    # Tuple of website roots. On dev machine it has sources and target. In production just the release
+    WEBSITE_DIRS = None
+
+    # Tuple of mediasite roots. On dev machine it has sources and target. In production just the release
+    MEDIASITE_DIRS = None
+
     def __repr__(self):
         return """
 project %(PROJECT_NAME)s (type %(REPO_TYPE)s)        
@@ -141,6 +156,7 @@ u/d/l %(UPLOADS_DIR)s %(DOWNLOADS_DIR)s %(LOG_DIR)s
     def apply_basedir(self, repo_dir, basedir, repo_type):
         """Apply the directory structure found by find_basedir
         """
+        #TODO detect extended structures
         self.REPO_TYPE = repo_type
         if repo_type == 'single':
             self.apply_single_basedir(repo_dir,basedir)
@@ -301,6 +317,7 @@ def find_basedir(basedir):
     """Finds the git and base directories in basedir or ancestor
     return (git,base,type) type being 'single'/'src'/'release'/'' 
     """
+    #TODO switch to returning (project,repo,base,type)
     while len(basedir) > 0 and not basedir is "/":
         git,base = is_basedir(basedir)
         if git and base:
@@ -324,6 +341,11 @@ def make_project_tree(directory,extended=False,simple=False,single=False):
         makedirs_tree(directory,DIRECTORY_STRUCTURE)
         if extended:
             makedirs_tree(directory, EXTENDED_DIRECTORY_STRUCTURE)
+            
+def ensure_target_tree(directory,extended=False):
+    from thepian.utils import makedirs_tree
+    makedirs_tree(directory,TARGET_DIRECTORY_STRUCTURE)
+    
         
 
     

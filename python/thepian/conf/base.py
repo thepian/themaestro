@@ -6,7 +6,7 @@ from subprocess import Popen
 
 import global_structure
 import global_settings
-from project_tree import ProjectTree
+from project_tree import ProjectTree, ensure_target_tree
 
 from UserDict import UserDict
 
@@ -185,41 +185,6 @@ class Structure(ProjectTree):
     # Name of the structure module used as the basis for conf.structure
     STRUCTURE_MODULE = None
 
-    # Enclosing project directory or ? ()
-    PROJECT_DIR = None
-
-    REPO_DIR = None
-
-    # Source directory on dev machine, or base directory in production
-    SOURCE_DIR = None
-
-    # Target directory on dev machine, or base directory in production
-    TARGET_DIR = None
-
-    # Release directory on dev machine, or base directory in production
-    RELEASE_DIR = None
-
-    # Uploads directory on dev machine under project, or /var/uploads in production
-    UPLOADS_DIR = None
-
-    # Downloads directory on dev machine under project, or /var/downloads in production
-    DOWNLOADS_DIR = None
-
-    # Workspace directory on dev machine, or sites directory in production
-    SITES_DIR = None
-
-    # Configuration directory where structure.py is located
-    CONF_DIR = None
-
-    PYTHON_DIR = None
-    TEMPLATES_DIR = None
-
-    # Tuple of website roots. On dev machine it has sources and target. In production just the release
-    WEBSITE_DIRS = None
-
-    # Tuple of mediasite roots. On dev machine it has sources and target. In production just the release
-    MEDIASITE_DIRS = None
-
     # Generated from SHARD_AFFINITY by inverting the dict
     AFFINITY_TO_SHARD = {}
 
@@ -258,6 +223,11 @@ class Structure(ProjectTree):
             raise AttributeError("Attribute '%s' not found using structure[..]" % index)
         return getattr(self,index)
 
+    def ensure_target_dirs(self):
+        """Check the project for directories in the target tree, and create any that are missing"""
+        #TODO check to see if project type is extended
+        ensure_target_tree(self.PROJECT_DIR)
+        
     def determine_installation(self):
         """Determine nginx, logrotate, spread toolkit, memcached, postgresql
         """
