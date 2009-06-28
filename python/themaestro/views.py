@@ -34,7 +34,7 @@ def generate_js(request, file_name):
     if not isdir(src):
         raise Http404
     target = join(structure.MEDIASITE_DIRS[-1],"js",file_name)
-    if newer_assets(src,target):
+    if newer_assets(src,target) or request.GET.get("force",False):
         lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)
         with open(target,"w") as f:
             f.write(''.join(lines))

@@ -121,7 +121,7 @@ def combine_asset_sources(src,basedir,source_node=SourceNode):
         source = source_node(path,basedir)
         m[source.path] = source
         bases.append(source)
-		
+        
     for path in m.keys():
         source = m[path]
         ensure_includes(source.includes,m,basedir,source_node=source_node)
