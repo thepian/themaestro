@@ -6,7 +6,7 @@ from os.path import isdir
 
 from django.conf import settings
 from django.template import TemplateDoesNotExist
-from django.utils._os import safe_join
+from fs.path import safe_join
 
 from thepian.conf import structure
 
