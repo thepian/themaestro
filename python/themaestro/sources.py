@@ -6,7 +6,7 @@ import fs
 from fs.filters import fnmatch, only_directories
 from os.path import join,isdir,exists
 import fileinput, re
-from distutils.dep_util import newer_group
+from fs.dependency import newer_group
 
 from thepian.conf import structure
 
@@ -26,8 +26,11 @@ class SourceNode(object):
         try:
             self._lines = [line for line in fileinput.FileInput(files=(self.path,))]
         except IOError:
-            self._lines = []
-            print "failed to load Asset Source: %s" % self.path
+            try:
+                self._lines = [line for line in fileinput.FileInput(files=(join(self.basedir,self.path),))]
+            except IOError:
+                self._lines = []
+                print "failed to load Asset Source: %s" % self.path
         includes = []
         for line in self._lines[:25]:
             m = requires_statement.search(line)
@@ -42,24 +45,24 @@ class SourceNode(object):
         return self.path
     
     def get_scope(self,name):
-        print 'scope',name
+        # print 'scope',name
         try:
             with open(join(self.basedir,name)) as f:
                 self.scope = f.read()
         except:
             pass
-                        
+
     @classmethod
     def list_dependencies(cls,src,full_path=True):
         """Naive implementation returning all files in the directory"""
-        return fs.listdir(src,full_path=full_path,recursed=True)
+        return fs.listdir(src,full_path=full_path,recursed=True,followlinks=True)
 
     @classmethod
     def decorate_lines(cls,lines,ordered_sources):
         return lines
         
 def css_fetcher(url):
-    print url
+    #print url
     read = u''
     with open(url[7:],"r") as f:
         read = f.read()
@@ -135,7 +138,7 @@ def order_sources(source,source_map,result):
         result.append(source)
         source.used = True
 
-def combine_asset_sources(src,basedir,source_node=SourceNode):
+def combine_asset_sources(src,basedir,source_node=SourceNode, prepend_lines=[], append_lines=[]):
     """
     A loose dependency detection, that ignores whitespace and extra signs
     
@@ -170,7 +173,11 @@ def combine_asset_sources(src,basedir,source_node=SourceNode):
         lines.append(u"/* %s */\n" % s.path[len(basedir)+1:]) #TODO asset type dependent comment
         lines.extend(s.lines)
         lines.append(u"\n")
-    
+        
+    if len(prepend_lines) > 0:
+        lines[0:0] = prepend_lines
+    if len(append_lines) > 0:
+        lines.extend(append_lines)
     source_node.decorate_lines(lines,ordered_sources)
     return lines
 
