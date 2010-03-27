@@ -5,7 +5,7 @@ from thepian.conf import structure,settings
 from optparse import make_option
 
 from themaestro.config.hosts import updated_hosts
-from themaestro.config.nginx import nginx_enabled, update_local_nginx, symlink_local_nginx
+from themaestro.config.nginx import nginx_enabled, update_local_nginx, symlink_local_nginx, nginx_installed
 
 """
 hosts = Replace all DOMAINS entries in /etc/hosts with fresh ones
@@ -20,8 +20,10 @@ class Command(DjangoCommand):
     args = ''
     
     def handle(self, *modulenames, **options):
+        #TODO make sure memcached couchdb are started
         try:
-            fs.symlink(structure.SCRIPT_PATH,'/usr/local/bin/maestro',replace=True)
+            # is this needed? fs.symlink(structure.SCRIPT_PATH,'/usr/local/bin/maestro',replace=True)
+            nginx_installed()
             #TODO create <project>/log dir for nginx 
             structure.ensure_target_dirs()
             structure.machine.uploads_area.require_directory(structure.UPLOADS_DIR)
