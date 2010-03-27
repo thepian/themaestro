@@ -2,7 +2,7 @@
 Wrapper for loading templates from "css" and "js" directories in their built forms.
 """
 
-from os.path import isdir
+from os.path import isdir, isfile
 
 from django.conf import settings
 from django.template import TemplateDoesNotExist
@@ -29,6 +29,11 @@ def load_template_source(template_name, template_dirs=None):
                 return (open(target).read().decode(settings.FILE_CHARSET), target)
             except IOError:
                 tried.append(target)
+        elif isfile(src):
+            try:
+                return (open(src).read().decode(settings.FILE_CHARSET), src)
+            except IOError:
+                tried.append(src)
     
     # js sources
     if template_name.startswith("js/"):
@@ -43,6 +48,12 @@ def load_template_source(template_name, template_dirs=None):
                 return (open(target).read().decode(settings.FILE_CHARSET), target)
             except IOError:
                 tried.append(target)
+        elif isfile(src):
+            print src
+            try:
+                return (open(src).read().decode(settings.FILE_CHARSET), src)
+            except IOError:
+                tried.append(src)
     
     if tried:
         error_msg = "Tried %s" % tried

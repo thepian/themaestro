@@ -138,7 +138,7 @@ def order_sources(source,source_map,result):
         result.append(source)
         source.used = True
 
-def combine_asset_sources(src,basedir,source_node=SourceNode, prepend_lines=[], append_lines=[]):
+def combine_asset_sources(src,basedir,source_node=SourceNode, prepend_lines=[], append_lines=[], default_scope=None):
     """
     A loose dependency detection, that ignores whitespace and extra signs
     
@@ -178,6 +178,7 @@ def combine_asset_sources(src,basedir,source_node=SourceNode, prepend_lines=[], 
         lines[0:0] = prepend_lines
     if len(append_lines) > 0:
         lines.extend(append_lines)
+    #TODO apply default scope
     source_node.decorate_lines(lines,ordered_sources)
     return lines
 
