@@ -18,7 +18,7 @@ class Command(DjangoCommand):
         make_option('--nochange', action='store_true', dest='nochange', default=False,
             help='Tells Thepian to NOT make changes of any kind.'),
     )
-    help = 'Creates any missing conf files'
+    help = 'Creates any missing conf files in repository'
     args = ''
     
     def handle(self, *test_labels, **options):
