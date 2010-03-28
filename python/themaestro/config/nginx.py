@@ -1,6 +1,7 @@
 from __future__ import with_statement
-import fs
+import fs, os, sys
 from os.path import exists, dirname, join, split
+from subprocess import Popen, PIPE
 
 from thepian.conf import structure
 from thepian.conf.project_tree import ProjectTree
@@ -9,6 +10,32 @@ from themaestro.conf import templates
 
 # proxy_intercept_errors on;
 # recursive_error_pages on;
+
+def nginx_installed():
+
+    nginx_path = Popen('which nginx', shell=True, stdout=PIPE).communicate()[0]
+    if not nginx_path:
+        raise EnvironmentError(1,'Please install nginx')
+    print 'nginx', nginx_path
+    #run 'sudo nginx -t' and verify result
+    cmd = 'sudo nginx -t'
+    
+    output,stderr = Popen('sudo %1 -t' % nginx_path, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+    # syntax = stdout.readline()
+    # conf = stdout.readline()
+    #the configuration file /opt/local/etc/nginx/nginx.conf syntax is ok
+    #configuration file /opt/local/etc/nginx/nginx.conf test is successful
+    # print syntax
+    print >>sys.stderr, '...', str(output), str(stderr)
+    raise EnvironmentError(2,output) #"nginx isn't properly configured"
+
+    #fs.ensure("/opt/local/etc/nginx/enabled")
+    #TODO make sure nginx.conf end with an include enabled/*.conf
+    #TODO make sure /etc/nginx/enabled exists and has correct access attributes
+    #TODO nginx started
+    # sudo launchctl -W load org.macports.nginx.plist
+    # sudo launchctl start org.macports.nginx
+    
 
 def nginx_enabled(cluster_name=None,release_project_dir=None):
     """ Construct lines for the nginx enable configuration
