@@ -8,30 +8,79 @@ from thepian.conf.project_tree import ProjectTree
 
 from themaestro.conf import templates
 
+CONF_DIRS = [
+    '/opt/local/etc/nginx/',
+    '/usr/local/etc/nginx/',
+    '/usr/local/etc/nginx/',
+    '/usr/etc/nginx/',
+]
+
+EXAMPLE_MIME_TYPES = [
+    '/opt/local/etc/nginx/mime.types',
+    '/usr/local/etc/nginx/mime.types',
+    '/usr/local/etc/nginx/mime.types',
+    '/usr/etc/nginx/mime.types',
+]
+
 # proxy_intercept_errors on;
 # recursive_error_pages on;
 
+def _make_from_examples():
+    # Check that there is an 'mime.types' and 'nginx.conf' file to load
+    for d in CONF_DIRS:
+        if exists(d):
+            if exists(p+"nginx.conf.example"):
+                # fs.copy_file(p+"nginx.conf.example",p+"nginx.conf")
+                Popen("sudo cp %s %s" % (p+"nginx.conf.example",p+"nginx.conf"), shell=True).communicate()
+                print >>sys.stderr, "Created %s nginx.conf from example, please review A.S.A.P." % d
+                break
+            if exists(p+"mime.types.example"):
+                # fs.copy_file(p+"mime.types.example",p+"mime.types")
+                Popen("sudo cp %s %s" % (p+"mime.types.example",p+"mime.types"), shell=True).communicate()
+                print >>sys.stderr, "Created %s mime.types from example, please review A.S.A.P." % d
+                break
+            return d
+    return null
+    
+    
+def nginx_ensure_installed():
+    nginx_path = Popen('which nginx', shell=True, stdout=PIPE).communicate()[0]
+    if not nginx_path:
+        raise EnvironmentError(1,'Please install nginx')
+
+    d = _make_from_examples()
+    
 def nginx_installed():
 
     nginx_path = Popen('which nginx', shell=True, stdout=PIPE).communicate()[0]
     if not nginx_path:
         raise EnvironmentError(1,'Please install nginx')
-    print 'nginx', nginx_path
-    #run 'sudo nginx -t' and verify result
-    cmd = 'sudo nginx -t'
+    # print 'nginx', nginx_path
+
+        
+    # Check that there is an 'nginx.conf' file to load
+    # Check that there is an 'mime.types' file to load
+    d = _make_from_examples()
     
-    output,stderr = Popen('sudo %1 -t' % nginx_path, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
-    # syntax = stdout.readline()
-    # conf = stdout.readline()
+    # Check that there is a 'enabled' directory
+    
+    # Check that there is an 'error.log' file
+        
+    # TODO how to run -t while nginx is loaded
+    
+    #run 'sudo nginx -t' and verify result
+    output,stderr = Popen('sudo nginx -t', shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE).communicate()
+
     #the configuration file /opt/local/etc/nginx/nginx.conf syntax is ok
     #configuration file /opt/local/etc/nginx/nginx.conf test is successful
     # print syntax
-    print >>sys.stderr, '...', str(output), str(stderr)
-    raise EnvironmentError(2,output) #"nginx isn't properly configured"
+    print >>sys.stderr, str(stderr) #, str(stderr)
+    #raise EnvironmentError(2,output) #"nginx isn't properly configured"
 
-    #fs.ensure("/opt/local/etc/nginx/enabled")
+    if d is not null:
+        fs.ensure("/opt/local/etc/nginx/enabled")       #TODO correct access attributes
     #TODO make sure nginx.conf end with an include enabled/*.conf
-    #TODO make sure /etc/nginx/enabled exists and has correct access attributes
+    
     #TODO nginx started
     # sudo launchctl -W load org.macports.nginx.plist
     # sudo launchctl start org.macports.nginx

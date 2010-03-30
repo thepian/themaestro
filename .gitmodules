@@ -13,6 +13,6 @@
 [submodule "src/pyfacebook"]
 	path = src/pyfacebook
 	url = git://github.com/sciyoshi/pyfacebook.git
-[submodule "tornado"]
-	path = tornado
+[submodule "src/tornado"]
+	path = src/tornado
 	url = git://github.com/facebook/tornado.git

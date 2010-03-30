@@ -3,6 +3,7 @@ from optparse import make_option
 import sys,os
 from os.path import exists,join,expanduser
 from thepian.utils import *
+from themaestro.config import nginx
 
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
@@ -17,6 +18,7 @@ class Command(BaseCommand):
     
     def handle(self, *test_labels, **options):
         from thepian.conf import structure
+        nginx.nginx_installed()
         
         if exists(self.nginx_plist):
             os.system('sudo launchctl load -w %s' % self.nginx_plist)
