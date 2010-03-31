@@ -59,6 +59,19 @@ class Command(DjangoCommand):
             # set it up correctly for the first request (particularly important
             # in the "--noreload" case).
             translation.activate(settings.LANGUAGE_CODE)
+            
+            
+            # map the Urls to the class          
+            application = tornado.web.Application([
+                (r"/", ListMessagesHandler),
+                (r"/form/", FormHandler),
+            ])
+
+            # Start the server
+            if __name__ == "__main__":
+                http_server = tornado.httpserver.HTTPServer(application)
+                http_server.listen(8888)
+                tornado.ioloop.IOLoop.instance().start()            
 
             try:
                 path = admin_media_path or django.__path__[0] + '/contrib/admin/media'
