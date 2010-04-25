@@ -1,9 +1,0 @@
-#!/Sites/themaestro/bin/python2.6
-# EASY-INSTALL-ENTRY-SCRIPT: 'themaestro==0.1dev','console_scripts','maestro'
-__requires__ = 'themaestro==0.1dev'
-import sys
-from pkg_resources import load_entry_point
-
-sys.exit(
-   load_entry_point('themaestro==0.1dev', 'console_scripts', 'maestro')()
-)
