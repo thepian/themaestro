@@ -334,7 +334,6 @@ def execsitecustomize():
 def main():
     from os.path import join, dirname
     abs__file__()
-    print sys.path
     sys.path = sys.path[:-3] # remove pypy libs
     sys.path.append(join(dirname(dirname(sys.executable)),"src","tornado"))
 
