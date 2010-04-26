@@ -378,7 +378,10 @@ def execsitecustomize():
 
 
 def main():
+    from os.path import join, dirname
     abs__file__()
+    sys.path = sys.path[:-3] # remove pypy libs
+    sys.path.append(join(dirname(dirname(sys.executable)),"src","tornado"))
     paths_in_sys = removeduppaths()
     if (os.name == "posix" and sys.path and
         os.path.basename(sys.path[-1]) == "Modules"):
