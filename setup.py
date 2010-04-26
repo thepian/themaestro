@@ -3,7 +3,7 @@ import sys, os
 
 version = '0.1dev'
 
-packages = find_packages('python')
+packages = find_packages('python','python/src')
 packages.append('conf')
 
 setup(name='themaestro',
@@ -14,6 +14,8 @@ setup(name='themaestro',
       keywords='thepian themaestro maestro theapps django',
       author='Henrik Vendelbo',
       author_email='hvendelbo.dev@googlemail.com',
+      maintainer='Henrik Vendelbo',
+      maintainer_email='hvendelbo.dev@googlemail.com',
       url='www.thepian.org',
       license='All Rights Reserved',
       package_dir= {'':'python', 'conf':'conf'},
@@ -21,7 +23,7 @@ setup(name='themaestro',
       include_package_data=True,
       zip_safe=False,
       setup_requires=['setuptools',],
-      install_requires= ['Django','theapps','thepian-lib','docutils','ipython'],
+      install_requires= ['Django','theapps','thepian-lib','tornado','docutils','ipython'],
       entry_points= {
         'console_scripts':[
             'syspath = about:dummy_cmdline',
