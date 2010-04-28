@@ -179,7 +179,7 @@ class Structure(ProjectTree):
     """
     
     __file__ = None
-    __package__ = None
+    #__package__ = None
     __doc__ = None
 
     # Name of the structure module used as the basis for conf.structure
@@ -289,7 +289,7 @@ class Structure(ProjectTree):
         # Settings that should be converted into tuples if they're mistakenly entered
         # as strings.
         self.__file__ = mod.__file__
-        self.__package__ = mod.__package__
+        # self.__package__ = mod.__package__
         self.__doc__ = mod.__doc__
         if hasattr(mod,'__path__'):
             self.__path__ = mod.__path__
@@ -372,6 +372,15 @@ class Structure(ProjectTree):
         """Translates a shard number into a subdomain name"""
         l = len(self.SHARD_NAMES)
         return self.AFFINITY_TO_SHARD.get(number) or self.SHARD_NAMES[number % l]
+        
+    def determine_settings_module(self):
+        """Determine name of settings module based on THEPIAN_SETTINGS_MODULE environment variable or equivalent
+        """
+        if not '%s_SETTINGS_MODULE' % self.COMMAND_VARIABLE_PREFIX in os.environ: 
+            os.environ['%s_SETTINGS_MODULE' % self.COMMAND_VARIABLE_PREFIX] = 'development' #TODO development vs production
+        return os.environ['%s_SETTINGS_MODULE' % self.COMMAND_VARIABLE_PREFIX]
+
+    
 
 class Dependency(object):
     
@@ -418,7 +427,7 @@ class Settings(object):
     def blend(self, mod):
         """Blend a module into the structure, usually used to blend conf.development or conf.production into thepian.conf.settings"""
         self.__file__ = mod.__file__
-        self.__package__ = mod.__package__
+        # self.__package__ = mod.__package__
         self.__doc__ = mod.__doc__
         if hasattr(mod,'__path__'):
             self.__path__ = mod.__path__

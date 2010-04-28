@@ -3,8 +3,8 @@ Structure and configuration for Thepian.
 
 It can be used independent of Django
 """
-import os
-from os.path import dirname,abspath,join,split,exists,expanduser,isfile
+import sys, os
+from os.path import dirname,abspath,realpath,join,split,exists,expanduser,isfile
 
 from thepian.conf.base import FileArea, Feature, Machine, Structure, Dependency, Settings
 from thepian.conf.project_tree import find_basedir, make_project_tree    
@@ -16,14 +16,32 @@ def use_dependency(mod):
 
 structure = Structure() 
 
+def use_cwd_structure():
+    """Used by the shell to run of the current sys.path and merge a structure.py module into
+    the thepian.conf.structure object."""
+    script_file_name = realpath(sys.argv[0] or sys.executable)
+    try:
+        project_directory = find_basedir(os.getcwd())[1]
+    except Exception,e:
+        print e, ':: will use Thepian Maestro as project'
+        project_directory = find_basedir(script_file_name)
+
+    try:
+        import structure as conf_structure
+        use_structure(conf_structure)
+    except ImportError:
+        use_default_structure()
+
 def use_default_structure():
-    """Used by the thepian shell script to save name and more ...
-    """
+    """Used by the shell to run of the current sys.path and merge a structure.py module into
+    the thepian.conf.structure object."""
+    script_file_name = realpath(sys.argv[0] or sys.executable)
+    structure.SCRIPT_PATH = script_file_name
     structure.apply_basedir(*find_basedir(abspath(structure.SCRIPT_PATH)))
     structure.determine_installation()
 
 def use_structure(mod):
-    """Used by manage.py to run of the current sys.path and merge a structure.py module into
+    """Used by the shell to run of the current sys.path and merge a structure.py module into
     the thepian.conf.structure object."""
     structure.apply_basedir(*find_basedir(dirname(abspath(mod.__file__))))
     structure.blend(mod)

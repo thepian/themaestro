@@ -335,7 +335,10 @@ def main():
     from os.path import join, dirname
     abs__file__()
     sys.path = sys.path[:-3] # remove pypy libs
+    #TODO base it on the common dir of executable and library
+    sys.path.append(join(dirname(dirname(sys.executable)),"conf"))
     sys.path.append(join(dirname(dirname(sys.executable)),"src","tornado"))
+    sys.path.append(join(dirname(dirname(sys.executable)),"src","thepian-lib"))
 
     # paths_in_sys = addsitepackages(paths_in_sys)
 
@@ -350,6 +353,13 @@ def main():
     # this module is run as a script, because this code is executed twice.
     if hasattr(sys, "setdefaultencoding"):
         del sys.setdefaultencoding
+        
+    try:
+        from thepian.conf import use_settings, structure, use_cwd_structure
+        use_cwd_structure()
+        use_settings(structure.determine_settings_module())
+    except Exception, e:
+        print 'structure conf failed:: ',e
 
 main()
 
