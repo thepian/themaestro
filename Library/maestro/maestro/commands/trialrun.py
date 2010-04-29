@@ -18,19 +18,12 @@ class Command(object):
                             option_list=self.option_list)
 
     def __call__(self,*args,**options):
+        from mediaserver import Application
         import tornado.httpserver
         import tornado.ioloop
-        import tornado.web
 
-        class MainHandler(tornado.web.RequestHandler):
-            def get(self):
-                self.write("Hello, world")
-
-        application = tornado.web.Application([
-            (r"/", MainHandler),
-        ])
-
-        http_server = tornado.httpserver.HTTPServer(application)
+        # tornado.options.parse_command_line()
+        http_server = tornado.httpserver.HTTPServer(Application())
         http_server.listen(8888)
         tornado.ioloop.IOLoop.instance().start()
         return 'Tornado trial run\n'
