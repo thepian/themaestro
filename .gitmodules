@@ -1,6 +1,3 @@
-[submodule "extras/jsspec"]
-	path = extras/jsspec
-	url = git@github.com:thepian/jsspec.git
 [submodule "src/thepiandjango"]
 	path = src/thepiandjango
 	url = git@github.com:thepian/django.git
