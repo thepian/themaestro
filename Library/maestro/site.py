@@ -336,7 +336,6 @@ def main():
     abs__file__()
     sys.path = sys.path[:-3] # remove pypy libs
     #TODO base it on the common dir of executable and library
-    sys.path.append(join(dirname(dirname(sys.executable)),"conf"))
     sys.path.append(join(dirname(dirname(sys.executable)),"src","tornado"))
     sys.path.append(join(dirname(dirname(sys.executable)),"src","thepian-lib"))
 

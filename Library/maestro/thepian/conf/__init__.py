@@ -22,6 +22,9 @@ def use_cwd_structure():
     script_file_name = realpath(sys.argv[0] or sys.executable)
     try:
         project_directory = find_basedir(os.getcwd())[1]
+        conf_dir = join(project_directory,"conf")
+        if exists(conf_dir):
+            sys.path.append(conf_dir)
     except Exception,e:
         print e, ':: will use Thepian Maestro as project'
         project_directory = find_basedir(script_file_name)

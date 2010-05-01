@@ -22,6 +22,8 @@ class Command(object):
         import tornado.httpserver
         import tornado.ioloop
 
+        from thepian.conf import structure
+        # print "js dir =", structure.JS_DIR
         # tornado.options.parse_command_line()
         http_server = tornado.httpserver.HTTPServer(Application())
         http_server.listen(8888)
