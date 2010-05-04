@@ -45,13 +45,8 @@ class CssHandler(tornado.web.RequestHandler):
 
 
 class JsHandler(tornado.web.RequestHandler):
-    def get(self,file_name):
-        try:
-            return self.get2(file_name)
-        except Exception,e:
-            print '...',e
-            
-    def get2(self, file_name):
+
+    def get(self, file_name):
         from os.path import join,isdir
         from distutils.dep_util import newer_group
 
@@ -61,7 +56,7 @@ class JsHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(404)
         target = join(structure.MEDIASITE_DIRS[-1],"js",file_name)
         text = None
-        if newer_assets(src,target): #TODO or request.GET.get("force",False):
+        if newer_assets(src,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)
             with open(target,"w") as f:
                 text = ''.join(lines)
@@ -77,5 +72,48 @@ class JsHandler(tornado.web.RequestHandler):
                 with open(target,"r") as f:
                     text = f.read()
             self.write(text) 
+
+class JsTestHandler(tornado.web.RequestHandler):
+    
+    def get(self, file_name, test_path):
+        self.render("jsspecs/index.html", title="Specs for %s - %s" % (file_name,test_path))
+        
+class JoHandler(tornado.web.RequestHandler):
+
+    def get(self, file_name):
+        from os.path import join,isdir
+        from distutils.dep_util import newer_group
+
+        header_ip = 'X-Real-IP' in self.request.headers or 'X-Forwarded-For' in self.request.headers
+        src = join(structure.JS_DIR,file_name)
+        if not isdir(src):
+            raise tornado.web.HTTPError(404)
+
+        print 'hello'
+        text = ''
+        with open(join(src,'1.js'),"r") as f:
+            text = f.read()
+        try:
+            class SC(object):
+                pass
+            sc = SC()
+            sc.path = file_name
+            sc.script_name = file_name
+            sc.script_type = "JavaScript"
+            sc.namespace = ""
+            sc.root_scope = ""
+            sc.strictMode = False
+            from sources import joparser
+            node = joparser.parse(sc,text)
+
+            # jocore.libs.extend(structure.JS_DIR)
+            # jocore.load(file_name)
+            # text = jocore.compile()
+        except Exception,e:
+            print e, "......."
+            import traceback; traceback.print_exc()
+        
+        self.set_header("Content-Type","text/javascript")
+        self.write(text) 
 
 
