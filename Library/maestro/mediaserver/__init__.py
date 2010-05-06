@@ -4,9 +4,11 @@ from urls import urls
 
 class Application(tornado.web.Application):
     def __init__(self):
+        p = __path__[0]
+        template_path = structure.TEMPLATES_DIR # (p+'/templates',structure.TEMPLATES_DIR)
         settings = dict(
             blog_title=u"Tornado Blog",
-            template_path=structure.TEMPLATES_DIR,
+            template_path=template_path,
             static_path=structure.MEDIASITE_DIRS[0],
             # ui_modules={"Entry": EntryModule},
             xsrf_cookies=True,

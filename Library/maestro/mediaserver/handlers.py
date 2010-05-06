@@ -138,6 +138,10 @@ class JsVerifyHandler(JsHandler):
         except Exception,e:
             print e
         
+class JsVerifyAllHandler(tornado.web.RequestHandler):
+    
+    def get(self):
+        self.render("verify/all.html")
         
 class JoHandler(tornado.web.RequestHandler):
 
