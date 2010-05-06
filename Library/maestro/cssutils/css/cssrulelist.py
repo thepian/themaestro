@@ -2,7 +2,7 @@
 Partly also http://dev.w3.org/csswg/cssom/#the-cssrulelist."""
 __all__ = ['CSSRuleList']
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: cssrulelist.py 1824 2009-08-01 21:00:34Z cthedot $'
+__version__ = '$Id: cssrulelist.py 1913 2010-03-14 17:50:53Z cthedot $'
 
 class CSSRuleList(list):
     """The CSSRuleList object represents an (ordered) list of statements.
@@ -26,7 +26,7 @@ class CSSRuleList(list):
         raise NotImplementedError(
             'Must be implemented by class using an instance of this class.')
     
-    append = extend =  __setitem__ = __setslice__ = __notimplemented
+    append = extend = __setitem__ = __setslice__ = __notimplemented
     
     def item(self, index):
         """(DOM) Retrieve a CSS rule by ordinal `index`. The order in this
@@ -45,3 +45,9 @@ class CSSRuleList(list):
     length = property(lambda self: len(self),
         doc="(DOM) The number of CSSRules in the list.")
 
+    def rulesOfType(self, type):
+        """Yield only the rules which have the given `type`, one of the 
+        constants defined in :class:`cssutils.css.CSSRule`."""
+        for r in self:
+            if r.type == type:
+                yield r 

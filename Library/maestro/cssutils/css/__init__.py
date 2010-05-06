@@ -20,6 +20,8 @@ currently implemented
     - CSSValue
     - CSSPrimitiveValue
     - CSSValueList
+    - CSSVariablesRule
+    - CSSVariablesDeclaration
 
 todo
     - RGBColor, Rect, Counter
@@ -37,12 +39,14 @@ __all__ = [
     'CSSPageRule',
     'CSSStyleRule',
     'CSSUnknownRule',
+    'CSSVariablesRule',
+    'CSSVariablesDeclaration',
     'Selector', 'SelectorList',
     'CSSStyleDeclaration', 'Property',
     'CSSValue', 'CSSPrimitiveValue', 'CSSValueList'
     ]
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: __init__.py 1610 2009-01-03 21:07:57Z cthedot $'
+__version__ = '$Id: __init__.py 1928 2010-03-20 22:40:37Z cthedot $'
 
 from cssstylesheet import *
 from cssrulelist import *
@@ -55,9 +59,11 @@ from cssmediarule import *
 from cssnamespacerule import *
 from csspagerule import *
 from cssstylerule import *
+from cssvariablesrule import *
 from cssunknownrule import *
 from selector import *
 from selectorlist import *
 from cssstyledeclaration import *
+from cssvariablesdeclaration import *
 from property import *
 from cssvalue import *

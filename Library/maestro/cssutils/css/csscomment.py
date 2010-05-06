@@ -5,7 +5,7 @@ Implements CSSRule which is also extended for a CSSComment rule type.
 """
 __all__ = ['CSSComment']
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: csscomment.py 1638 2009-01-13 20:39:33Z cthedot $'
+__version__ = '$Id: csscomment.py 1943 2010-03-23 20:54:00Z cthedot $'
 
 import cssrule
 import cssutils
@@ -77,8 +77,8 @@ class CSSComment(cssrule.CSSRule):
         doc=u"The parsable textual representation of this rule.")
 
     type = property(lambda self: self.COMMENT, 
-                    doc="The type of this rule, as defined by a CSSRule "
-                        "type constant.")
+                    doc=u"The type of this rule, as defined by a CSSRule "
+                        u"type constant.")
     
     # constant but needed:
     wellformed = property(lambda self: True)

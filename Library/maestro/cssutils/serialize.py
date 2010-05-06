@@ -3,8 +3,9 @@
 """cssutils serializer"""
 __all__ = ['CSSSerializer', 'Preferences']
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: serialize.py 1741 2009-05-09 18:20:20Z cthedot $'
+__version__ = '$Id: serialize.py 1927 2010-03-20 21:52:02Z cthedot $'
 
+from cssutils.helper import normalize
 import codecs
 import cssutils
 import helper
@@ -72,6 +73,9 @@ class Preferences(object):
     listItemSpacer = u' '
         string which is used in ``css.SelectorList``, ``css.CSSValue`` and
         ``stylesheets.MediaList`` after the comma
+    normalizedVarNames = True
+        defines if variable names should be serialized normalized (they are 
+        used as being normalized anyway)
     omitLastSemicolon = True
         If ``True`` omits ; after last property of CSSStyleDeclaration
     paranthesisSpacer = u' '
@@ -79,6 +83,10 @@ class Preferences(object):
         ``css.CSSMediaRule`` or ``css.CSSStyleRule``
     propertyNameSpacer = u' '
         string which is used after a Property name colon
+    resolveVariables = False
+        if ``True`` all variable references are tried to resolved and
+        all CSSVariablesRules are removed from the output.
+        Any variable reference not resolvable is simple kept untouched.
     selectorCombinatorSpacer = u' '
         string which is used before and after a Selector combinator like +, > or ~.
         CSSOM defines a single space for this which is also the default in cssutils.
@@ -124,9 +132,11 @@ class Preferences(object):
         self.lineNumbers = False
         self.lineSeparator = u'\n'
         self.listItemSpacer = u' '
+        self.normalizedVarNames = True
         self.omitLastSemicolon = True
         self.paranthesisSpacer = u' '
         self.propertyNameSpacer = u' '
+        self.resolveVariables = False
         self.selectorCombinatorSpacer = u' '
         self.spacer = u' '
         self.validOnly = False # should not be changed currently!!!
@@ -191,7 +201,6 @@ class Out(object):
             add ``*spacer`` except ``space=False``
         """
         prefspace = self.ser.prefs.spacer
-        
         if val or typ in ('STRING', 'URI'):
             # PRE
             if 'COMMENT' == typ:
@@ -230,7 +239,10 @@ class Out(object):
             if indent:
                 self.out.append(self.ser._indentblock(val, self.ser._level+1))
             else:
+                if val.endswith(u' '):
+                    self._remove_last_if_S()
                 self.out.append(val)
+                        
             # POST
             if lineSeparator:
                 # Property , ...
@@ -238,6 +250,9 @@ class Out(object):
             elif val in u'+>~': # enclose selector combinator
                 self.out.insert(-1, self.ser.prefs.selectorCombinatorSpacer)
                 self.out.append(self.ser.prefs.selectorCombinatorSpacer)
+            elif u')' == val and not keepS: # CHAR funcend 
+                # TODO: pref?
+                self.out.append(u' ')
             elif u',' == val: # list
                 self.out.append(self.ser.prefs.listItemSpacer)
             elif u':' == val: # prop
@@ -384,6 +399,32 @@ class CSSSerializer(object):
         else:
             return u''
 
+    def do_CSSVariablesRule(self, rule):
+        """
+        serializes CSSVariablesRule
+
+        media
+            TODO
+        variables
+            CSSStyleDeclaration
+
+        + CSSComments
+        """
+        variablesText = rule.variables.cssText
+
+        if variablesText and rule.wellformed and not self.prefs.resolveVariables:
+            out = Out(self)
+            out.append(self._atkeyword(rule, u'@variables'))   
+            for item in rule.seq:
+                # assume comments {
+                out.append(item.value, item.type)            
+            out.append(u'{')
+            out.append(u'%s%s}' % (variablesText, self.prefs.lineSeparator),
+                       indent=1)            
+            return out.value()            
+        else:
+            return u''
+        
     def do_CSSFontFaceRule(self, rule):
         """
         serializes CSSFontFaceRule
@@ -712,11 +753,42 @@ class CSSSerializer(object):
         else: 
             return u''
 
+    def do_css_CSSVariablesDeclaration(self, variables):
+        """Variables of CSSVariableRule."""
+        if len(variables.seq) > 0:
+            out = Out(self)
+            
+            lastitem = len(variables.seq) - 1
+            for i, item in enumerate(variables.seq):
+                type_, val = item.type, item.value
+                if u'var' == type_:
+                    name, cssvalue = val
+                    if self.prefs.normalizedVarNames:
+                        name = normalize(name)
+                    out.append(name)
+                    out.append(u':')
+                    out.append(cssvalue.cssText)
+                    if i < lastitem or not self.prefs.omitLastSemicolon:
+                        out.append(u';')
+                
+                elif isinstance(val, cssutils.css.CSSComment):
+                    # CSSComment
+                    out.append(val, 'COMMENT')
+                    out.append(self.prefs.lineSeparator)
+                else:
+                    out.append(val.cssText, type_)
+                    out.append(self.prefs.lineSeparator)
+            
+            return out.value().strip() 
+
+        else:
+            return u''
+
     def do_css_CSSStyleDeclaration(self, style, separator=None):
         """
         Style declaration of CSSStyleRule
         """
-#        # TODO: use Out()
+        # TODO: use Out()
         
         # may be comments only       
         if len(style.seq) > 0:
@@ -867,7 +939,27 @@ class CSSSerializer(object):
                 out.append(val, type_)
                 
             return out.value() 
+
+    def do_css_CSSVariable(self, variable):
+        """Serializes a CSSVariable"""
+        if not variable:
+            return u''
+        else:
+            out = Out(self)
             
+            if not self.prefs.resolveVariables or not variable.value:
+#                if not variable.value:
+#                    cssutils.log.warn('No value for variable "%s" found, keeping variable.' % variable.name,
+#                                      neverraise=True)
+                for item in variable.seq:
+                    type_, val = item.type, item.value
+                    out.append(val, type_)
+                    
+            else:
+                out.append(variable.value)
+
+            return out.value()
+          
     def do_css_RGBColor(self, cssvalue):
         """Serialize a RGBColor value"""
         if not cssvalue:
@@ -877,17 +969,6 @@ class CSSSerializer(object):
             unary = None
             for item in cssvalue.seq:
                 type_, val = item.type, item.value
-                
-#                # prepare
-#                if 'CHAR' == type_ and val in u'+-':
-#                    # save - for next round                
-#                    if u'-' == val:
-#                        # omit +
-#                        unary = val
-#                    continue
-#                elif unary:
-#                    val = unary + val.cssText
-#                    unary = None
                     
                 out.append(val, type_)
             

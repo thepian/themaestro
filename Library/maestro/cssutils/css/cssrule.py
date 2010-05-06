@@ -1,7 +1,7 @@
 """CSSRule implements DOM Level 2 CSS CSSRule."""
 __all__ = ['CSSRule']
 __docformat__ = 'restructuredtext'
-__version__ = '$Id: cssrule.py 1808 2009-07-29 13:09:36Z cthedot $'
+__version__ = '$Id: cssrule.py 1943 2010-03-23 20:54:00Z cthedot $'
 
 import cssutils
 import xml.dom
@@ -18,19 +18,41 @@ class CSSRule(cssutils.util.Base2):
     CSSRule type constants.
     An integer indicating which type of rule this is.
     """
-    COMMENT = -1 # cssutils only
-    UNKNOWN_RULE = 0 #u
-    STYLE_RULE = 1 #s
-    CHARSET_RULE = 2 #c
-    IMPORT_RULE = 3 #i
-    MEDIA_RULE = 4 #m
-    FONT_FACE_RULE = 5 #f
-    PAGE_RULE = 6 #p
-    NAMESPACE_RULE = 7 # CSSOM
+    UNKNOWN_RULE = 0 
+    ":class:`cssutils.css.CSSUnknownRule` (not used in CSSOM anymore)"
+    STYLE_RULE = 1
+    ":class:`cssutils.css.CSSStyleRule`"
+    CHARSET_RULE = 2
+    ":class:`cssutils.css.CSSCharsetRule` (not used in CSSOM anymore)"
+    IMPORT_RULE = 3
+    ":class:`cssutils.css.CSSImportRule`"
+    MEDIA_RULE = 4
+    ":class:`cssutils.css.CSSMediaRule`"
+    FONT_FACE_RULE = 5
+    ":class:`cssutils.css.CSSFontFaceRule`"
+    PAGE_RULE = 6
+    ":class:`cssutils.css.CSSPageRule`"
+    NAMESPACE_RULE = 10
+    """:class:`cssutils.css.CSSNamespaceRule`, 
+    Value has changed in 0.9.7a3 due to a change in the CSSOM spec."""
+    COMMENT = 1001 # was -1, cssutils only
+    """:class:`cssutils.css.CSSComment` - not in the offical spec,
+    Value has changed in 0.9.7a3"""
+    VARIABLES_RULE = 1008 
+    """:class:`cssutils.css.CSSVariablesRule` - experimental rule
+    not in the offical spec"""
 
-    _typestrings = ['UNKNOWN_RULE', 'STYLE_RULE', 'CHARSET_RULE', 'IMPORT_RULE',
-                     'MEDIA_RULE', 'FONT_FACE_RULE', 'PAGE_RULE', 'NAMESPACE_RULE',
-                     'COMMENT']
+    _typestrings = {UNKNOWN_RULE: u'UNKNOWN_RULE', 
+                    STYLE_RULE: u'STYLE_RULE',
+                    CHARSET_RULE: u'CHARSET_RULE', 
+                    IMPORT_RULE: u'IMPORT_RULE',
+                    MEDIA_RULE: u'MEDIA_RULE', 
+                    FONT_FACE_RULE: u'FONT_FACE_RULE', 
+                    PAGE_RULE: u'PAGE_RULE',                     
+                    NAMESPACE_RULE: u'NAMESPACE_RULE',
+                    COMMENT: u'COMMENT',
+                    VARIABLES_RULE: u'VARIABLES_RULE'
+                    }
 
     def __init__(self, parentRule=None, parentStyleSheet=None, readonly=False):
         """Set common attributes for all rules."""
@@ -44,12 +66,12 @@ class CSSRule(cssutils.util.Base2):
 
     def _setAtkeyword(self, akw):
         """Check if new keyword fits the rule it is used for."""
-        if not self.atkeyword or (self._normalize(akw) == 
+        if not self.atkeyword or (self._normalize(akw) ==
                                   self._normalize(self.atkeyword)):
             self._atkeyword = akw
         else:
-            self._log.error(u'%s: Invalid atkeyword for this rule: %r' % 
-                            (self._normalize(self.atkeyword), akw), 
+            self._log.error(u'%s: Invalid atkeyword for this rule: %r' %
+                            (self._normalize(self.atkeyword), akw),
                             error=xml.dom.InvalidModificationErr)
 
     atkeyword = property(lambda self: self._atkeyword, _setAtkeyword,
@@ -75,30 +97,35 @@ class CSSRule(cssutils.util.Base2):
         self._checkReadonly()
 
     cssText = property(lambda self: u'', _setCssText,
-                       doc="(DOM) The parsable textual representation of the "
-                           "rule. This reflects the current state of the rule "
-                           "and not its initial value.")
+                       doc=u"(DOM) The parsable textual representation of the "
+                           u"rule. This reflects the current state of the rule "
+                           u"and not its initial value.")
 
     parent = property(lambda self: self._parent,
-                      doc="The Parent Node of this CSSRule (currently if a "
-                          "CSSStyleDeclaration only!) or None.")    
-    
+                      doc=u"The Parent Node of this CSSRule or None.")
+
     parentRule = property(lambda self: self._parentRule,
-                                doc="If this rule is contained inside "
-                                    "another rule (e.g. a style rule inside "
-                                    "an @media block), this is the containing "
-                                    "rule. If this rule is not nested inside "
-                                    "any other rules, this returns None.")
+                          doc=u"If this rule is contained inside another rule "
+                          u"(e.g. a style rule inside an @media block), this "
+                          u"is the containing rule. If this rule is not nested "
+                          u"inside any other rules, this returns None.")
 
-    parentStyleSheet = property(lambda self: self._parentStyleSheet,
-                          doc="The style sheet that contains this rule.")
+    def _getParentStyleSheet(self):
+        # rules contained in other rules (@media) use that rules parent
+        if (self.parentRule):
+            return self.parentRule._parentStyleSheet
+        else:
+            return self._parentStyleSheet
 
-    type = property(lambda self: self.UNKNOWN_RULE, 
-                    doc="The type of this rule, as defined by a CSSRule "
+    parentStyleSheet = property(_getParentStyleSheet,
+                          doc=u"The style sheet that contains this rule.")
+
+    type = property(lambda self: self.UNKNOWN_RULE,
+                    doc=u"The type of this rule, as defined by a CSSRule "
                         "type constant.")
 
-    typeString = property(lambda self: CSSRule._typestrings[self.type], 
-                          doc="Descriptive name of this rule's type.")
+    typeString = property(lambda self: CSSRule._typestrings[self.type],
+                          doc=u"Descriptive name of this rule's type.")
 
-    wellformed = property(lambda self: False, 
+    wellformed = property(lambda self: False,
                           doc=u"If the rule is wellformed.")

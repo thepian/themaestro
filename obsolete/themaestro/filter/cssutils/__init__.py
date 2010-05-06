@@ -14,7 +14,7 @@ from django.conf import settings
 
 # cssutils logs to stdout by default, hide that in production
 if not settings.DEBUG:
-    log = logging.getLogger('assets.cssutils')
+    log = logging.getLogger(__name__)
     log.addHandler(logging.handlers.MemoryHandler(10))
     cssutils.log.setLog(log)
 
