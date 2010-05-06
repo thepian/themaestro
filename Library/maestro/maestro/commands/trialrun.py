@@ -21,6 +21,9 @@ class Command(object):
         from thepian.conf import structure
         from os.path import join
         
+        structure.ensure_target_dirs()
+        #TODO part add_themaestro functionality
+
         import logging
         LOG_FILENAME = join(structure.PROJECT_DIR,'testing.log')
         logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
