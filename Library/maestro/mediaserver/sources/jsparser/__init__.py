@@ -92,7 +92,7 @@ class ParseError(Error_): pass
 class WTF(Exception): pass
 
 
-def parse(source_context, source, starting_line_number=1, strictMode=False, 
+def parse(source, source_context=None, starting_line_number=1, strictMode=False, 
         import_order = 0, depth = 1, glob = None):
     """Parse some Javascript
 
@@ -106,17 +106,25 @@ def parse(source_context, source, starting_line_number=1, strictMode=False,
     Raises:
         ParseError
     """
-    path = source_context.path
-    filename = source_context.script_name
-    script_type = source_context.script_type
-    ns = source_context.namespace
-    root_scope = source_context.root_scope 
-    strictMode = source_context.strictMode
+    if source_context:
+        path = source_context.path
+        filename = source_context.script_name
+        script_type = source_context.script_type
+        ns = source_context.namespace
+        root_scope = source_context.root_scope 
+        strictMode = source_context.strictMode
+    else:
+        path = None
+        filename = None
+        script_type = "javascript"
+        ns = None
+        root_scope = None
+        strictMode = None
 
      #path="", filename="", script_type="jooscript", ns=None, 
         #import_order=0, depth=1, root_scope=None,
 
-    Init(source_context, script_type, glob or globals())
+    # Init(source_context, script_type, glob or globals())
     t = Tokenizer(source, path, filename, ns, starting_line_number)
     x = CompilerContext(script_type == "class" and PACKAGE or MODULE, 
             import_order = import_order, depth = depth-1, root_scope = root_scope,

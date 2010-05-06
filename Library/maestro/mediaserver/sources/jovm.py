@@ -132,8 +132,8 @@ def init_(jocore, tokens):
     globals()['jocore'] = jocore
 
 # types aliases
-nan = float('nan')
-inf = float('inf')
+inf = 1e10000
+nan = inf / inf
 null = Null()
 undefined = None
 false = False 
