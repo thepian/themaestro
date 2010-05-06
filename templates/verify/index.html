@@ -11,12 +11,17 @@
 <body>
 	<h1>{{ title }}</h1>
 	
-	<form action="get" >
-		<input type="hidden" value="">
+	<form action="" method="post" >
+		{{ xsrf_form_html() }}
+		{% for spec in specs %}
+		<input type="hidden" name="{{ spec.name }}-result" value="">
+		{% end %}
 	</form>
 	
 	<script type="text/javascript" >
-		{% include "jsspec/index.js"%}
+		{{ source }}
+	
+		{% include "index.js"%}
 	
 	</script>
 </body>
