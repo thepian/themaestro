@@ -18,11 +18,17 @@ class Command(object):
                             option_list=self.option_list)
 
     def __call__(self,*args,**options):
+        from thepian.conf import structure
+        from os.path import join
+        
+        import logging
+        LOG_FILENAME = join(structure.PROJECT_DIR,'testing.log')
+        logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+                
         from mediaserver import Application
         import tornado.httpserver
         import tornado.ioloop
 
-        from thepian.conf import structure
         # print "js dir =", structure.JS_DIR
         # tornado.options.parse_command_line()
         http_server = tornado.httpserver.HTTPServer(Application())
