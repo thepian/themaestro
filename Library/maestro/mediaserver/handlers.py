@@ -19,6 +19,7 @@ class CssHandler(tornado.web.RequestHandler):
             return self.get2(file_name)
         except Exception,e:
             print '...',e
+            import traceback; traceback.print_exc()
             
     def get2(self,file_name):
         header_ip = 'X-Real-IP' in self.request.headers or 'X-Forwarded-For' in self.request.headers

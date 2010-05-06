@@ -1,5 +1,5 @@
 from __future__ import with_statement
-import fs, re
+import fs, re, fileinput
 from os.path import join,isdir,exists
 
 from thepian.conf import structure
