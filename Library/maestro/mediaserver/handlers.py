@@ -6,6 +6,7 @@ from thepian.conf import structure
 from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources
 
 import tornado.web
+import tornado.template
 
 class HomeHandler(tornado.web.RequestHandler):
     
@@ -119,6 +120,17 @@ class VerifySource(object):
 
 class JsVerifyHandler(JsHandler):
     
+    def __init__(self):
+        self.js_loader = tornado.template.Loader(structure.JS_DIR)
+        
+    def render_js(self, template_name, **kwargs):
+        t = self.js_loader.load(template_name)
+        base = {}
+        #TODO add some extras ?
+        base.update(**kwargs)
+        html = t.generate(base)
+        self.finish(html)
+    
     def get(self, file_name, test_path):
         try:
             source = self.getSource(file_name)
@@ -138,6 +150,22 @@ class JsVerifyHandler(JsHandler):
             self.write('results noted.')
         except Exception,e:
             print e
+        
+class JsVerifyDetailHandler(JsHandler):
+    
+    def get(self, directory, file_name, test_path):
+        try:
+            source = self.getSource(file_name) # directory = directory
+            src = join(structure.JS_DIR,directory,file_name,'verify')
+            if not isdir(src):
+                raise tornado.web.HTTPError(404)
+
+            specs = VerifySource.list(src)
+            #TODO if index.html exists use that
+            self.render("verify/index.html", title="Specs for %s - %s" % (file_name,test_path), source = source, specs = specs)
+        except Exception,e:
+            print e
+            
         
 class JsVerifyAllHandler(tornado.web.RequestHandler):
     
