@@ -1,1 +1,1 @@
-py.test.cmdline.main(['','mediaserver.sources'])
+# py.test.cmdline.main(['','mediaserver.sources'])

@@ -8,6 +8,8 @@ from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sour
 import tornado.web
 import tornado.template
 
+from verify import VerifySource
+
 class HomeHandler(tornado.web.RequestHandler):
     
     def get(self):
@@ -49,6 +51,11 @@ class CssHandler(tornado.web.RequestHandler):
 
 class JsHandler(tornado.web.RequestHandler):
 
+    def __init__(self, application, request, transforms=None):
+        super(JsHandler,self).__init__(application, request, transforms)
+        self.verify_doms = {}
+        self.js_loader = tornado.template.Loader(structure.JS_DIR)
+        
     def acceleratedGet(self, file_name):
         from os.path import join,isdir
         from distutils.dep_util import newer_group
@@ -100,29 +107,8 @@ class JsHandler(tornado.web.RequestHandler):
             self.write(text)
             self.set_header("Content-Type","text/javascript")
 
-class VerifySource(object):
-    
-    @classmethod
-    def list(cls,base):
-        tests = os.listdir(base)
-        specs = []
-        for test in tests:
-            if test.endswith(".js"):
-                source = None
-                with open(join(base,test)) as f:
-                    source = f.read()
-                specs.append(VerifySource(test[:-3],source))
-        return specs
-    
-    def __init__(self,name,source=None):
-        self.name = name
-        self.source = source or "console.log('123');"
-
 class JsVerifyHandler(JsHandler):
     
-    def __init__(self):
-        self.js_loader = tornado.template.Loader(structure.JS_DIR)
-        
     def render_js(self, template_name, **kwargs):
         t = self.js_loader.load(template_name)
         base = {}
@@ -153,16 +139,29 @@ class JsVerifyHandler(JsHandler):
         
 class JsVerifyDetailHandler(JsHandler):
     
+    
+    def getVerifyPage(self,path):
+        if path not in self.verify_doms:
+            import html5lib
+            from xml.etree import cElementTree 
+            p = join(structure.JS_DIR,path)
+            # parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilders("dom"))
+            parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("etree", cElementTree))
+            with open(p) as f:
+                doc = parser.parse(f)
+                self.verify_doms[path] = doc
+            
+        return self.verify_doms[path]
+        
+    
     def get(self, directory, file_name, test_path):
         try:
-            source = self.getSource(file_name) # directory = directory
-            src = join(structure.JS_DIR,directory,file_name,'verify')
-            if not isdir(src):
+            path = join(directory,'verify')
+            verify = VerifySource.get(path,file_name[:-3])
+            if not verify.source:
                 raise tornado.web.HTTPError(404)
-
-            specs = VerifySource.list(src)
-            #TODO if index.html exists use that
-            self.render("verify/index.html", title="Specs for %s - %s" % (file_name,test_path), source = source, specs = specs)
+            
+            self.write(verify.render(xsrf_form_html = self.xsrf_form_html()))
         except Exception,e:
             print e
             

@@ -9,5 +9,6 @@ class Command(object):
     def __call__(self, *args, **options):
         import py 
         print sys.path, args
-        args = ['Library/maestro/mediaserver/sources/jsparser']
+        # args = ['Library/maestro/mediaserver/sources/jsparser']
+        args = ['Library/maestro/mediaserver']
         py.test.cmdline.main(args)
