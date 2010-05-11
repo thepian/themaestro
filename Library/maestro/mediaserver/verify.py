@@ -3,8 +3,9 @@ import os, re
 from os.path import join,isdir,exists
 from thepian.conf import structure
 
-from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources
+from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources, expand_inline_asset_sources
 
+    
 class VerifySource(object):
     
     sources = {}
@@ -49,9 +50,6 @@ class VerifySource(object):
         self.source = source
         self.load()
             
-    type_regex = re.compile(r"""\btype="(\w*/\w*)"\b""")
-    language_regex = re.compile(r"""\blanguage="(\w*)"\b""")
-    src_regex = re.compile(r"""\bsrc="([^"]*)"\b""")
 
     def get_attr(self,regex,attrs):
         """Determine the attribute contents"""
@@ -66,6 +64,54 @@ class VerifySource(object):
         self.load()
         
     def load(self):
+        if self.source is None and exists(join(structure.JS_DIR,self.path)):
+            with open(join(structure.JS_DIR,self.path)) as f:
+                self.source = f.read()
+
+        from BeautifulSoup import BeautifulSoup, Tag
+        soup = BeautifulSoup(self.source)
+        scripts = soup.findAll('script',type="text/pagespec", language=re.compile('.+'))
+        specs = []
+        for script in scripts:
+            # script["name"] or index counter
+            lines = expand_inline_asset_sources(script.string,structure.JS_DIR, source_node=JsSourceNode, default_scope = 'verify/inner.scope.js')
+            specs.append('\n'.join(lines)) #TODO do lines end with \n ?
+            script.extract()
+            
+        #TODO wrap with outer.scope.js
+
+        new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
+        new_form.insert(0,'<input type="hidden" name="a-result" value=""') #TODO script name or index 
+        soup.body.append(new_form)
+
+        soup.body.append("\n");
+        
+        new_script = Tag(soup, "script", attrs=[("type","text/javascript")])
+        new_script.insert(0, '\n'.join(specs))
+        soup.body.append(new_script)
+
+        self.soup = soup
+        self.new_form = new_form
+        self.new_script = new_script
+        
+    def simple_load(self):
+        if self.source is None and exists(join(structure.JS_DIR,self.path)):
+            with open(join(structure.JS_DIR,self.path)) as f:
+                self.source = f.read()
+                
+        import html5lib
+        self.doc = html5lib.parse(self.source)
+        scripts = self.doc.getiterator("script")
+        self.scripts = []
+        for script in scripts:
+            if script.attrib["type"] == "text/pagespec" and "language" in script.attrib:
+                if "src" in script.attrib:
+                    pass #TODO load the file
+                script.parent.remove(script)
+                self.scripts.append(script)
+        self.tail_script = ElementTree.SubElement(self.doc.find("body"),"script", type="text/javascript")
+        
+    def five_load(self):
         if self.source is None and exists(join(structure.JS_DIR,self.path)):
             with open(join(structure.JS_DIR,self.path)) as f:
                 self.source = f.read()
@@ -85,34 +131,14 @@ class VerifySource(object):
                 self.scripts.append(script)
         self.tail_script = ElementTree.SubElement(self.doc.find("body"),"script", type="text/javascript")
                     
-        
-
-    script_regex = re.compile(r"""<(/?)script([^>]*)(/?)>""")
-
-    def old_load(self):
-        if self.source is None and exists(join(structure.JS_DIR,self.path)):
-            with open(join(structure.JS_DIR,self.path)) as f:
-                self.source = f.read()
-                
-        scripts = [i for i in self.script_regex.finditer(self.source)]
-        self.scripts = []
-        for script,next in zip(scripts, scripts[1:]):
-            src = self.get_attr(self.src_regex,script.group(2))
-            tp = self.get_attr(self.type_regex,script.group(2))
-            print script.groups(), src, tp
-            if tp == "text/pagespec":
-                if script.group(3) == "" or src: # single tag, or script.src=?
-                    pass #TODO
-                elif script.group(1) == "": #beginning tag
-                    language = self.get_attr(self.language_regex,script.group(2))
-                    if language:
-                        self.scripts.append({
-                            "language": language,
-                            "source": self.source[script.end()+1 : next.start()-1]
-                        })
-            
-            
+                    
     def render(self,form_action="",xsrf_form_html=""):
+        
+        morphed = self.soup.prettify()
+        self.new_form["action"] = form_action
+        self.new_form.insert(0, xsrf_form_html)
+        return morphed
+        
         language = self.get_language(self.script)
         if language == "verify":
             src = join(structure.JS_DIR,self.js_path)

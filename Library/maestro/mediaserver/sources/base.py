@@ -11,18 +11,27 @@ class SourceNode(object):
     
     used = False
     
-    def __init__(self,path,basedir):
+    def __init__(self,path,basedir,source=None):
+        """
+        Loads the source code for the node from *path* unless *source* is specified.
+        Then determines scope, includes and requires
+        
+        source Optional string with inline source code
+        """
         self.path = path
         self.basedir = basedir
         self.scope = None
-        try:
-            self._lines = [line for line in fileinput.FileInput(files=(self.path,))]
-        except IOError:
+        if not source:
             try:
-                self._lines = [line for line in fileinput.FileInput(files=(join(self.basedir,self.path),))]
+                self._lines = [line for line in fileinput.FileInput(files=(self.path,))]
             except IOError:
-                self._lines = []
-                print "failed to load Asset Source: %s" % self.path
+                try:
+                    self._lines = [line for line in fileinput.FileInput(files=(join(self.basedir,self.path),))]
+                except IOError:
+                    self._lines = []
+                    print "failed to load Asset Source: %s" % self.path
+        else:
+            self._lines = source.split('\n')
         includes = []
         for line in self._lines[:25]:
             m = requires_statement.search(line)

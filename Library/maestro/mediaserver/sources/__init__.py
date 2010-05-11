@@ -35,6 +35,40 @@ def order_sources(source,source_map,result):
         result.append(source)
         source.used = True
 
+def expand_inline_asset_sources(inline,basedir,source_node=SourceNode, prepend_lines=[], append_lines=[], default_scope=None):
+    """
+    Expand a source string
+    """
+    m = {}
+    source = source_node('',basedir,source=inline)
+    m[''] = source
+    ensure_includes(source.includes,m,basedir,source_node=source_node)
+
+    ordered_sources = []
+    order_sources(source,m,ordered_sources)
+    for path in m:
+        source = m[path]
+        if not source.used:
+            print 'additional source', path
+            ordered_sources.append(source)
+            source.used = True
+
+    lines = []
+    for s in ordered_sources:
+        lines.append(u"/* %s */\n" % s.path[len(basedir)+1:]) #TODO asset type dependent comment
+        lines.extend(s.lines)
+        lines.append(u"\n")
+        
+    if len(prepend_lines) > 0:
+        lines[0:0] = prepend_lines
+    if len(append_lines) > 0:
+        lines.extend(append_lines)
+    #TODO apply default scope
+    source_node.decorate_lines(lines,ordered_sources)
+    return lines
+    
+    
+    
 def combine_asset_sources(src,basedir,source_node=SourceNode, prepend_lines=[], append_lines=[], default_scope=None):
     """
     A loose dependency detection, that ignores whitespace and extra signs
