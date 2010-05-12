@@ -1,6 +1,3 @@
-[submodule "src/thepiandjango"]
-	path = src/thepiandjango
-	url = git@github.com:thepian/django.git
 [submodule "src/theapps"]
 	path = src/theapps
 	url = git@github.com:thepian/theapps.git
