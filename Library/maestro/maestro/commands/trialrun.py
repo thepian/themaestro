@@ -31,10 +31,14 @@ class Command(object):
         from mediaserver import Application
         import tornado.httpserver
         import tornado.ioloop
+        import tornado.autoreload
 
         # print "js dir =", structure.JS_DIR
         # tornado.options.parse_command_line()
-        http_server = tornado.httpserver.HTTPServer(Application())
+        ioloop = tornado.ioloop.IOLoop.instance()
+        http_server = tornado.httpserver.HTTPServer(Application(ioloop=ioloop))
         http_server.listen(8888)
-        tornado.ioloop.IOLoop.instance().start()
-        return 'Tornado trial run\n'
+        
+        tornado.autoreload.start(io_loop=ioloop)
+        ioloop.start()
+        #return 'Tornado trial run\n'

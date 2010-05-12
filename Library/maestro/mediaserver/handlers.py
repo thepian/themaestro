@@ -13,7 +13,12 @@ from verify import VerifySource
 class HomeHandler(tornado.web.RequestHandler):
     
     def get(self):
-        pass
+        self.render("mediahome.html")
+        
+    def post(self):
+        if "stop-server" in self.request.arguments.keys():
+            self.application.ioloop.stop()
+        self.write('done.')
 
 class CssHandler(tornado.web.RequestHandler):
 

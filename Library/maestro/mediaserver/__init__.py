@@ -3,11 +3,13 @@ import tornado.web
 from urls import urls
 
 class Application(tornado.web.Application):
-    def __init__(self):
+    def __init__(self,ioloop=None):
+        self.ioloop = ioloop
         p = __path__[0]
         template_path = structure.TEMPLATES_DIR # (p+'/templates',structure.TEMPLATES_DIR)
         settings = dict(
             # blog_title=u"Tornado Blog",
+            debug=True,
             template_path=template_path,
             static_path=structure.MEDIASITE_DIRS[0],
             # ui_modules={"Entry": EntryModule},
