@@ -54,11 +54,20 @@ class SourceNode(object):
             pass
 
     @classmethod
+    def read_scope(self,name,basedir):
+        # print 'scope',name
+        try:
+            with open(join(basedir,name)) as f:
+                return f.read()
+        except:
+            return ''
+
+    @classmethod
     def list_dependencies(cls,src,full_path=True):
         """Naive implementation returning all files in the directory"""
         return fs.listdir(src,full_path=full_path,recursed=True,followlinks=True)
 
     @classmethod
-    def decorate_lines(cls,lines,ordered_sources):
+    def decorate_lines(cls,lines,ordered_sources,basedir=None,default_scope=None):
         return lines
         

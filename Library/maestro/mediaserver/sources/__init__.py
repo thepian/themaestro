@@ -64,7 +64,7 @@ def expand_inline_asset_sources(inline,basedir,source_node=SourceNode, prepend_l
     if len(append_lines) > 0:
         lines.extend(append_lines)
     #TODO apply default scope
-    source_node.decorate_lines(lines,ordered_sources)
+    source_node.decorate_lines(lines,ordered_sources,basedir=basedir,default_scope=default_scope)
     return lines
     
     
@@ -110,7 +110,7 @@ def combine_asset_sources(src,basedir,source_node=SourceNode, prepend_lines=[], 
     if len(append_lines) > 0:
         lines.extend(append_lines)
     #TODO apply default scope
-    source_node.decorate_lines(lines,ordered_sources)
+    source_node.decorate_lines(lines,ordered_sources,basedir=basedir,default_scope=default_scope)
     return lines
 
 def source_paths():

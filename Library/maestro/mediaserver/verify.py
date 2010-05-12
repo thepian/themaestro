@@ -78,7 +78,8 @@ class VerifySource(object):
             specs.append('\n'.join(lines)) #TODO do lines end with \n ?
             script.extract()
             
-        #TODO wrap with outer.scope.js
+        #TODO improve the decorate_lines interface
+        JsSourceNode.decorate_lines(specs,[JsSourceNode('','',source='')],basedir=structure.JS_DIR,default_scope="verify/outer.scope.js")
 
         new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
         new_form.insert(0,'<input type="hidden" name="a-result" value=""') #TODO script name or index 

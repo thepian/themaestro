@@ -34,11 +34,12 @@ class JsSourceNode(SourceNode):
         return line
 
     @classmethod
-    def decorate_lines(cls,lines,ordered_sources):
+    def decorate_lines(cls,lines,ordered_sources,basedir=None,default_scope=None):
         for source in ordered_sources:
-            if source.scope:
-                scope = insert_statement.split(source.scope,1)
-                lines.insert(0,scope[0])
-                lines.append(scope[1])
+            scope = source.scope or cls.read_scope(default_scope,basedir)
+            if scope:
+                parts = insert_statement.split(scope,1)
+                lines.insert(0,parts[0])
+                lines.append(parts[1])
         return lines
 
