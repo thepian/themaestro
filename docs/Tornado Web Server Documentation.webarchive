@@ -1,0 +1,1022 @@
+bplist00Ò_WebMainResource_WebSubresourcesÕ	
+_WebResourceTextEncodingName^WebResourceURL_WebResourceFrameName_WebResourceData_WebResourceMIMETypeUUTF-8_'http://www.tornadoweb.org/documentationPO¦
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Tornado Web Server Documentation</title>
+<link rel="stylesheet" href="/static/base.css" type="text/css">
+
+</head><body>
+<div id="body">
+<div id="header">
+<table>
+<tbody><tr>
+<td class="logo"><a href="/"><img src="/static/tornado.png" alt="Tornado"></a></td>
+<td class="title"><h1>documentation</h1></td>
+</tr>
+</tbody></table>
+</div>
+<div id="content">
+<div class="toc">
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#download">Download</a><ul>
+<li><a href="#prerequisites">Prerequisites</a></li>
+</ul>
+</li>
+<li><a href="#module-index">Module index</a><ul>
+<li><a href="#main-modules">Main modules</a></li>
+<li><a href="#low-level-modules">Low-level modules</a></li>
+<li><a href="#random-modules">Random modules</a></li>
+</ul>
+</li>
+<li><a href="#tornado-walkthrough">Tornado walkthrough</a><ul>
+<li><a href="#request-handlers-and-request-arguments">Request handlers and request arguments</a></li>
+<li><a href="#templates">Templates</a></li>
+<li><a href="#cookies-and-secure-cookies">Cookies and secure cookies</a></li>
+<li><a href="#user-authentication">User authentication</a></li>
+<li><a href="#cross-site-request-forgery-protection">Cross-site request forgery protection</a></li>
+<li><a href="#static-files-and-aggressive-file-caching">Static files and aggressive file caching</a></li>
+<li><a href="#localization">Localization</a></li>
+<li><a href="#ui-modules">UI modules</a></li>
+<li><a href="#non-blocking-asynchronous-requests">Non-blocking, asynchronous requests</a></li>
+<li><a href="#third-party-authentication">Third party authentication</a></li>
+</ul>
+</li>
+<li><a href="#performance">Performance</a></li>
+<li><a href="#running-tornado-in-production">Running Tornado in production</a></li>
+<li><a href="#wsgi-and-google-appengine">WSGI and Google AppEngine</a></li>
+<li><a href="#caveats-and-support">Caveats and support</a></li>
+</ul>
+</div>
+<h2 id="overview">Overview</h2>
+<p><a href="http://friendfeed.com/">FriendFeed</a>'s web server is a relatively simple,
+non-blocking web server written in Python. The FriendFeed application is
+written using a web framework that looks a bit like
+<a href="http://webpy.org/">web.py</a> or Google's
+<a href="http://code.google.com/appengine/docs/python/tools/webapp/">webapp</a>,
+but with additional tools and optimizations to take advantage of the
+non-blocking web server and tools.</p>
+<p><a href="http://github.com/facebook/tornado">Tornado</a> is an open source
+version of this web server and some of the tools we use most often at
+FriendFeed. The framework is distinct from most mainstream web server
+frameworks (and certainly most Python frameworks) because it is
+non-blocking and reasonably fast. Because it is non-blocking
+and uses <a href="http://www.kernel.org/doc/man-pages/online/pages/man4/epoll.4.html">epoll</a>, it can handle 1000s of simultaneous standing connections,
+which means the framework is ideal for real-time web services. We built the
+web server specifically to handle FriendFeed's real-time features â€”
+every active user of FriendFeed maintains an open connection to the
+FriendFeed servers. (For more information on scaling servers to support
+thousands of clients, see
+<a href="http://www.kegel.com/c10k.html">The C10K problem</a>.)</p>
+<p>Here is the canonical "Hello, world" example app:</p>
+<pre><code>import tornado.httpserver
+import tornado.ioloop
+import tornado.web
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("Hello, world")
+
+application = tornado.web.Application([
+    (r"/", MainHandler),
+])
+
+if __name__ == "__main__":
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.listen(8888)
+    tornado.ioloop.IOLoop.instance().start()
+</code></pre>
+<p>See <a href="#tornado-walkthrough">Tornado walkthrough</a> below for a detailed
+walkthrough of the <code>tornado.web</code> package.</p>
+<p>We attempted to clean up the code base to reduce interdependencies between
+modules, so you should (theoretically) be able to use any of the modules
+independently in your project without using the whole package.</p>
+<h2 id="download">Download</h2>
+<p>Download the most recent version of Tornado from GitHub:</p>
+<blockquote>
+<p><a href="/static/tornado-0.2.tar.gz">tornado-0.2.tar.gz</a></p>
+</blockquote>
+<p>You can also <a href="http://github.com/facebook/tornado">browse the source</a> on GitHub. To install Tornado:</p>
+<pre><code>tar xvzf tornado-0.2.tar.gz
+cd tornado-0.2
+python setup.py build
+sudo python setup.py install
+</code></pre>
+<p>After installation, you should be able to run any of the demos in the <code>demos</code>
+directory included with the Tornado package.</p>
+<pre><code>./demos/helloworld/helloworld.py
+</code></pre>
+<h3 id="prerequisites">Prerequisites</h3>
+<p>Tornado has been tested on Python 2.5 and 2.6. To use all of the features of Tornado, you need to have <a href="http://pycurl.sourceforge.net/">PycURL</a> and a JSON library like <a href="http://pypi.python.org/pypi/simplejson/">simplejson</a> installed. Complete installation instructions for Mac OS X and Ubuntu are included below for convenience.</p>
+<p><strong>Mac OS X 10.5/10.6</strong></p>
+<pre><code>sudo easy_install setuptools pycurl==7.16.2.1 simplejson
+</code></pre>
+<p><strong>Ubuntu Linux</strong></p>
+<pre><code>sudo apt-get install python-dev python-pycurl python-simplejson
+</code></pre>
+<h2 id="module-index">Module index</h2>
+<p>The most important module is <a href="http://github.com/facebook/tornado/blob/master/tornado/web.py"><code>web</code></a>, which is the web framework
+that includes most of the meat of the Tornado package. The other modules
+are tools that make <code>web</code> more useful. See
+<a href="#tornado-walkthrough">Tornado walkthrough</a> below for a detailed
+walkthrough of the <code>web</code> package.</p>
+<h3 id="main-modules">Main modules</h3>
+<ul>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/web.py"><code>web</code></a> - The web framework on which FriendFeed is built. <code>web</code> incorporates most of the important features of Tornado</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/escape.py"><code>escape</code></a> - XHTML, JSON, and URL encoding/decoding methods</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/database.py"><code>database</code></a> - A simple wrapper around <code>MySQLdb</code> to make MySQL easier to use</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/template.py"><code>template</code></a> - A Python-based web templating language</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/httpclient.py"><code>httpclient</code></a> - A non-blocking HTTP client designed to work with <code>web</code> and <code>httpserver</code></li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/auth.py"><code>auth</code></a> - Implementation of third party authentication and authorization schemes (Google OpenID/OAuth, Facebook Platform, Yahoo BBAuth, FriendFeed OpenID/OAuth, Twitter OAuth)</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/locale.py"><code>locale</code></a> - Localization/translation support</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/options.py"><code>options</code></a> - Command line and config file parsing, optimized for server environments</li>
+</ul>
+<h3 id="low-level-modules">Low-level modules</h3>
+<ul>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/httpserver.py"><code>httpserver</code></a> - A very simple HTTP server built on which <code>web</code> is built</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/iostream.py"><code>iostream</code></a> - A simple wrapper around non-blocking sockets to aide common reading and writing patterns</li>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/ioloop.py"><code>ioloop</code></a> - Core I/O loop</li>
+</ul>
+<h3 id="random-modules">Random modules</h3>
+<ul>
+<li><a href="http://github.com/facebook/tornado/blob/master/tornado/s3server.py"><code>s3server</code></a> - A web server that implements most of the <a href="http://aws.amazon.com/s3/">Amazon S3</a> interface, backed by local file storage</li>
+</ul>
+<h2 id="tornado-walkthrough">Tornado walkthrough</h2>
+<h3 id="request-handlers-and-request-arguments">Request handlers and request arguments</h3>
+<p>A Tornado web application maps URLs or URL patterns to subclasses of
+<code>tornado.web.RequestHandler</code>. Those classes define <code>get()</code> or <code>post()</code>
+methods to handle HTTP <code>GET</code> or <code>POST</code> requests to that URL.</p>
+<p>This code maps the root URL <code>/</code> to <code>MainHandler</code> and the URL pattern
+<code>/story/([0-9]+)</code> to <code>StoryHandler</code>. Regular expression groups are passed
+as arguments to the <code>RequestHandler</code> methods:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("You requested the main page")
+
+class StoryHandler(tornado.web.RequestHandler):
+    def get(self, story_id):
+        self.write("You requested the story " + story_id)
+
+application = tornado.web.Application([
+    (r"/", MainHandler),
+    (r"/story/([0-9]+)", StoryHandler),
+])
+</code></pre>
+<p>You can get query string arguments and parse <code>POST</code> bodies with the
+<code>get_argument()</code> method:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write('&lt;html&gt;&lt;body&gt;&lt;form action="/" method="post"&gt;'
+                   '&lt;input type="text" name="message"&gt;'
+                   '&lt;input type="submit" value="Submit"&gt;'
+                   '&lt;/form&gt;&lt;/body&gt;&lt;/html&gt;')
+
+    def post(self):
+        self.set_header("Content-Type", "text/plain")
+        self.write("You wrote " + self.get_argument("message"))
+</code></pre>
+<p>If you want to send an error response to the client, e.g., 403 Unauthorized,
+you can just raise a <code>tornado.web.HTTPError</code> exception:</p>
+<pre><code>if not self.user_is_logged_in():
+    raise tornado.web.HTTPError(403)
+</code></pre>
+<p>The request handler can access the object representing the current request
+with <code>self.request</code>. The <code>HTTPRequest</code> object includes a number of useful
+attribute, including:</p>
+<ul>
+<li><code>arguments</code> - all of the <code>GET</code> and <code>POST</code> arguments</li>
+<li><code>files</code> - all of the uploaded files (via <code>multipart/form-data</code> POST requests)</li>
+<li><code>path</code> - the request path (everything before the <code>?</code>)</li>
+<li><code>headers</code> - the request headers</li>
+</ul>
+<p>See the class definition for <code>HTTPRequest</code> in <code>httpserver</code> for a complete list
+of attributes.</p>
+<h3 id="templates">Templates</h3>
+<p>You can use any template language supported by Python, but Tornado ships
+with its own templating language that is a lot faster and more flexible
+than many of the most popular templating systems out there. See the
+<a href="http://github.com/facebook/tornado/blob/master/tornado/template.py"><code>template</code></a> module documentation for complete documentation.</p>
+<p>A Tornado template is just HTML (or any other text-based format) with
+Python control sequences and expressions embedded within the markup:</p>
+<pre><code>&lt;html&gt;
+   &lt;head&gt;
+      &lt;title&gt;{{ title }}&lt;/title&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+     &lt;ul&gt;
+       {% for item in items %}
+         &lt;li&gt;{{ escape(item) }}&lt;/li&gt;
+       {% end %}
+     &lt;/ul&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre>
+<p>If you saved this template as "template.html" and put it in the same
+directory as your Python file, you could render this template with:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        items = ["Item 1", "Item 2", "Item 3"]
+        self.render("template.html", title="My title", items=items)
+</code></pre>
+<p>Tornado templates support <em>control statements</em> and <em>expressions</em>. Control
+statements are surronded by <code>{%</code> and <code>%}</code>, e.g., <code>{% if len(items) &gt; 2 %}</code>.
+Expressions are surrounded by <code>{{</code> and <code>}}</code>, e.g., <code>{{ items[0] }}</code>.</p>
+<p>Control statements more or less map exactly to Python statements. We support
+<code>if</code>, <code>for</code>, <code>while</code>, and <code>try</code>, all of which are terminated with <code>{% end %}</code>.
+We also support <em>template inheritance</em> using the <code>extends</code> and <code>block</code>
+statements, which are described in detail in the documentation for the
+<a href="http://github.com/facebook/tornado/blob/master/tornado/template.py"><code>template</code> module</a>.</p>
+<p>Expressions can be any Python expression, including function calls. We
+support the functions <code>escape</code>, <code>url_escape</code>, and <code>json_encode</code> by default,
+and you can pass other functions into the template simply by passing them
+as keyword arguments to the template render function:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("template.html", add=self.add)
+
+    def add(self, x, y):
+        return x + y
+</code></pre>
+<p>When you are building a real application, you are going to want to use
+all of the features of Tornado templates, especially template inheritance.
+Read all about those features in the <a href="http://github.com/facebook/tornado/blob/master/tornado/template.py"><code>template</code> module</a>
+section.</p>
+<p>Under the hood, Tornado templates are translated directly to Python.
+The expressions you include in your template are copied verbatim into
+a Python function representing your template. We don't try to prevent
+anything in the template language; we created it explicitly to provide
+the flexibility that other, stricter templating systems prevent.
+Consequently, if you write random stuff inside of your template expressions,
+you will get random Python errors when you execute the template.</p>
+<h3 id="cookies-and-secure-cookies">Cookies and secure cookies</h3>
+<p>You can set cookies in the user's browser with the <code>set_cookie</code> method:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_cookie("mycookie"):
+            self.set_cookie("mycookie", "myvalue")
+            self.write("Your cookie was not set yet!")
+        else:
+            self.write("Your cookie was set!")
+</code></pre>
+<p>Cookies are easily forged by malicious clients. If you need to set cookies
+to, e.g., save the user ID of the currently logged in user, you need to
+sign your cookies to prevent forgery. Tornado supports this out of the
+box with the <code>set_secure_cookie</code> and <code>get_secure_cookie</code> methods. To use
+these methods, you need to specify a secret key named <code>cookie_secret</code> when
+you create your application. You can pass in application settings as keyword
+arguments to your application:</p>
+<pre><code>application = tornado.web.Application([
+    (r"/", MainHandler),
+], cookie_secret="61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=")
+</code></pre>
+<p>Signed cookies contain the encoded value of the cookie in addition to a
+timestamp and an <a href="http://en.wikipedia.org/wiki/HMAC">HMAC</a> signature. If the
+cookie is old or if the signature doesn't match, <code>get_secure_cookie</code> will
+return <code>None</code> just as if the cookie isn't set. The secure version of the
+example above:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        if not self.get_secure_cookie("mycookie"):
+            self.set_secure_cookie("mycookie", "myvalue")
+            self.write("Your cookie was not set yet!")
+        else:
+            self.write("Your cookie was set!")
+</code></pre>
+<h3 id="user-authentication">User authentication</h3>
+<p>The currently authenticated user is available in every request handler
+as <code>self.current_user</code>, and in every template as <code>current_user</code>. By
+default, <code>current_user</code> is <code>None</code>.</p>
+<p>To implement user authentication in your application, you need to
+override the <code>get_current_user()</code> method in your request handlers to
+determine the current user based on, e.g., the value of a cookie.
+Here is an example that lets users log into the application simply
+by specifying a nickname, which is then saved in a cookie:</p>
+<pre><code>class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie("user")
+
+class MainHandler(BaseHandler):
+    def get(self):
+        if not self.current_user:
+            self.redirect("/login")
+            return
+        name = tornado.escape.xhtml_escape(self.current_user)
+        self.write("Hello, " + name)
+
+class LoginHandler(BaseHandler):
+    def get(self):
+        self.write('&lt;html&gt;&lt;body&gt;&lt;form action="/login" method="post"&gt;'
+                   'Name: &lt;input type="text" name="name"&gt;'
+                   '&lt;input type="submit" value="Sign in"&gt;'
+                   '&lt;/form&gt;&lt;/body&gt;&lt;/html&gt;')
+
+    def post(self):
+        self.set_secure_cookie("user", self.get_argument("name"))
+        self.redirect("/")
+
+application = tornado.web.Application([
+    (r"/", MainHandler),
+    (r"/login", LoginHandler),
+], cookie_secret="61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=")
+</code></pre>
+<p>You can require that the user be logged in using the
+<a href="http://www.python.org/dev/peps/pep-0318/">Python decorator</a>
+<code>tornado.web.authenticated</code>. If a request goes to a method with this
+decorator, and the user is not logged in, they will be redirected to
+<code>login_url</code> (another application setting). The example above could
+be rewritten:</p>
+<pre><code>class MainHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        name = tornado.escape.xhtml_escape(self.current_user)
+        self.write("Hello, " + name)
+
+settings = {
+    "cookie_secret": "61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
+    "login_url": "/login",
+}
+application = tornado.web.Application([
+    (r"/", MainHandler),
+    (r"/login", LoginHandler),
+], **settings)
+</code></pre>
+<p>If you decorate <code>post()</code> methods with the <code>authenticated</code> decorator, and
+the user is not logged in, the server will send a <code>403</code> response.</p>
+<p>Tornado comes with built-in support for third-party authentication schemes
+like Google OAuth. See the <a href="http://github.com/facebook/tornado/blob/master/tornado/auth.py"><code>auth</code> module</a> for more details. Check
+out the Tornado Blog example application for a complete example that
+uses authentication (and stores user data in a MySQL database).</p>
+<h3 id="cross-site-request-forgery-protection">Cross-site request forgery protection</h3>
+<p><a href="http://en.wikipedia.org/wiki/Cross-site_request_forgery">Cross-site request forgery</a>, or XSRF, is a common problem for personalized web applications. See the
+<a href="http://en.wikipedia.org/wiki/Cross-site_request_forgery">Wikipedia article</a>
+for more information on how XSRF works.</p>
+<p>The generally accepted solution to prevent XSRF is to cookie every user
+with an unpredictable value and include that value as an additional
+argument with every form submission on your site. If the cookie and the
+value in the form submission do not match, then the request is likely
+forged.</p>
+<p>Tornado comes with built-in XSRF protection. To include it in your site,
+include the application setting <code>xsrf_cookies</code>:</p>
+<pre><code>settings = {
+    "cookie_secret": "61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
+    "login_url": "/login",
+    "xsrf_cookies": True,
+}
+application = tornado.web.Application([
+    (r"/", MainHandler),
+    (r"/login", LoginHandler),
+], **settings)
+</code></pre>
+<p>If <code>xsrf_cookies</code> is set, the Tornado web application will set the <code>_xsrf</code>
+cookie for all users and reject all <code>POST</code> requests hat do not contain a
+correct <code>_xsrf</code> value. If you turn this setting on, you need to instrument
+all forms that submit via <code>POST</code> to contain this field. You can do this with
+the special function <code>xsrf_form_html()</code>, available in all templates:</p>
+<pre><code>&lt;form action="/login" method="post"&gt;
+  {{ xsrf_form_html() }}
+  &lt;div&gt;Username: &lt;input type="text" name="username"/&gt;&lt;/div&gt;
+  &lt;div&gt;Password: &lt;input type="password" name="password"/&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;input type="submit" value="Sign in"/&gt;&lt;/div&gt;
+&lt;/form&gt;
+</code></pre>
+<p>If you submit AJAX <code>POST</code> requests, you will also need to instrument your
+JavaScript to include the <code>_xsrf</code> value with each request. This is the
+<a href="http://jquery.com/">jQuery</a> function we use at FriendFeed for AJAX <code>POST</code>
+requests that automatically adds the <code>_xsrf</code> value to all requests:</p>
+<pre><code>function getCookie(name) {
+    var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    return r ? r[1] : undefined;
+}
+
+jQuery.postJSON = function(url, args, callback) {
+    args._xsrf = getCookie("_xsrf");
+    $.ajax({url: url, data: $.param(args), dataType: "text", type: "POST",
+        success: function(response) {
+        callback(eval("(" + response + ")"));
+    }});
+};
+</code></pre>
+<h3 id="static-files-and-aggressive-file-caching">Static files and aggressive file caching</h3>
+<p>You can serve static files from Tornado by specifying the <code>static_path</code>
+setting in your application:</p>
+<pre><code>settings = {
+    "static_path": os.path.join(os.path.dirname(__file__), "static"),
+    "cookie_secret": "61oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
+    "login_url": "/login",
+    "xsrf_cookies": True,
+}
+application = tornado.web.Application([
+    (r"/", MainHandler),
+    (r"/login", LoginHandler),
+], **settings)
+</code></pre>
+<p>This setting will automatically make all requests that start with <code>/static/</code>
+serve from that static directory, e.g., <a href="http://localhost:8888/static/foo.png">http://localhost:8888/static/foo.png</a>
+will serve the file <code>foo.png</code> from the specified static directory. We
+also automatically serve <code>/robots.txt</code> and <code>/favicon.ico</code> from the static
+directory (even though they don't start with the <code>/static/</code> prefix).</p>
+<p>To improve performance, it is generally a good idea for browsers to
+cache static resources aggressively so browsers won't send unnecessary
+<code>If-Modified-Since</code> or <code>Etag</code> requests that might block the rendering of
+the page. Tornado supports this out of the box with <em>static content
+versioning</em>.</p>
+<p>To use this feature, use the <code>static_url()</code> method in your templates rather
+than typing the URL of the static file directly in your HTML:</p>
+<pre><code>&lt;html&gt;
+   &lt;head&gt;
+      &lt;title&gt;FriendFeed - {{ _("Home") }}&lt;/title&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+     &lt;div&gt;&lt;img src="{{ static_url("images/logo.png") }}"/&gt;&lt;/div&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre>
+<p>The <code>static_url()</code> function will translate that relative path to a URI
+that looks like <code>/static/images/logo.png?v=aae54</code>. The <code>v</code> argument is
+a hash of the content in <code>logo.png</code>, and its presence makes the Tornado
+server send cache headers to the user's browser that will make the browser
+cache the content indefinitely.</p>
+<p>Since the <code>v</code> argument is based on the content of the file, if you update
+a file and restart your server, it will start sending a new <code>v</code> value,
+so the user's browser will automatically fetch the new file. If the file's
+contents don't change, the browser will continue to use a locally cached
+copy without ever checking for updates on the server, significantly
+improving rendering performance.</p>
+<p>In production, you probably want to serve static files from a more
+optimized static file server like <a href="http://nginx.net/">nginx</a>. You can
+configure most any web server to support these caching semantics. Here
+is the nginx configuration we use at FriendFeed:</p>
+<pre><code>location /static/ {
+    root /var/friendfeed/static;
+    if ($query_string) {
+        expires max;
+    }
+ }
+</code></pre>
+<h3 id="localization">Localization</h3>
+<p>The locale of the current user (whether they are logged in or not) is
+always available as <code>self.locale</code> in the request handler and as <code>locale</code>
+in templates. The name of the locale (e.g., <code>en_US</code>) is available as
+<code>locale.name</code>, and you can translate strings with the <code>locale.translate</code>
+method. Templates also have the global function call <code>_()</code> available
+for string translation. The translate function has two forms:</p>
+<pre><code>_("Translate this string")
+</code></pre>
+<p>which translates the string directly based on the current locale, and</p>
+<pre><code>_("A person liked this", "%(num)d people liked this", len(people)) % {"num": len(people)}
+</code></pre>
+<p>which translates a string that can be singular or plural based on the value
+of the third argument. In the example above, a translation of the first
+string will be returned if <code>len(people)</code> is <code>1</code>, or a translation of the
+second string will be returned otherwise.</p>
+<p>The most common pattern for translations is to use Python named placeholders
+for variables (the <code>%(num)d</code> in the example above) since placeholders can
+move around on translation.</p>
+<p>Here is a properly localized template:</p>
+<pre><code>&lt;html&gt;
+   &lt;head&gt;
+      &lt;title&gt;FriendFeed - {{ _("Sign in") }}&lt;/title&gt;
+   &lt;/head&gt;
+   &lt;body&gt;
+     &lt;form action="{{ request.path }}" method="post"&gt;
+       &lt;div&gt;{{ _("Username") }} &lt;input type="text" name="username"/&gt;&lt;/div&gt;
+       &lt;div&gt;{{ _("Password") }} &lt;input type="password" name="password"/&gt;&lt;/div&gt;
+       &lt;div&gt;&lt;input type="submit" value="{{ _("Sign in") }}"/&gt;&lt;/div&gt;
+       {{ xsrf_form_html() }}
+     &lt;/form&gt;
+   &lt;/body&gt;
+ &lt;/html&gt;
+</code></pre>
+<p>By default, we detect the user's locale using the <code>Accept-Language</code> header
+sent by the user's browser. We choose <code>en_US</code> if we can't find an appropriate
+<code>Accept-Language</code> value. If you let user's set their locale as a preference,
+you can override this default locale selection by overriding <code>get_user_locale</code>
+in your request handler:</p>
+<pre><code>class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        user_id = self.get_secure_cookie("user")
+        if not user_id: return None
+        return self.backend.get_user_by_id(user_id)
+
+    def get_user_locale(self):
+        if "locale" not in self.current_user.prefs:
+            # Use the Accept-Language header
+            return None
+        return self.current_user.prefs["locale"]
+</code></pre>
+<p>If <code>get_user_locale</code> returns <code>None</code>, we fall back on the <code>Accept-Language</code>
+header.</p>
+<p>You can load all the translations for your application using the
+<code>tornado.locale.load_translations</code> method. It takes in the name of the
+directory which should contain CSV files named after the locales whose
+translations they contain, e.g., <code>es_GT.csv</code> or <code>fr_CA.csv</code>. The method
+loads all the translations from those CSV files and infers the list of
+supported locales based on the presence of each CSV file. You typically
+call this method once in the <code>main()</code> method of your server:</p>
+<pre><code>def main():
+    tornado.locale.load_translations(
+        os.path.join(os.path.dirname(__file__), "translations"))
+    start_server()
+</code></pre>
+<p>You can get the list of supported locales in your application with
+<code>tornado.locale.get_supported_locales()</code>. The user's locale is chosen to
+be the closest match based on the supported locales. For example, if the
+user's locale is <code>es_GT</code>, and the <code>es</code> locale is supported, <code>self.locale</code>
+will be <code>es</code> for that request. We fall back on <code>en_US</code> if no close match
+can be found.</p>
+<p>See the <a href="http://github.com/facebook/tornado/blob/master/tornado/locale.py"><code>locale</code> module</a> documentation for detailed information
+on the CSV format and other localization methods.</p>
+<h3 id="ui-modules">UI modules</h3>
+<p>Tornado supports <em>UI modules</em> to make it easy to support standard, reusable
+UI widgets across your application. UI modules are like special functional
+calls to render components of your page, and they can come packaged with
+their own CSS and JavaScript.</p>
+<p>For example, if you are implementing a blog, and you want to have
+blog entries appear on both the blog home page and on each blog entry page,
+you can make an <code>Entry</code> module to render them on both pages. First, create
+a Python module for your UI modules, e.g., <code>uimodules.py</code>:</p>
+<pre><code>class Entry(tornado.web.UIModule):
+    def render(self, entry, show_comments=False):
+        return self.render_string(
+            "module-entry.html", show_comments=show_comments)
+</code></pre>
+<p>Tell Tornado to use <code>uimodules.py</code> using the <code>ui_modules</code> setting in your
+application:</p>
+<pre><code>class HomeHandler(tornado.web.RequestHandler):
+    def get(self):
+        entries = self.db.query("SELECT * FROM entries ORDER BY date DESC")
+        self.render("home.html", entries=entries)
+
+class EntryHandler(tornado.web.RequestHandler):
+    def get(self, entry_id):
+        entry = self.db.get("SELECT * FROM entries WHERE id = %s", entry_id)
+        if not entry: raise tornado.web.HTTPError(404)
+        self.render("entry.html", entry=entry)
+
+settings = {
+    "ui_modules": uimodules,
+}
+application = tornado.web.Application([
+    (r"/", HomeHandler),
+    (r"/entry/([0-9]+)", EntryHandler),
+], **settings)
+</code></pre>
+<p>Within <code>home.html</code>, you reference the <code>Entry</code> module rather than printing
+the HTML directly:</p>
+<pre><code>{% for entry in entries %}
+  {{ modules.Entry(entry) }}
+{% end %}
+</code></pre>
+<p>Within <code>entry.html</code>, you reference the <code>Entry</code> module with the
+<code>show_comments</code> argument to show the expanded form of the entry:</p>
+<pre><code>{{ modules.Entry(entry, show_comments=True) }}
+</code></pre>
+<p>Modules can include custom CSS and JavaScript functions by overriding
+the <code>embedded_css</code>, <code>embedded_javascript</code>, <code>javascript_files</code>, or
+<code>css_files</code> methods:</p>
+<pre><code>class Entry(tornado.web.UIModule):
+    def embedded_css(self):
+        return ".entry { margin-bottom: 1em; }"
+
+    def render(self, entry, show_comments=False):
+        return self.render_string(
+            "module-entry.html", show_comments=show_comments)
+</code></pre>
+<p>Module CSS and JavaScript will be included once no matter how many times
+a module is used on a page. CSS is always included in the <code>&lt;head&gt;</code> of the
+page, and JavaScript is always included just before the <code>&lt;/body&gt;</code> tag
+at the end of the page.</p>
+<h3 id="non-blocking-asynchronous-requests">Non-blocking, asynchronous requests</h3>
+<p>When a request handler is executed, the request is automatically finished.
+Since Tornado uses a non-blocking I/O style, you can override this default
+behavior if you want a request to remain open after the main request handler
+method returns using the <code>tornado.web.asynchronous</code> decorator.</p>
+<p>When you use this decorator, it is your responsibility to call
+<code>self.finish()</code> to finish the HTTP request, or the user's browser
+will simply hang:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.write("Hello, world")
+        self.finish()
+</code></pre>
+<p>Here is a real example that makes a call to the FriendFeed API using
+Tornado's built-in asynchronous HTTP client:</p>
+<pre><code>class MainHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        http = tornado.httpclient.AsyncHTTPClient()
+        http.fetch("http://friendfeed-api.com/v2/feed/bret",
+                   callback=self.async_callback(self.on_response))
+
+    def on_response(self, response):
+        if response.error: raise tornado.web.HTTPError(500)
+        json = tornado.escape.json_decode(response.body)
+        self.write("Fetched " + str(len(json["entries"])) + " entries "
+                   "from the FriendFeed API")
+        self.finish()
+</code></pre>
+<p>When <code>get()</code> returns, the request has not finished. When the HTTP client
+eventually calls <code>on_response()</code>, the request is still open, and the response
+is finally flushed to the client with the call to <code>self.finish()</code>.</p>
+<p>If you make calls to asynchronous library functions that require a callback
+(like the HTTP <code>fetch</code> function above), you should always wrap your
+callbacks with <code>self.async_callback</code>. This simple wrapper ensures that if
+your callback function raises an exception or has a programming error,
+a proper HTTP error response will be sent to the browser, and the connection
+will be properly closed.</p>
+<p>For a more advanced asynchronous example, take a look at the <code>chat</code> example
+application, which implements an AJAX chat room using
+<a href="http://en.wikipedia.org/wiki/Push_technology#Long_polling">long polling</a>.</p>
+<h3 id="third-party-authentication">Third party authentication</h3>
+<p>Tornado's <code>auth</code> module implements the authentication and authorization
+protocols for a number of the most popular sites on the web, including
+Google/Gmail, Facebook, Twitter, Yahoo, and FriendFeed. The module includes
+methods to log users in via these sites and, where applicable, methods to
+authorize access to the service so you can, e.g., download a user's address
+book or publish a Twitter message on their behalf.</p>
+<p>Here is an example handler that uses Google for authentication, saving
+the Google credentials in a cookie for later access:</p>
+<pre><code>class GoogleHandler(tornado.web.RequestHandler, tornado.auth.GoogleMixin):
+    @tornado.web.asynchronous
+    def get(self):
+        if self.get_argument("openid.mode", None):
+            self.get_authenticated_user(self.async_callback(self._on_auth))
+            return
+        self.authenticate_redirect()
+
+    def _on_auth(self, user):
+        if not user:
+            self.authenticate_redirect()
+            return
+        # Save the user with, e.g., set_secure_cookie()
+</code></pre>
+<p>See the <code>auth</code> module documentation for more details.</p>
+<h2 id="performance">Performance</h2>
+<p>Web application performance is generally bound by architecture, not frontend
+performance. That said, Tornado is pretty fast relative to most popular
+Python web frameworks.</p>
+<p>We ran a few remedial load tests on a simple "Hello, world" application 
+in each of the most popular Python web frameworks
+(<a href="http://www.djangoproject.com/">Django</a>, <a href="http://webpy.org/">web.py</a>, and
+<a href="http://www.cherrypy.org/">CherryPy</a>) to get the baseline performance of
+each relative to Tornado. We used Apache/mod_wsgi for Django and web.py
+and ran CherryPy as a standalone server, which was our impression of how
+each framework is typically run in production environments. We ran 4
+single-threaded Tornado frontends behind an <a href="http://nginx.net/">nginx</a>
+reverse proxy, which is how we recommend running Tornado in production
+(our load test machine had four cores, and we recommend 1 frontend per
+core).</p>
+<p>We load tested each with Apache Benchmark (<code>ab</code>) on the a separate machine
+with the command</p>
+<pre><code>ab -n 100000 -c 25 http://10.0.1.x/
+</code></pre>
+<p>The results (requests per second) on a 2.4GHz AMD Opteron processor with
+4 cores:</p>
+<div style="text-align:center;margin-top:2em;margin-bottom:2em"><img src="http://chart.apis.google.com/chart?chxt=y&amp;chd=t%3A100%2C40%2C27%2C25%2C9&amp;chco=609bcc&amp;chm=t+8213%2C000000%2C0%2C0%2C11%7Ct+3353%2C000000%2C0%2C1%2C11%7Ct+2223%2C000000%2C0%2C2%2C11%7Ct+2066%2C000000%2C0%2C3%2C11%7Ct+785%2C000000%2C0%2C4%2C11&amp;chs=600x175&amp;cht=bhs&amp;chtt=Web+server+requests%2Fsec+%28AMD+Opteron%2C+2.4GHz%2C+4+cores%29&amp;chxl=0%3A%7CCherryPy+%28standalone%29%7Cweb.py+%28Apache%2Fmod_wsgi%29%7CDjango+%28Apache%2Fmod_wsgi%29%7CTornado+%281+single-threaded+frontend%29%7CTornado+%28nginx%3B+4+frontends%29%7C"></div>
+
+<p>In our tests, Tornado consistently had 4X the throughput of the next fastest
+framework, and even a single standalone Tornado frontend got 33% more
+throughput even though it only used one of the four cores.</p>
+<p>Not very scientific, but at a high level, it should give you a sense that we
+have cared about performance as we built Tornado, and it shouldn't add too
+much latency to your apps relative to most Python web development frameworks.</p>
+<h2 id="running-tornado-in-production">Running Tornado in production</h2>
+<p>At FriendFeed, we use <a href="http://nginx.net/">nginx</a> as a load balancer
+and static file server. We run multiple instances of the Tornado web
+server on multiple frontend machines. We typically run one Tornado frontend
+per core on the machine (sometimes more depending on utilization).</p>
+<p>This is a barebones nginx config file that is structurally similar to the
+one we use at FriendFeed. It assumes nginx and the Tornado servers
+are running on the same machine, and the four Tornado servers
+are running on ports 8000 - 8003:</p>
+<pre><code>user nginx;
+worker_processes 1;
+
+error_log /var/log/nginx/error.log;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+    use epoll;
+}
+
+http {
+    # Enumerate all the Tornado servers here
+    upstream frontends {
+        server 127.0.0.1:8000;
+        server 127.0.0.1:8001;
+        server 127.0.0.1:8002;
+        server 127.0.0.1:8003;
+    }
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    access_log /var/log/nginx/access.log;
+
+    keepalive_timeout 65;
+    proxy_read_timeout 200;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    gzip on;
+    gzip_min_length 1000;
+    gzip_proxied any;              
+    gzip_types text/plain text/html text/css text/xml
+               application/x-javascript application/xml
+               application/atom+xml text/javascript;
+
+    # Only retry if there was a communication error, not a timeout
+    # on the Tornado server (to avoid propagating "queries of death"
+    # to all frontends)
+    proxy_next_upstream error;
+
+    server {
+        listen 80;
+
+        # Allow file uploads
+        client_max_body_size 50M;
+
+        location ^~ /static/ {
+            root /var/www;
+            if ($query_string) {
+                expires max;
+            }
+        }
+        location = /favicon.ico {
+            rewrite (.*) /static/favicon.ico;
+        }
+        location = /robots.txt {
+            rewrite (.*) /static/robots.txt;
+        }
+
+        location / {
+            proxy_pass_header Server;
+            proxy_set_header Host $http_host;
+            proxy_redirect false;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Scheme $scheme;
+            proxy_pass http://frontends;
+        }
+    }
+}
+</code></pre>
+<h2 id="wsgi-and-google-appengine">WSGI and Google AppEngine</h2>
+<p>Tornado comes with limited support for <a href="http://wsgi.org/">WSGI</a>. However,
+since WSGI does not support non-blocking requests, you cannot use any
+of the asynchronous/non-blocking features of Tornado in your application
+if you choose to use WSGI instead of Tornado's HTTP server. Some of the
+features that are not available in WSGI applications:
+<code>@tornado.web.asynchronous</code>, the <code>httpclient</code> module, and the <code>auth</code> module.</p>
+<p>You can create a valid WSGI application from your Tornado request handlers
+by using <code>WSGIApplication</code> in the <code>wsgi</code> module instead of using
+<code>tornado.web.Application</code>. Here is an example that uses the built-in WSGI
+<code>CGIHandler</code> to make a valid
+<a href="http://code.google.com/appengine/">Google AppEngine</a> application:</p>
+<pre><code>import tornado.web
+import tornado.wsgi
+import wsgiref.handlers
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write("Hello, world")
+
+if __name__ == "__main__":
+    application = tornado.wsgi.WSGIApplication([
+        (r"/", MainHandler),
+    ])
+    wsgiref.handlers.CGIHandler().run(application)
+</code></pre>
+<p>See the <code>appengine</code> example application for a full-featured AppEngine
+app built on Tornado.</p>
+<h2 id="caveats-and-support">Caveats and support</h2>
+<p>Tornado was refactored from the <a href="http://friendfeed.com/">FriendFeed</a>
+code base to reduce dependencies. This refactoring may have introduced
+bugs.  Likewise, because the FriendFeed servers have always run
+<a href="#running-tornado-in-production">behind nginx</a>, Tornado has not been
+extensively tested with HTTP/1.1 clients beyond Firefox. Tornado
+currently does not attempt to handle multi-line headers and some types
+of malformed input.</p>
+<p>You can discuss Tornado and report bugs on <a href="http://groups.google.com/group/python-tornado">the Tornado developer mailing list</a>.</p>
+</div>
+<div id="footer">
+<div>Tornado is one of <a href="http://developers.facebook.com/opensource.php">Facebook's open source technologies</a>. It is available under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache Licence, Version 2.0</a>.</div>
+<div>This web site and all documentation is licensed under <a href="http://creativecommons.org/licenses/by/3.0/">Creative Commons 3.0</a>.</div>
+</div>
+</div>
+
+
+
+</body></html>Ytext/html£Ô_WebResourceResponse_)http://www.tornadoweb.org/static/base.cssO/bplist00ÔjkX$versionX$objectsY$archiverT$top † ¯ "()012LMNOPQRSTUVWXYZ[\]^_`deU$nullİ	
+ !R$6S$10R$2R$7R$3S$11R$8V$classR$4R$9R$0R$5R$1€€€ €€€€ €Ó#$%&[NS.relativeWNS.base€€€ _)http://www.tornadoweb.org/static/base.cssÒ*+,-Z$classnameX$classesUNSURL¢./UNSURLXNSObject#A±“EÄ «ÈÓ3456AWNS.keysZNS.objects€ª789:;<=>?@€	€
+€€€€€€€€ªBCDEFGHIJK€€€€€€€€€€VServer]Cache-Control\Content-TypeWExpiresTDate^Content-Length_Content-EncodingTEtag_X-Xss-ProtectionSAge_Google Frontend_public, max-age=600Xtext/css_Thu, 06 May 2010 16:27:40 GMT_Thu, 06 May 2010 18:43:45 GMTS477TgzipX"AxT6qg"Q0R99Ò*+ab_NSMutableDictionary£ac/\NSDictionaryÒ*+fg_NSHTTPURLResponse£hi/_NSHTTPURLResponse]NSURLResponse_NSKeyedArchiverÑlm_WebResourceResponse€    # - 2 7 Z ` { ~ ‚ … ˆ ‹  ’ ™ œ Ÿ ¢ ¥ ¨ ª ¬ ® ° ² ´ ¶ ¸ º ¼ ¾ À Ç Ó Û İ ß á&,/5>GIPXceprtvxz|~€‚„‘“•—™›Ÿ¡£ª¸ÅÍÒáôù"8Aa…Š“•˜³·ÄÇÌàäø1             n              3Obody {
+  background: white;
+  color: black;
+  font-family: Georgia, serif;
+  font-size: 11pt;
+  margin: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: Calibri, sans-serif;
+  margin: 0;
+}
+
+img {
+  border: 0;
+}
+
+pre,
+code {
+  color: #060;
+}
+
+a,
+a code {
+  color: #216093;
+}
+
+table {
+  border-collapse: collapse;
+  border: 0;
+}
+
+td {
+  border: 0;
+  padding: 0;
+}
+
+#body {
+  margin: auto;
+  max-width: 850px;
+}
+
+#header {
+  margin-bottom: 15px;
+  margin-right: 30px;
+}
+
+#content,
+#footer {
+  margin-left: 31px;
+  margin-right: 31px;
+}
+
+#content p,
+#content li,
+#footer {
+  line-height: 16pt;
+}
+
+#content pre {
+  line-height: 14pt;
+  margin: 17pt;
+  padding-left: 1em;
+  border-left: 1px solid #ccc;
+}
+
+#footer {
+  margin-top: 5em;
+}
+
+#header .logo {
+  line-height: 0;
+  padding-bottom: 5px;
+  padding-right: 15px;
+}
+
+#header .logo img {
+  width: 286px;
+  height: 72px;
+}
+
+#header .title {
+  vertical-align: bottom;
+}
+
+#header .title h1 {
+  font-size: 35px;
+  font-weight: normal;
+}
+
+#header .title h1,
+#header .title h1 a {
+  color: #666;
+}
+
+#content h1,
+#content h2,
+#content h3 {
+  color: #4d8cbf;
+  margin-bottom: 2pt;
+  margin-top: 17pt;
+}
+
+#content h2 {
+  font-size: 19pt;
+}
+
+#content h3 {
+  font-size: 15pt;
+}
+
+#content p {
+  margin: 0;
+  margin-bottom: 1em;
+}
+Xtext/cssÔ_,http://www.tornadoweb.org/static/tornado.pngObplist00ÔfgX$versionX$objectsY$archiverT$top † ¯"()012JKLMNOPQRSTUVWXYZ[\`aU$nullİ	
+ !R$6S$10R$2R$7R$3S$11R$8V$classR$4R$9R$0R$5R$1€€€ €€€€ €Ó#$%&[NS.relativeWNS.base€€€ _,http://www.tornadoweb.org/static/tornado.pngÒ*+,-Z$classnameX$classesUNSURL¢./UNSURLXNSObject#A±“<#\aúÈÓ3456@WNS.keysZNS.objects€©789:;<=>?€	€
+€€€€€€€©ABCDEFGHI€€€€€€€€€VServer]Cache-Control\Content-TypeWExpiresTDate^Content-LengthTEtag_X-Xss-ProtectionSAge_Google Frontend_public, max-age=600Yimage/png_Tue, 27 Apr 2010 04:09:57 GMT_Thu, 06 May 2010 18:00:22 GMTT7101X"AxT6qg"Q0S237Ò*+]^_NSMutableDictionary£]_/\NSDictionary½Ò*+bc_NSHTTPURLResponse£de/_NSHTTPURLResponse]NSURLResponse_NSKeyedArchiverÑhi_WebResourceResponse€    # - 2 7 X ^ y | € ƒ † ‰   — š    £ ¦ ¨ ª ¬ ® ° ² ´ ¶ ¸ º ¼ ¾ Å Ñ Ù Û İ ß'-06?HJQYdfprtvxz|~€‚Œ’”–˜šœ¥³ÀÈÍÜáôø
+ *Jjoxz~ƒ™ª­²ÆÊŞìş             j              O½‰PNG
+
+   IHDR     H    išˆ   tEXtSoftware Adobe ImageReadyqÉe<  _IDATxÚì][l\×uİó~¿É¡HŠIY„$Ë²d*~$Q,%Š¨#•Qä§6PDŸ‰Q ÒOÑ´_ÒGj§V?¢¶âª)Ğ ‘RÓ;(Ë’ìX/Š’(’"9ï÷ƒ3İûÜ{îÜ9wÈácÈ³‰Ã{ç¾ç³×¬½ÏÙûèÊå2¬³±ÃrËn,}X‚XŠX>ÆrË"dÓˆn€ç –ïÉ€óµÇÆ±üËyQ]B„àYØ¼å/°ô.ãüAÁ|„À£UlşË¾ÚÙ…ˆçó0ŸÍCK¡T†X¡ ìßé²Ãş€$Æó†¨2!BÚ_Œ«t]/–cùëZv“È`&“…™tæsù%/r7‘†A—\f}Ü#ªKˆ<K1œÆâRoœH$áa2Ól–³¨.!BğÔÊ,ÿe»Ú”'a™K¡Tjú‚ıg;$!Q]B„li…‡ÌªÅòÊrÇa4€Ûd7‚L‡U"6n³¬Cí¡Ôå>*ªMˆ­<Ô%şoj³ŠLª‘DCÀñ˜LĞç´Á6›UÍj˜(^ÈC,_„LqlJ{}¾û—X¾+ªMˆ­kj½’™I$—ƒOçcU½Rõ˜Ív4Ÿúö*°y”JÁL:¡\R6$å’ˆ„‹N~«…>öˆ*"dk™V`y†oø"ƒ›±ä’€3ìqÂ€Ë©l›Íd˜³y:“SØ‘6ò?ZvZÌ`7)©U&DÈ…Ré€N§Wİô9…ìæj(ºhO•Í`€İŞ
+àïg&[RœÙpÀ!ñ"
+ ĞŸÇƒK5+’å_D•	Òş¢ÙÇƒ¬ä€^b:ÌŸÍçá£ÙH]_I¯‡a·vº€@¹…"ÜK¤ªœÍj°éCó«‹Ãdıâœf$ç²!B¶ğäˆéÀoq•Q—‡É|×=v›Í{}np%2õe4÷Ğ¤"Àá¦”©BóË«b5É|æ3yHŠ°Óï«A!dÿˆ€ô÷¢º„Ù"¦šGcõ[¤'t%Óp-¯Ërv!Ë”Íª)4©>$ ƒæg7&D¯!:‹Yî*§^¬éd Šæ‹@@Xf ´ Ï÷øùåßdNB„ÙÀ“)	tÈ¼rê4ƒóŒßÍÆŞäKp-c!ÜIlä€ãAÀÑK€3›ÊÀx,S©pÖÅÉ-i›ÊˆûÛ……Òğ2i\ÿ=–Oè&Dõ	²ÉL­t±èeLGîœB ¸^tx™ù4›ÉÂg¡8Èq¬cÀÓg·ÂŞ€L‰±Ì# İ'`.#9¤•¬2±&tZÍĞí´BË&£RúúY,ÿ‹å—fƒşç¢*…ÙÀ“*ş¤‚h6eáFĞéEPÙç—÷İ‰&à62˜²LYÜF#ìïô€Û"Dá5nE’pÊ
+âHÌ¦Ça…~šn·ıÉÔiêA'&ôOX~j5¢¢Z…iCàI
+40ğ-æƒ)àò|Š¥êãzt|¬W®£i5™Ì(¦Ò Ë{Ò>JuñÅ\¨öÓÒˆìf‡Ó;ıN°›%‹//Â\2Ñl"¹"2§[óx]9MğZŒDVäsXxt,g3ßU+DHO<ŸĞî®ºŠ¸ïÊ|âIùy¯ÎÓÈtˆŒ\Ÿ‹Âd*+ùrLöú\Ğ+3—™D®"èø”ešS.ë`·ß;}Nf~¸Ü¤`"h® ™h*6TëûQ|@øG‡¼^8¬UîªóXŞ´‚ıÒ&ÀóH‘æh:%á~"]å‹q¡	u¨ËÇ@æÆ<1,êÕza›O1­ˆåÜ¥e°a·‚n»öİ`3¡ˆ€s'”@-yUxÄR`#C—êØÊs?Óé„=]n0•Ş¯«“é ¨b!B68ğDsù#ÈbxĞÄÉÃ²µ/†z§÷v2Ğ™Š§áZ(Î …¶¿ĞM cbæ£GaˆÉì…Ä†`p°Ë»dİœÃíhZÅ„*€ÓæS'çCãÅ%wJÓu#ƒšŒea2‘…ü‚ê\‰|V€Ó¦Œ:ï4™DÖB!B62ğDr¹	\ì@S>™	C¼XTÌ+Òî+dĞôúıTXˆ»^@@À(Kğñ£Äò
+{! 9°Í&Ÿ²£±™¤
+¥*°ñ˜°Í¯Mš¥„@èÚT¾œOq\T@ˆ˜×Ÿï‚Óª€Ï«.³é‚¨j!B6(ZÎæ¨k­O%Ó(Ë¬¢„àCfR2u®£•Gå§è‡=>'øìfÈà÷“adMEv<ÊÓ'êõƒÁäKd9<Œ°lŒN‰_/[„H&%90´Q!péóÁ·†È¶ôìü9sø¿¹3ÏSş{KT³!K,êí8k¦TşSîá€‹m#‹Âh=`5C¿ÇÁÖ?E&Cæg ‚.èó: ıi>SxÂ7£öÛÜ§a&™‡#C`6–|h~ Û/ üšMeG(]€[3	Øµ…•Äòù×=fóùF/ã•ŸŠ!¤İdË¦Šò©¶G°\i^ºñÉxæ3Ù™#4s©¤Š¥
+#Á}N+|H¯oER¬gŠ
+9ŠiÛ½pfR9v,ól‡¶# EÓyøíıÌ!pvÃ‡ËÿTÌçÊ£˜š­4üz¬0èµÉ×¬ÜãÓ©„r/,ßíSÈ&•rñÕl÷©ömLS‹±™0L%+ BJl@ÆÓçµ3öJç ]X` Ôë0ƒ™IÍÍ0gH:Ø…ÇöbI!ûùğš^Ùbè(€#o«#€ÉxVƒ|?>ŸêúThòÍ'² ˆö)DÈ†òQROr?Fp!‡2g<4¢Ø(³ÉXZñÃì@3Š–£iÈÉÉjĞÃ®N)êÇ£¸½\6@+WMI6ë¨ĞµB~Z|=TèÜ.d<ìÚ%©g‹™…±¿3œÍhüõ(¯C	Ë”Yˆ­<Ó4³àYRĞÙdVf ºŠSÙeUXÄLJòíPÊ§ÕÈÀäÌPè¼aŸm»3—`ƒkM©ÊRW6ÌÙ¬b1yõ¾F%'÷¢Ñ5¨^ÙìL¥İZ€çØ:Õƒoï-DÈÚªè·8@„™/¦Âv(<Á"ÈËä‹lìíó3å– ‚›R4¶§—€×ïD2‹šRK©u¯mïôXš¢Ó±ŒrîÎ{Ø Ü4:ê`ÁGˆ-!FÔÇ¯ò4pIÕãÔi7ËÊ]f¾²l*‘9CÛbrï­»LŠg
+Ê/(×PÔ]Î³SÛ£dg»g¹2B™¤Qœèı°t>›I6İÊOŞ_ˆ!x ã\Ô±R¤È|½Äü>Òº™ºw
+ Âf"rV¹Ø@ğ”k¢Ô¥ÕŸM<òy)²’@ »=ŸagìØıä*ù|Jå* "DÈÆ1µz™™Åré“…–N‹IñÓøœfx&èdÅE€„'»d`¢Ë™éEl§TÇo£6¥¸“¹\cjuâõ‚öŠã˜ÒºÓ?¼‘¢©÷T—âøü|§¥A›mTÃû[ÇºÍQÈ–a<ˆœx”U€@bĞëªØF×&³›23Œ¸Ì:×Å¡ßk}"€SÍnê/Ë8ßá©Ënø¦Z‹ëw£0È³ë?»İ&“1’l/ú&Îx&5¾sXFšğÉ4:ö’ÆkÑ`¯wEs²e€‡¯o†›R¤üV£nI#EÉ½ƒ`te:ÁÖÄ²rÔâ¦Ô˜aôÏ„ vd—ì6ã¢¦‘ªŸç“»øb6ÍîÓï±ÂŞí.H¤ò—C2Ìz=øİÆº°.7Á:k<–z¡.68æ¸hbB„Ôe<’:³+İ°{‚(;àö€fSx“ÒcL%rUQãå2TE¸×uz¬F8<ä‡ÊŸTè¸ßQäó‡	øü±4hÑ`õõaŸCö(Iö®éyIqe2`ı—¨j!B6ğ¨@İãÄü.NæÀt°ÏÍÖD³‹šRêÏe™åwØa_Ÿ»Êœ‚†÷pX,Ç6·ûYä;m¿=—QÀ³ßoSzÇğĞQQÕB„l$à‘5Ş"+/ÿLs[i,ú=ĞçµÂŸ‰Ì!ª^«vĞ‹Ç’OFë„‚j–Õßi‡tÚ«îÙNVN·á0`G—ß÷Âv‡c¢Íë‰ÇİOiH^úêø“ÈW4&¯/×Q>õß•—jù¡ü\ÇTÇÑ½Ï.rÿf®ò÷äßûXIÌ¿çbç®ä»/õÇTß“?C«ëYıêú¥ûƒµíˆX•¶gä&ŒA T®°“t¡Z1³	¸-ğu,éLæùÊx,^4¥‚¸ÀF‹9±,õ9ù|	>ˆÉ¦œnw*Ç!Pµ³™5"+÷5úœ *Aã2 œkò—¡ş`FºşkªÆøxr´5o¤Ô@-óÚü{ŸÅGsÉå„|ÜIX¾sŞ§zÇCëDı¾Çåw|v…u}J.¾%ê÷˜|ÌY¹DÚµíã™Áå6Å!¬2·Ò¹Ø,F` !ü³YMĞo55<VZËmÃÏ½†\AJJæ4ëaW¯“ï›èw:Î·)Ãáq%¿ŞïÈçµ&~%}¶Óò",İ£7²Ìks<Óä»ú…ÜÈO¶XÙµ¾ç3²Ò_hyŸõûDX·UÛÓ£‚ŞcŒÄi®‰ü.Ã|"ßT¤¸::\ë?¾vlÖÈt2±î‡³Šïèğ.¯:œâÚt.®°âkAàr“»•JÒŒ¼Ó$èÔš}Í¼³‹ò½|-|Ï›¼ŞJŞçĞ*ÔÅšµ=_sE¥icÔ±Z¢¹¦Ã¬ÕÌfµAkŸïãñXõ`EÕ½\Îóm
+:#«tİ•Æ¢YeĞùaoH£Ò®FPîH“JûÎ
+ß§Z—ogMÛ•ö¢ìtšª7C©¤²…EÀ`‘4ª²š 5ËÃÿ\Ÿg©7J<šXZ¼ zÂ¶“_¬¢bs“d¥6ÿjÈ±^û”FàY-9¥ñú-I×š¶=ı°×}Ut‚Ô”œ¿åR%?)òS§«XœÁ,Z j>–ƒ_]ã S®biYe #ÀİXâ@Î)¿ÂÔcpZö'—mh­Æ•€G3&DdßãJ•ù]ÕûÕ©ÊNÙ‡4Ö¢g8ÓÄ»¼•£MÑöô2¨\`£•ÍFèq›«L—éx¦Ã™ee·ZœÁh¬z us2	ÿs-$Œj1à®¤İ(W›·L,-¿ÔTé‡äÊæ‘+ÊNĞÖƒuªÅÏÎóúª»Ğ[ÑÅ<.+º_VüC ­çJKn£±:ÊÍßákª÷[û<çäç¸¤AÉÓÆúö«İ/¿“H»·=ğg\±Ÿ
+ÚŸÈsåaR™‚Ê	\[óÙ€æ™#´€ÖG_FáÃ;Q)ã!å ÒéàÛû,&K˜ª­6‘ÅIXºË6"ÓH)†ZD©#²’—Ÿ‹7LÎV"çT9¢‹×46ğÏ~®pÎ‚ö¿“Şq#Ó–YßüÆÚ¹í1àÙãó©uÔÔj5Â¿µ’¦”%ü*ÃÆã—»¬Ÿ4‰šé¹j´¦æ³pá“ÇğÅtJ1©(TâÛÏÀOIÃjRªª@«]¦0ndş\íãqNjll+ã‹0ñş"7ê?­áú>ïÉËÓè;¬ğıŸkPß<¦p¬]Û^¥¤o¢GI‰wm³ƒËb¬ê)ŠfŠğá­¤3ÅŠb/£4ZÉt>ø<¿º‚Pª¨<ÏvŸ¾}°ƒ²)w"yùZ:pZ
+h‘ÿªMÌ¬±¥X©) ¥­F
+-cq´Dò¬A½-÷ûh F-ƒ9ãŒ´cÛS€çi¿'Jã^HF=<»İÉÒ™–xâw|~ó§0L<N/Á`g4ùü|ù0	×îÅa:”] îã=ŞıdîÌf¤äó²?ç+ƒn8†L‡…[È÷æ+©Oı.
+£<Ñ&lG‹’4;*·Qå¯¤+ù,¬^
+ÓM4ğv•€6ŞÄ{8Ûm¯jXò>¿÷íë¡èË¸ú=—Ã/yàwwc,Õ·ahšâË÷ã0æO¿ß=~
+ƒ0,‘´““á<ŠæØ¤,Ëád
+¾³ß>·¹îY÷ç²UÑòÄr^Üå—ÃTå¹I$0Ÿ*€NxyºÖ¶	mUNŸVükÕ’Èø~kÁp[]ßm×öŒOÂ¼ÿpõ€Ëi„¯îtÃ‡·c2`ĞdëR^ŠÅ¢ry"n›‘E›Ó8 5(ÌÆóK!'ƒ0ªSâ¨î#xy\æº µ{»Ù0u°·×İV¶%!S7úED€ë»ºìªX®¶‰ÑjÔ—óë®åœcËlXØ¼¢b=Ö„iÔì=6Êû]·¶÷ğìx£Ÿ…"Gqõ=	|LğÕ§<p&–]P[W™À…¶Ğğ}JT<wrõ¹AEu|µø‘	ıÙs òAUù–è\#‹’2šzØ·Ã¡Ähíó{.lÆ³Z•/¤"<r-|C€gl+´=}½Ï|QÔå£X®’Â»|ìóÃp—MñûT÷>••Ô©|½$Os\;Àºê½È{ è77Ì©¼Ø Ãkãq¸õXÊ@H^Şã³YÉ±ü3¡KB4²¾»°òĞ!MÊ¢¡ç:|ÑOç‰ù”ßÂ¯3ó§Ï;|nOgà~(y"=	t2»©f6œ¡˜Ø¼[Âó»ü–'ösYÊW¤ŠFçSñ¼„æà@·2;ÅÕıßÛ¢j…h`9ïˆ×°Á€‡ä ‚.Ş¸2&ÉÏ±xf=ìA“†JM¬HªQ¹LEsU¦Ô@À
+^‡º<fğyL*‘€ª€ÀEcƒ“â·Ñšhb>W¹OĞÊa‰=¯¨V!˜ 
+<\ëğ_›âê±üÈÓÛĞd¢Ò#»b.^™‡Hº’üëq,»A1¿ÂÑ<D’E¶J2'è!3©›4ƒEã„`:˜šËÂ\’z²Êà²ÀéTò5_@¦vµÍê ‘3q9&€–s.máv¯tŞ…J6½z~—‹°zî—6{Û3j¾Z§ŸØÄO¨\—Ôí~ã ‡‹—÷ùàÊİëj'Iæ`ì^B±Ÿ*ytdÎS–z£BñôuÙªªÅL®ëwâğéıs.Ñ¹]PR& lË¤îÔ¨—Éºœ•Ôs²Ñ¤Qœ˜·ZÊ©`ù¶BÛ3.çiuú©ÇHé5úãlˆÌ°×&=<¿Û‡FøüaŠÍ\ÁºÏK*H‘Á†İÜ ƒ—ú:-O¤@­grÓù‡ïïöša¸ßÁÖ¨&vø/lBEáİ»Í€…–Aj[U)ÆéufƒÍ²(_;¶=c+î+ÁÀŸÌ†Ş—ı@0Üç€A4ÎfáÊ½$¤L‹l7Â`Ğ
+Û4üŞÊàArH'SEÆ~Â‰<=à‹¥ºÓm>VP¢ÛwtXáè~Ÿjnvx³MAK#§_¥f†®ŸhÁ=7³§‘‰µÚ,£‘âhüqh6ëâ†i{ÆV½Íçƒó>lJà3@ìg°×Î€‚Ì-
+4%	%¬kz¥¦Ây6*:™-1ŸO"· Ğ‚Ï·FU,èætZI{ñÒn7˜ÌÊ,o
+Ú•íğY|-ª|-IË·2ğ¬Ôï±R¦¡PNAã|Ê­p¯[ÛÓ·²Æ|F_9Şà§ƒ½6øæ3> É%Êr¸9|~ö OÀU\R<V2[d~›2ïS®8yZ&‘=1Ğ¢Èt»Ir(Kû. ãz³Íû»™–_6>;C£Æ6&ğeÙ¦ÀÊÆıD4¼ÿ°tÔ8í»ØÎmO¿5÷B°ã<."(PvCÖ•şİ;aW·4 ä‡ÜÛ,J“üõù­°¿ß‡Ÿñ(¨YdBÜˆ*Ñé{É¯SX¸j¡÷g ñô'Z’ŸÛâÀÒHéO5`9­È­¥¾ß©p'ä:~§İÛ®Ù	õš‘ÏSÀ÷ğ,)õTås%˜çà³{I6ˆOøç´à•;Àlyßÿ4·g¤hö€ÃßÿFïšx±«c°UÏûÊOG›õ4úÕÑ5q=­İ³êÉä¸2hÍhGç5šÏ½ÜÂï´Z×nôî—úZò4\)‡T¿üZó5ë Ø]X›,rCµ½U.¿›™û	.~ªT¤T+Ÿ'á³‰óó0f„ ò¯ÀlÖ+õ&NFi±¯"sêô+NéW_êê¸°I€‡*ïò*6Fj4”¹n|‹ÏZ)}£ïÒìüa«	<kŞöôkğÅákÛ:	xˆ™¼ÉÍ/êRß3ä„ã}hbIÓ'‡’E»™`­“Ò]ü÷Gspk&£˜X‡÷x Ãgâ¹~F[	:@ÆA{>šåTüqÁ£ü]œİ ÏqZãk‹´ İ¬yÛÓ¯Õ[Fğ‰byûëÛ:S!3‰¶|f8şœOr÷ ÂÜ˜LÁè•üÇ³0É+éOïõÀğ€ƒg/¤¤e¯nB¥XÎl˜Z+^8”[«ôc- °•fƒÖå_^Ó¶§_ZGğ¡Y-Òì98”¼kH·¢Ï·f*³ZÃù;#~ŞáàctmR¥he2oòQì SWË­¸ÁÊG€¯$wò¹U`±kÖöôëUë‡»;@Ê‡É»C¥/h­ÌH!÷zííµÃ_¾„î …÷a±t\!k¼A¥¯d¬ÿ%;¹åˆ¨år~Q/­Òwjåµ[ñîyhÄÉ&”—ûNk¨¿fëú´ÆºâÏ æf©äóã±í­‰sy)yz–b \Ssğ«±0øFxªÇ;¶YÁíªßxU‡æÕ7ºƒ«õ,M:—¹ÔK˜İêz<#ŞªÔ6>>äR‹î7²È=6Òµë½‹å~ÿ‘šw\rï.¢ÄµÇG`eŒ÷«sÍK®}lêlUÚŞºÏ{S³3¸èÊg¥QË«¡ö2©~v¤'øa²9Ä¸Ş€¸w‹€Çd‘ §TV"Óà`yûhO0*ªJˆ<­(ÿ.3ú:²uŞG0ıfopTT!›Sş_€ upÙĞª”4A    IEND®B`‚Yimage/pngÔ_http://chart.apis.google.com/chart?chxt=y&chd=t%3A100%2C40%2C27%2C25%2C9&chco=609bcc&chm=t+8213%2C000000%2C0%2C0%2C11%7Ct+3353%2C000000%2C0%2C1%2C11%7Ct+2223%2C000000%2C0%2C2%2C11%7Ct+2066%2C000000%2C0%2C3%2C11%7Ct+785%2C000000%2C0%2C4%2C11&chs=600x175&cht=bhs&chtt=Web+server+requests%2Fsec+%28AMD+Opteron%2C+2.4GHz%2C+4+cores%29&chxl=0%3A%7CCherryPy+%28standalone%29%7Cweb.py+%28Apache%2Fmod_wsgi%29%7CDjango+%28Apache%2Fmod_wsgi%29%7CTornado+%281+single-threaded+frontend%29%7CTornado+%28nginx%3B+4+frontends%29%7COôbplist00ÔbcX$versionX$objectsY$archiverT$top † ¯"()012HIJKLMNOPQRSTUVWX\]U$nullİ	
+ !R$6S$10R$2R$7R$3S$11R$8V$classR$4R$9R$0R$5R$1€€€ €€€€ €Ó#$%&[NS.relativeWNS.base€€€ _http://chart.apis.google.com/chart?chxt=y&chd=t%3A100%2C40%2C27%2C25%2C9&chco=609bcc&chm=t+8213%2C000000%2C0%2C0%2C11%7Ct+3353%2C000000%2C0%2C1%2C11%7Ct+2223%2C000000%2C0%2C2%2C11%7Ct+2066%2C000000%2C0%2C3%2C11%7Ct+785%2C000000%2C0%2C4%2C11&chs=600x175&cht=bhs&chtt=Web+server+requests%2Fsec+%28AMD+Opteron%2C+2.4GHz%2C+4+cores%29&chxl=0%3A%7CCherryPy+%28standalone%29%7Cweb.py+%28Apache%2Fmod_wsgi%29%7CDjango+%28Apache%2Fmod_wsgi%29%7CTornado+%281+single-threaded+frontend%29%7CTornado+%28nginx%3B+4+frontends%29%7CÒ*+,-Z$classnameX$classesUNSURL¢./UNSURLXNSObject#A±›kÚ»)=ÈÓ3456?WNS.keysZNS.objects€¨789:;<=>€	€
+€€€€€€¨@ABCDEFG€€€€€€€€VServer]Cache-Control\Content-TypeWExpiresTDate_X-Content-Type-Options^Content-Length_X-Xss-Protection_GoogleChartAPI/1.0_public, max-age=86400Yimage/png_Thu, 13 May 2010 23:06:02 GMT_Wed, 12 May 2010 23:06:02 GMTWnosniffU18299]1; mode=blockÒ*+YZ_NSMutableDictionary£Y[/\NSDictionaryG{Ò*+^__NSHTTPURLResponse£`a/_NSHTTPURLResponse]NSURLResponse_NSKeyedArchiverÑde_WebResourceResponse€    # - 2 7 V \ w z ~  „ ‡ ‹  • ˜ ›  ¡ ¤ ¦ ¨ ª ¬ ® ° ² ´ ¶ ¸ º ¼ Ã Ï × Ù Û İæëöÿ ")1<>GIKMOQSUW`bdfhjlnpw…’šŸ¸ÇÚï1QY_mrˆŒ™œ¡µ¹ÍÛíğ             f              OG{‰PNG
+
+   IHDR  X   ¯   ®7   bKGD ÿ ÿ ÿ ½§“    IDATxœíİy@SWÚ0ğs“0…%€ àˆR«ˆ#nÕ2µ‹»o­Õ–eê´3îÓN«¯µnkqi«ZÇ¡ÔÖÁ¢E\jeSvˆ„@ k’@Èr¿?îÌıò&!DK…Êóû+99÷9çòäœ{/ÁpG   ÀHEê    C	!  €!  €!  €!xÜN<ùÎ;ïOsss—/_şË/¿Oq_»vmVVV›———oÙ²å7ïå“Âh4xAœF£9xğàoÑºL&;|ø°iÉ•+W–/_şÏşÓ´ğÅ_Ü´i“Ù¶'NœX¾|yii)BèwŞYş_ë×¯?räˆB¡è¯ÑÚÚÚwŞy'...::úÅ_<{ö¬N§°«öÔoÇñœœœcÇ<y²®®Îvå;wîdgg›–ˆD"bgÎœùÇ?şñÄ‰Z­–|õõ×_¿~ıºiıÏ?ÿüÃ?ü5¶ìÃcVUUõücB"Û˜1c~úé§¾¾>âé7şùgâi}}½@ 7n\›÷öö¶´´<>{î¹¢¢"ÛuîÜ¹3~üøß¢õ£G.X°À´äÛo¿U*•™™™¦…¥¥¥ÕÕÕd‰ÑhüöÛo›šš4BH"‘DFFşå/ùË_ş²råÊŠŠŠ—_~¹»»Û²Å’’’õë×³ÙìÔÔÔıë_7nÌÌÌÜ¶m›Ñh´İU{ê7²gÏ£G:88H$’µk×’–¤RéÎ;Mû)Ö­[7jÔ¨£Gfdd$%%ıøã¦_4›››U*•iÎÎN™LöÈ½µìÃã7qâÄë×¯‹ÅâÁ
+‰<nÓ§O×étUUU!Ç
+
+âââîÜ¹C¼Z^^îââB<U«Õ÷îİ
+…fßÖq¯®®.//7ı5$‰îİ»×ŞŞnZhÇqbz!
+»ººº»»É$MÔïííµs[³Z¾ÔßîH$’»wïvuuét:â£ßh4Êår²‚F£!»a#Ù.wwwF•JEî‘Õ1¹yóæœ9sjĞEEEÍÍÍÈš´´´Lœ8‘,imm-..Ş¹sg]]]mm­iåˆˆˆü‘|ZRRâêêÊd2É??¿¨¨¨¨¨¨…¦¥¥ÑéôsçÎ™µ¨×ë÷îİûüóÏïÜ¹344Ô××7>>şôéÓUUUD•JE¼y***Èìh9Pvë®®®¢¢¢úúz²dµ–––»wï*•J«ƒc:JÙÙÙiii‰‰‰{÷î]»víÉ“'­Ö4»ví5j”iáßÿş÷E‹½ûî»S¦Lñõõ‹‹ûä“Oòóó‹‹‹m·KŒ†Ü„I¶í>˜±ú®°1PöüX¾-Ÿ}öYË7À#£V  ìÄårıııËÊÊ"""jkk{zz^{íµU«Vi4ƒQ^^>uêT
+…‚ºuëÖ={|||Z[[Ç{ìØ1â“±¯¯oóæÍr¹œÉd8qbôèÑ¦Môõõ%''×ÕÕyzzşòË/Û·o_¶lYU*Õ¢E‹^yå•Ó§O8p ;;ÛÅÅeÇ!£ÑøüóÏ¿õÖ[óçÏ·gÛÙ³g“}°|©¿İ9uêÔgŸ}Æãñd2ÙÌ™3{{{:$•J—-[v÷î]"Ú¡C‡¼¼¼ˆõC«q¬îò»ï¾ÛÚÚzèĞ!­V;oŞ<«c¢Óé
+…»»ûCBèÂ…©©©şşşÏ<óÌ_şò³••õôÓO›–\¹r%00066–Ïçggg‘/ÅÇÇşùç[¶lÁ0!”““3şü¯¿şÚê[ÈÁÁaÙ²eß}÷İo¼aZ^\\ÜÖÖöê«¯š½ß^xá…¬¬¬_|±¸¸øã?5jTGG‡R©d±X'Nœğôô4¨E‹Ùy¬333:Äãñ¤Rihhè¡C‡ètºJ¥š?ş¦M›nİº¥×ë[ZZN:ÜßŸƒ\.Ÿ;w®¯¯/ñÔßßÿ‡~°ZóôéÓîîîÁÁÁäÊgmmmmmmJJŠi5ooï‹/š~‡èOqqñ®]»ˆÇZ­¶···  Àö&–}0cõ]Ñß@ÙóÒßÛrîÜ¹G}ûí·©Tê€{:0€ÇnÿşıÉÉÉ8Ÿ={–x°téÒ›7oâ8şÜsÏ¥§§ã8®P(fÏMööönÚ´éÀ8DFF={Çq­Vûúë¯¿õÖ[fñoİºµpáB­V‹ãø÷ßÿê«¯Ú¨T*§M›¶k×.¢ş7æÏŸo0p/**š;w®V«µs[Sf/õ¡¬¬lÆŒUUU8‹Åâyóæ»ÓÒÒIF{ï½÷ÒÒÒlÄ±ºË8?ûì³6*üüóÏÄ`>Ô ‰D¢™3gÖÔÔ]9s&ñ-ŞÔúõëóóóMKV®\yîÜ9â¸?óÌ3Äi9Ç§OŸ^UUµlÙ²²²2ÇÃüùóâââ~şùgÇ×¬YClHúùçŸgÍšeÖâW_}µråJÜÂO?ı4sæLü¿o3gÎà8®Õj·oßn6Pvëæææ3fâ8®R©^zé¥Ï>ûŒ¨yôèQ"ìÖ­[9bÙ%«ÔjõÚµk‰æÌ”––.]ºT¡P8pà½÷Ş#
+øá‡E‹‘ud2YÕI$¢ğ™gÙ´iÓ&^zé%³?F³råÊO?ıÔv÷¬öÁ”Õw…²ç¤¿÷-ãË—/¯¬¬`LíK£`L›6øÈËÏÏŸ1cBhæÌ™yyy
+…âÁƒÓ¦MCåçç{xxL™2E.—÷ôô,^¼˜<-áää´bÅ
+„Nå•WòòòÌÎ 1…BqåÊ¥R¹téRb­ÉF@Ç7lØ@§ÓBÑÑÑz½XYºråÊ¢E‹ètºÛš1}©¿×¯_‰‰	E=záÂ…¶‡®¿8VwyÀ1Aİ¸qcîÜ¹;h·nİš:u*1ÑñññIMMuuu5kQ$ùøø˜>ıå—_ˆ/qqq‰¤¼¼Ü´şüùó¯^½Š*))qssó÷÷·1T*ÕrU\§ÓÑhVV¹õz=ñ˜N§¯^½ı÷ÍóÓO?áÿwÎÎc}çÎ   éÓ§#„œŸ{î¹[·n‘AşøÇ?x<éJ»W¯^}é¥—\]]“’’Ì^êîîŞ½{÷ßşö7‹eZŞ××gº¿ÿş÷¿““““““7oŞlºl8jÔ(	GGGÓ 8ïİ»wÌ˜1–×+ÙÓSVß6Ê?olŸ¯-²,‚!0mÚ´îîîšššÒÒRbñ$::úÈ‘#ÑÑÑL&300!ÔÑÑ!“É^yår+‡C<pww'··w__ŸV«5=oùÎ;ï|ıõ×ÿûß7nÜg# BÈÃÃƒxàààwíÚµğğğk×®}úé§¶;cº­%ò¥ş"tttËb!OOO‰Dbcèú‹cu—M7´ZÁh4677ûùù=ì µ··{yy‘…S§N5ë'ãÆÙÙ™,ÉÎÎ6Ï<óŒiIXXù4>>~Ë–-o½õ±.jcB---¦ x{{777FbiôàÁoooâ±››™	¼¼¼zzzz{{Mß<vk¹\NÆDq¹Üò©la©««kçÎ‰$99yŞ¼y–NŸ>íáá!•J/_¾ÜØØ¨×ë/_¾¼hÑ"ooïÖÖÖ¢ÿ6lØ°aBèĞ¡C¦ßbccÈ§===¦—™œ8q¢¹¹ùÌ™3Ä¢túëƒéVVß¶jÀ?olb½ÚFŸí‰‡øùçŸ“_ü§OŸ.•J³²²"##‰O1‹åïïŸNl¢V«Õj5ñ¸««‹ü°“J¥Ãìì½J¥Š‹‹KHHP(—/_şë_ÿúïÿÛF@3.Ü¹sçŒ3|||ˆ¯·öoÛŸş"¸¸¸´µµ‘ÕZ[[­n®T*‰˜şâXİeOOOÛc"‹§L™òƒÆd2M¯İ½víÇ3½ôÃ0ƒ¡V«İÜÜB8ggg'%%½ğÂD…ŒŒŒ/¿üòÏş3y'88˜Á`Ü»w/77÷Ô©S¶Ç3;;{æÌ™f…3fÌĞjµ999ñññd!q*y5\.×ëõÄDJ*•::::99™±óX»ººš^»ÑÖÖÆf³m÷Ù*ƒÁğæ›o†††=zÔêºBÈËË«±±‘˜.755†«W¯.\¸0,,ŒÁ`dee=ÿüó¦û[XXiOëW®\¹xñâ¹sçl_ÿb£¦‰Ğê»ÂÎz„7¶Z­vqq±g7K£`hLŸ>=77÷©§"2Œ)S¦\»vXEEEEÕ××ß»w!d4·oß~öìYâ%FCÜˆf0Î=kvEB(33sãÆƒÍfó½^o# ™©S§R©ÔcÇ§åmwÆNıE˜1cÆÍ›7‰Û(ÛÚÚ®\¹BÔ'>›ššB2™Œ¼Š¡¿8Vw™Ø„X7¶Záúõë±±±0h³fÍ*(( .”J¥ï¾û®e¶ g·åååR©tñâÅŒÿZ¸p¡\.7»:#>>şğáÃîîîcÇ5‹¦R©Z[[[[[kjjöîİÛĞĞğ?ÿó?fuX,ÖæÍ›?øàò•JµwïŞÖÖVbª„êíí=ş<úï›'::šü('ÊÎc-ˆÛ{zz¾ıöÛ˜˜Ëj¦~üñÇ’’³Â¼¼<©Túâ‹/655ÕÕÕÕÕÕ¨OÄ_µjÕÑÿš5kÖŒ3=J¡P;võêUb···wÿşıvŞ_T]]½ÿşƒšÎØúëg}0­cõ]aç@=Â[,óx<{öt@0#CcÚ´i_}õq‚]\\L&B.—û×¿şuëÖ­AAAmmm®®®ï½÷ñRHHÈwß}wéÒ%¹\Î`0ˆÕKSÏ<óLffæ²eË|}}kkkW­ZEœ¬ê/ 
+…2şüıë_ä;±SfÏ¿víÚàà`‰DBŞ7âáá³aÃ†I“&I¥ÒY³fÙÓß.»¹¹;vL¯×[­pÿşı?ıéO0h¡¡¡ë×¯_·n]ppp]]İ‚È™%iúôé•••QQQ¡~ø!22’Ëå’¯zzz†……eggGGG“…Äİ‰‰‰–xæÌ™3gÎ „F5uêÔS§N™ÎwIëÖ­£P(Û·owqqa2™MMMÁÁÁ§N"Oaº»»_½z5++K¡PĞétòÍCÔ¬Y³ì9Ö>>>III‰‰‰!!!ÍÍÍëÖ­³õ@èÔ©Sááá¦…@¡P¬\¹’,	¸páQÚ´iááá6b>ÿüó}}}ï½÷Ş‡~H,].]ºtûöíÄíI¶ıûßÿV©T¦Ù?>  Àj?íÑß»ÂzØ7vwwwGGqrı×Ãpø&0ŒuvvÖÔÔ°X,>ŸoúõS¯×———ã8fõúNWYYÙÓÓ`ú…·¿€¿¦3¿>‚H$’J¥!!!ÙÙÙ÷îİ;tèBÈh4VTTôöö†……™-ßYcu—åryUUUPP§§§YƒÁ ‰LïaxØA‹Å£G¶úD"ÑŞ½{¿üòËG¨_I«ÕVWWk4___ÓICaaá¾}û233‰;P§L™âàà@¼d:PÈîcİÚÚúË/¿p8>ŸoûÑ«ãÇ¿õÖ[ƒ°‡ÿ—F£©®®6&Làp8F£Ñ`0»ö°~e?­¾+ì(ûßØ—/_®¨¨°¼içÑ@"`ùê«¯ÈDøxûí·_~ùåÁúÚşë‰ğâÅ‹CÒzZZZttôäÉ“‡¤uûı.úùÚk¯7J4X`¡Óé^¶ğ;òç?ÿ9==}ø$Bfz!ëc¶yóæ¡jú¡ÿ~VVV×²V@˜  ÑàªQ   #$B   #$B   #$B   #$B   #$B   #$B   #$B   #$B   #$B   #$B`¯ŞŞŞ¡î  >H„À^<ê.  ÀàƒD  `DƒD  `Dƒß#áåÓ÷†º  0È`F  `DƒD  `DƒD  `DƒD  `DƒD  `Dâ«F+**
+…i‰‹‹Kxxø 6¡P(Äb1ŸÏ·]M*•2‹5`@¥RÙÜÜú+;†ãxWW—›››i¡L&ûå—_bbb~ep;õ78b±˜Íf;;;?n  Àâa[[›X,‹ÅÿøÇ?Åbqkkëà6!‹oÜ¸a»ÑhÌÌÌtqq±' B¡())ùõËÍÍ=sæŒYáÑ£G»»»6ãŸ}öÙ#ô¡¿Áqrrúæ›o!   <fÍå·<¶åÊ¡×ë‹®%Me·~<¶å‡ƒ›ª¯}MV3w¾ÜG>şt1ûà¦«‡ë‹®ñŒ0..x››ûì³Ïš¦"…BÑÓÓãåå…aãF£Çq…Báææf41“J¥¦³–öövNÇåri´ÿì”L&stt4mÎ4¦iyQQQHH…B!²ŞÚÚêääÄd2Fã˜1cV¬X²¬l00£P(!ƒÁ@¡P03-$555]¹r…ËåšêõzFó‡?üÁtİİİ­†i»:®¢¢B¯×û®P(4———=2Çe2N'f¨nnn:N*•z{{?Âa €ÇCÙú ïûş°åF¡æ|œÌ=£Pó¿:0ïÍ#NÎ·NïrprŠYÖR•÷ËÏ—Òb+Ù/¥‚kçãŞ8dÔ÷]=òÆp¼¡ÇñsçÎÕ××»¸¸h4šäää®®®‹/ªÕêqãÆÍš5ëÂ…B¡ğÕW_NIIQ«ÕL&S"‘lÛ¶Íf§¦¦vwwS©TƒáäädÓtôÎ;ë×¯G577[ÿôÓO»ºº(Š›››““SLLÌåË—·lÙbY¹§§çúõëúÓŸärùáÃ‡ß~ûm‹uüøñààà…’ÍiµÚ/¿ü2!!áçŸ6İñşóŸ}}}ÇOHH ÷wÅŠf=W(fíæååiµÚ“'O&&&fddTTT°Ùl¹\””ÔÛÛkVyüøñfƒ£P(9âêêÚÙÙ9aÂ„U«V!„"""òóó×a €‡ÖİÖÂö	p„ró› 6êûzÇÏXìæŒ?sI{}UPÌ2MW“ëK&Â^eçÄø5L®/BÈmlÈpL„¥¥¥‰dÏ=
+å»ï¾ËÊÊŠ®­­İ¹sçèÑ£›ššŞÿ}6›››[ZZêîîîêêšœœŒ:ş|UU•^¯wppØ½{7†a§NÒëõ–1W®\I4g0ÚÚÚÈsufÁ;;;qß¹s'ãÇwrr2íªYå+V”””Ü¼y³²²rùòåD®]³fN7İêÂ…±±±f;¾zõêÂÂÂ­[·666’û[RRbÖóY³f™µ»~ıúòòòÄÄD¡Pxÿşıİ»wÓh´›7offf.^¼Ø¬rKK‹Ùà”””¬[·N«Õ¦§§ã8aÇËÉÉù1  ŠÑ¦UÿøÕsPh}å˜É14ÇQÄKzmO}á•¹/ „‚f-SHš+ş3÷ğŸ‡’ıRÚTzK«’Ç«FëêêÂÃÃ‰µÄ©S§ŠD"„ÏèÑ£‰
+¾¾¾l6!D¬Fr¹Ü„„„ÂÂÂK—.•——ã8.‰¢¢¢ˆõÏiÓ¦õ“ —Ë™L&ùÔ,xmmmDDBÃ°É“'›uÕ¬2BhÅŠW¯^uvv&/ùqss3]ò½wï^ooott´íA ÷×jÏ-Û%…Bƒ‘“““İŞŞŞÔÔdYÙrpx<^yyyzzzeeåêÕ«‰—Ølv{{;B¨££C ¹\>à± €ÇIİ%ÓÈÛ\Çr|ú4İêN)QŞpïÚ¥÷×Œ™3nz|Ûb£9:é´=ÃqFhzFB¡F„ƒƒYJ¥šÖ¯¯¯?yòdlll`` Z­¶ŒĞ_Lã¦ÑÌ‚§úLCÙ¨ŒêééAóH³3‘„»wïŠD¢İ»wët:µZ½wïŞwß}×²¹¿V{nÙ.‰Íf“'öBBB,+[ÇÛ»woEEEIIIFFÆ;˜L&†aVû  ÃGÍ­Ìñ3óã^"
+®ÿkÆÊ·oñ^_O÷üä]Ü}¬n%‹œ˜ÏÀ0ÏÀ0³ødx<^ee%‘ŸÊÊÊüıım×QQQ,àóùÄ¬%  €¼°³¼¼ÜvL‡C¤Ïş:SQQA<®®®¶İÇÏ=»fÍ6›}ıúu¢P&“)•J²Î†Ş{ï½]»v­_¿ŞÏÏoÇ¶c>Ôhğx¼®®®°°°ğğp½^_[[kYÇrp®]»V\\½qãF6›-‘HBr¹ÜÕÕ!äîîÎçóù|>‡Ã±İU  xÌœœ{”íÄc¼ÕÁqÔƒÒ}e\âGıeA„¨0[píŸÄãeçpœFDDäåå8p€ÅbÉd²­[·Ú¾£ 44ô“O>Q©T
+…Â`0¼òÊ+¤Óé4B¡XÆ$7§ÑhG©TZ½‰ğé§Ÿ.**:|ø0•J¥P(¶o­ËÉÉár¹¡¡¡~~~û÷ïŸ<y2—Ëıúë¯CBBÈ‹eÈ©ƒƒ†af×µÚ3–iÃ0£ÑxáÂ…^x!??ß¾}IIIz½Ş¬rLLŒÙà¦¤¤­VK¥RBÁÁÁ¶û  C+$ö…«‡sR¶bªª]ÿ§ãå?|Ş\yço>ıŸ
+s_˜¶|‹ÅVÏÿğá¦.±7è{º;1³…ÁáC,÷õõùùùÙX$)•ÊÖÖV___:ŞĞĞàïïO¥RÉ3‹6bŞ¾}Û`0Ì™3Ç2r[[›V«Õétl6»¨¨H¯×/Y²ä¡vD¥Rİ½{766ö¡¶23àhttt(•ÊqãÆ!„¤R©Z­öóó3»H‡„ã¸Ùàh4š––ƒáããC¬ˆ~ñÅñññ>>ÿÿ+•P(Üë¡ïq €ß»šÁ7¿	ö/sõºÎ&!•îäê;~ø&ÂÇI¯×§¥¥%&&Z{ğàAZZ‘ü._¾üæ›o>ì­u………|>ßôzœáO¡Pdff¾üòË¦… O$H„ÿÑÔÔÄf³­®ŠÅâÊÊJÃÂÂÂ,ïyx"YH„ €'$B`/H„ €'Òp¼j   xl   Ñ   Ñ   Ñàb`/¡P·Ø <0#  0¢A"  0¢A"  0¢Çº†­—Oßê.€Çg.Ÿ».fìP÷€ßÌ  Œh  Œh  Œh  Œh  Œh4„PEE…B¡0-uqq	Äf
+…X,æóù¶«I¥RƒAş\.çp8¶7Q*•ÍÍÍ¡¡¡öt£»»»¡¡aòäÉöTF©Õj‘Hd}ÛìË:2™ì—_~‰‰‰”>ˆè ›Íf³ÙÎÎÎ§Q  B„P[[›X,‹ÅÿøÇ?Åbqkkëà6#‹oÜ¸a»ÑhÌÌÌtqq!öõõ8p`ÀÈ
+…¢¤¤ÄÎn´··ÿøãVÃqü³Ï>CuvvfggÛ|@ö‚e£Gvw?ô¯ ’»ğ°ˆ899}óÍ7°9x‚>}:66vşüùçÏŸï¯dùòåÓş«¬¬Ìj †B(..x’››ûì³Ï’©!¤P(zzz¼¼¼0ÃqÜh4â8®P(ÜÜÜŒF#†aR©ÔtêĞŞŞ®Óé¸\.öŸ;e2™£££i“¦1MË‹ŠŠBBB(
+B(+++??ßlJÀq\&“Ñét777„Ğ˜1cV¬XA”[íRkk«“““É4f¡
+…F£ñòò"%étºŠŠ
+½^O<5‰„Ãá8;;›‚»»»Õ v‚ÙV–uBz½^£Ñüá°Ú®Ù¡1İwrˆ>˜6×ß@™vÀÍÍM§ÓI¥RoooËC F Û·o§¤¤\¼xQ«ÕÆÇÇ‡……utt˜•„„„Ü¹sçúõëÄ&şşş–[¸,Àã×ïõ8Ÿ;w®¾¾ŞÅÅE£Ñ$''wuu]¼xQ­V7nÖ¬Y.\ptttpp
+…¯¾újpppJJŠZ­f2™‰dÛ¶ml6;55µ»»›J¥2'''Ë˜ä*(BèÎ;ë×¯'O›6mòäÉÿû¿ÿkÖ+…BqäÈWW×ÎÎÎ	&¬Zµª®®îòåË[¶linn¶ìÒ§Ÿ~ÚÕÕE¡PÜÜÜœœœfÏM†ÊÈÈ¨¨¨`³Ùr¹<))‰Ëå’/¥§§kµÚ“'O.]ºT¥R¥¦¦Òét"&ƒÁ aåÊ•fAÜİİË¦9eÂ?ÿùÏ¾¾¾ãÇ'$$í®X±Âl
+…Ù¾çåå»˜˜hÖ\oo¯YåñãÇ[v """???!!áW½¿À“B&“mÛ¶-   !Q__ßÓÓcVÂd2}}}ıüüT*•———Õ­ ‚a¨ßDXZZ*‘HöìÙCÒ£“L    IDAT¡P¾ûî»¬¬¬èèèÚÚÚ;w=º©©©¡¡áı÷ßg³Ù¹¹¹¥¥¥îîî®®®ÉÉÉ¡óçÏWUUéõz‡İ»wcvêÔ)½^osåÊ•Dsƒ¡­­˜ä!„¼¼¼,'p¡’’’€€€uëÖiµÚôôt³ŸÎ0ëRgg'ã;wîÄqüøñã¦	F(Ş¿÷îİ4íæÍ›™™™›7o&_]¿~}yyybbbSSSggç¶mÛX,VNNNii©é Xyî¹çË­Íê=Y½zuaaáÖ­[ÉvKJJÌ†qÖ¬YfûNî‚es‹/6«ÜÒÒbÙ—““óğï(ğdZ¾|9BèöíÛßÿ}GGÇìÙ³‰¥#Ó’{÷î544Ì;W¥Rùøø\¼xÑr«!Ş ¬é÷ªÑºººğğpbánêÔ©"‘!äãã3zôh¢‚¯¯/›ÍF9;;.—›PXXxéÒ¥òòrÇE"QTT±ş9mÚ´şbär9“É°»<¯¼¼<==½²²rõêÕf‹«f]ª­­ˆˆ@afvÁ‹P(d0999ÙÙÙíííMMMÕÕÕééééééR©Ô,&1m%WÉA°bÏ XneYÇ*²]«Ãh¶ï6öÔ²²Õ°Ùìööv„PGG‡@ r¹|Àl†9;;«Tª––Ë//¯'NVUUq¹ÜÔÔÔş¶`XéwFˆayúŠB¡9ÀÁÁ¬@¥RMë×××Ÿ<y266600P­V[Fè/&ÁÎŸEäñx{÷î­¨¨())ÉÈÈØ±c‡é«f]2f0Åf³É`!!!£G¦ÓéD¹˜èÿ‚Y{Ár«¼¼<ı´l×ê0Zö³¿NZV¶ÚIÃÌ¾g€‘¬ººÚÃÃ#&&&&&†B¡œ={vÍš5f%ûöí#Ş`†-Z´èÆ–[íÛ·o¨w sı~ìòx¼ÊÊJ"?•••ùûûÛ$¢¢¢,XÀçó‰©C@@ y=gyy¹í˜‡È¶]»v­¸¸8::zãÆl6["‘Ø¨Ìãñ***ˆÇÕÕÕf/uuu…………‡‡ëõúÚÚZWW×ÀÀÀÀÀÀQ£FØş‚Ø9f[YÖ°]ûes–u¬v@.—»ºº"„Üİİù|>ŸÏğVğûê«¯>şøcâ±L&sss³,9räÈ={ˆ’âââĞĞPË:¿ç ¨ßaDDD^^ŞX,–L&Ûºu«í‹øCCC?ùä•J¥P(CAAÁ+¯¼RPPpğàA:N£Ñ(ŠeÌÿßÃá(•JÓËg,¦¤¤­VK¥Rú«üôÓO>|˜J¥R(Ó»â&Nœ˜ŸŸ¿oß>ÆÆÆ¤¤$Ó13.\˜9s¦ÎXÑjµ‚åVnnnful4Š¬Ëïä.¼ğÂfÍ™ƒ$ÄÄÄXv ±±~^ıõ9sæTUUétºÖÖÖ÷ß_­V›•ôõõÅÅÅ•””•JõÁÈår³:C½ XÙ^“‹Å}}}~~~6VŞHJ¥²µµÕ××—N§744øûûS©ÔÆÆFGGGòÌ¢˜·oß6sæÌ±İŠF£iiia0>>>¶×îÚÚÚ´Z­N§c³ÙEEEz½~É’%¦¤R©Z­öóó#EMutt(•ÊqãÆ¸×fAì³­p·¬cÛ€‡Ætlì)Á²_|ñE||¼YG(î¿õĞw4‚ß/³Ÿaêëë+--e0“&Mê¯D¯×—••Ñh´)S¦–u nH„“^¯OKKKLL¬SS<HKK#’ßåË—ß|óM¸+ÎN
+…"33óå—_6-„D8ÒÀï‚b%B„PSS›Í¶½:úPÄbqee%†aaaaƒö‰gõ@@"i ‚bxıB½ŸŸßàôññ1]Üvô  Ãüú  €!  €!  €!  €mx]5
+†3¡P·Ø <0#  0¢A"  0¢A"  0¢¯êÁ0÷òé{Cİ…'G·Ëg&u/  0#  0²A"  0¢A"  0¢A"  0¢A"  0¢—D˜——wûöíÛ·oÊd2¢P­VWTTüvJ¥R¥RI>½{÷®P(ü•1íï³D"Q©TÜB¡¼¹UJ¥²ºº!$‹Õjõà €ái¸$Âôôô††±X,
+>üÃ? „T*Õİ»w£Fcff¦‹‹ñ´½½ıóÏ??wîÜ¯ÛÙÙ™mOÍÜÜ\GGÇGnH,ß¸qã‘7·J¡P””” „œœœ¾ùæ›Ál»téÒ¢E‹æÌ™sìØ1ûKNŸ>;şüóçÏM¿øıF÷.[¶ŒøIôîîî¿ÿıï|>ßßßíÚµd…öövNÇåri4ãF£Ã0©TÊf³‰:­­­NNNL&Óh4R©T„B¡èééñòòÂ0Ì´¹¢¢¢
+å?_
+£££+++ëêêÆ2!N×ÑÑÁår,»A–FOOO2¸Ñh”H$‡ì˜B¡Ğh4^^^D‹ƒÇqF<Édííí!2”eÿe2™ª×ë©T*†aF£ÇqbˆBb[:îææFÖ7±1cÆ¬X±!äææ¦Óé¤R©···]ü:ÕÕÕo¼ñÆ÷ßÏb±V¯^Íb±zê©K‚‚‚RRR.^¼¨ÕjãããÃÂÂø|şPï
+ ¿?Ã(’˜LæôéÓKKK©Têùóçß~ûm£Ñ˜’’¢V«™L¦D"Ù¶m[OOÏ…„Bá«¯¾üé§ŸvuuQ(777''§uëÖ;w®¾¾ŞÅÅE£Ñ$''‰–pçÎõë×“O×®]ëèèXTTD$Â‚‚‚»wïvuu1Œ¶¶¶-[¶Œ=Ú¬îîîgÎœ‘H$t:}Ë–-!•J•ššJ§Ó‰ñùüŒŒŒŠŠ
+6›-—Ë“’’¸\nMMMpppssó—_~Éd2q—H$|>_­V744ÄÅÅ-X° Çq³ş5*55µ»»›J¥2'''ËÑûè£BBBÎ;×ÔÔ´{÷n•Jµk×®]»v¥¦¦ºººvvvN˜0aÕªUF£ÑlÄbbb._¾LìEDDD~~~BBÂo~¼BEEEkÖ¬	G­[·®°°B¡XÂb±¶mÛ€Šˆˆ¨¯¯‡DÀ#‰!ÄårE"ù´££ÃÕÕ599!tşüùªªª€€€†††÷ßŸÍfçææ–––vvvâ8¾sçNÇ?îääTZZ*‘HöìÙC¡P¾ûî»¬¬¬•+WC[[91zğà^¯?~<•J=~üø‹/¾HÌÛß}÷]ggçÛ·ogdd¬ZµÊ¬ÎÎÎjµz×®]†¥¤¤TVVº»»wvvnÛ¶Åbåääéüşıû»wï¦Ñh7oŞÌÌÌÜ¼ysEEÅ²eËÚÛÛ‰Êôöö—/_^°`eÿ‰Yãîİ»1;uê”^¯·ºI“&İ¿?$$¤¾¾¾¯¯O­V×ÔÔL˜0¡²²2  `İºuZ­6==Çñüü|³3Ããñrrr~›ÃÌ‘ßÉÔjõ×_˜˜HLÍm—,_¾!tûöíï¿ÿ¾££cöìÙCÒy ~ï†Ë9B3z½\xDq¹Ü„„„ÂÂÂK—.•——?åëëËf³BÎÎÎƒ¡¶¶6""!„aØäÉ“BuuuáááDJ›:uªif•ËåL&“|ZXXÈápnÜ¸ÑĞĞĞÛÛK^„Âçó‰µÍéÓ§‹D"Ën…ÂğğpbÑrË–-Ä·u___bêI¬7
+…Bƒ‘“““İŞŞŞÔÔ„ãxooï¨Q£B^^^Ä:'ƒÁğóó#«²–ı‰DQQQDsÓ¦M³:t“'O¾ÿ~WW‹Å
+		©­­
+…“'Oæñxåååééé•••«W¯Æ0ÌrÄL±Ùlb¶££C ¹\ş¨ÇØ%###22rñâÅdÎ³§Ã0ggg•JÕÒÒ24ıàwn˜Îëëë‰õIòéÉ“'cccÉ«‰“^$ƒÁ@ğ#`fZBd‚é¯0â8^TT¥ÑhBAAA………'N$ãôz½e7È“p!r~fÖ1„›Í&O¶…„„ˆD¢qãÆ8–ı7+±ºÕØ±c»ººÊÊÊ‚ƒƒ¹\®P(¬©©Y´h‡ÃÙ»woEEEIIIFFÆ;,GÌ¬u³³ªà·ƒãø†äryvv6Ç³³¤ººÚÃÃ#&&&&&†B¡œ={vß¾}C¹ ü>»!±dW[[ûÔSO‘… **jÁ‚|>¿¿y	Ç#ï[ îàñx•••DÎ+++ó÷÷'+s82¡ÖÔÔĞéôåË—/^¼xñâÅ			eee:!tÿş}­V‹*))ñ÷÷·ìÇ«ªª"âœ>}úŞ=+ÿ“šÇãuuu…………‡‡ëõúÚÚÚ²²²°°°‡Â²ÿÄU¡òòr«[azåÊ•   	&”””888p8œk×®GGGoÜ¸‘ÍfK$Ë3%—Ë]]]Bîîî|>ŸÏçs8œûÍÅ‹»ºº¾ıö["ÃÙYòÕW_}üñÇÄc™Lfz À~ÃhF¸gÏÃp3fÌÖ­[;;;‰—BCC?ùä•J¥P(CAAé%š„§Ÿ~º¨¨èğáÃT*•B¡8;;GDDäåå8p€ÅbÉd²­[·’•i4‡ÃQ*•,«°°0**Š|iìØ±L&“H3ÎÎÎ~ø¡§§g]]İë¯¿a˜Y76mÚ”ŸŸèĞ!*•ªÕj#""È› I'NÌÏÏß·oŸ‡‡GcccRRRvv6±¨k›eÿ
+
+<H§Ói4Z“ÂI“&—ü—ğLš4	!˜’’"´Z-•J7nœÙˆ™ill„ß£lnÜ¸ñÃ?7ó¼ñÆ½½½–lÙ²eÎœ9UUU:®µµõı÷ßšŞğ;‡™.7MMMÄU£!¥RÙÚÚêëëK§ÓüııMO""„ÚÚÚ´Z­N§c³ÙEEEz½~É’%!±XÜ××çççg¶byûömƒÁ0gÎœşZÏËË‰DË–-“J¥cÆŒ!NéYvƒJ¥677Æ±cÇÚXK”J¥jµÚÏÏF£uvvšŞ a›Yÿqollttt=z´H¦¥¥…Á`øøø`Ößˆ¾øâ‹øøx²D(î¿Õı°‚şÊÏ0õõõ•––2âë à£¡F“——Ç`0ˆ§,‹¼ùÁôô!©§§'--mÉ’%‰ä§Ÿ~zóÍ7‰rÓrS3fÌHKK›={¶í3aL&Óô²«İ .r±Íô†<û³ ²è?†aäÊX[[Û­[·Ìê;vúôéVC1Œ   òi#†R(8÷7t`ø Óé¦ë €G0|g„
+…¢  `úôéÄ™*{ˆÅâÊÊJÃÂÂÂ,×N-555±ÙlÓ›Í^•Ëå–—S8[ŞAA¡P,¯ÖéO#fud`F8¸à‡y&†o"Ã$ÂÁ‰€abØ]5
+   <N  Œh  Œh  Œhp±°—P(„[ì O˜  Ñ   Ñ   Ñ†ï¿XÃĞË§­ü¼°mI˜÷óÓ}‡º €~ÁŒ  Àˆ‰  Àˆ‰  Àˆ‰  Àˆ‰  Àˆö;K„­­­"‘h°¢I¥R¥RI>½{÷®P(ü•1ÕjuEE…=5%‰J¥zä†
+…@ xäÍ­R*•ÕÕÕ!±X¬V«78  O¿³DXWWWXX8(¡ŒFcff¦‹‹ñ´½½ıóÏ??wîÜ¯ÛÙÙ™mOÍÜÜ\GGÇGnH,ß¸qã‘7·J¡P””” „œœœ¾ùæ›Á—.]Z´hÑœ9s;F”Ü¹sgÑ¢Eñññ999DImmíK/½ôôÓO§¥¥õW ,Ãâ>B½^O¥R138?°N*
+FãååE¡ü'mkµÚ.—ëàà@1!NG¾DF _%# „ŠŠŠBBBÈ’ÂÂÂèèèÊÊÊºººñãÇ[HÔloo×ét\.—F£‘%F£ÑôŞF£D"áp8ÎÎÎD‰Ù^Çi4ñ@&“yzz:88´··#„<<<ÈP
+…¢§§ÇËË‹Ø„L&³‘Am&±-Nwss#ë·¶¶:991™L£Ñ8fÌ˜+V „ÜÜÜt:T*õöö¶ï»TWW¿ñÆßÿ=‹ÅZ½z5‹ÅJHHxá…ÎŸ??jÔ¨gŸ}öŞ½{®®®K–,9tèĞÄ‰ÿøÇ?†„„Ì˜1Ã¬dÎœ9C½+ <9†E"üè£BBBÎ;×ÔÔ´{÷n•Jµk×®>úèâÅ‹l6[.—'%%!„ššš8À`0d2Ù›o¾éïïO)((¸{÷nWWƒÁhkkÛ²eËÍ›7}||bccB©©©±±±S¦L!½sçÎúõëÉ§………k×®utt,**"¡eÀÑ£G§¤¤¨Õj&“)‘H¶mÛæîî~æÌ‰Dâàà@§Ó·lÙ‚R©T©©©t:](¾úê«|>?##Ãt/¸\nMMMpppssó—_~Éd2q—H$|>_­V744ÄÅÅ-X° ÇñsçÎÕ××»¸¸h4šäääQ£F¥¦¦vwwS©Tƒáäädÿ`îÚµ+55ÕÕÕµ³³sÂ„	«V­2Ÿ~úiWW…BqsssrrŠ‰‰¹|ù2±ùùù			¿İqŠŠŠÖ¬YZ·n]aa¡££ãœ9s~úi„Ğ³Ï>{éÒ%ooï°°°¥K—"„¾ÿş{võêU³’¡İ 0Ãâ/jÒ¤I÷ïß		©¯¯ïëëS«Õ555&L‰D÷ïßß½{7F»yófffæ”)SZ[[ß}÷]ƒñÓO?eddlÛ¶ŒÓØØøî»ï:;;ß¾};##cáÂ…YYY±±±J¥²¥¥eÒ¤IdMƒÁĞÖÖFNŒ<x ×ëÇO¥R?şâ‹/ó6³€«V­ruuMNNF?¾ªªÊÙÙY­VïÚµÃ°”””ÊÊJww÷ÎÎÎmÛ¶±X¬œœœÒÒR*•j¶›7o®¨¨X¶lY{{;QÙÑÑñàÁƒŞŞŞñññàòåË,(--•H${öì¡P(ß}÷]VV1kÜ½{7†a§NÒëõöfeee@@Àºuë´Zmzz:ãùùù8ïÜ¹ÇñãÇ›¥UG®ÔÁB~÷R«Õ_ıubb¢éoz×ÕÕµ··5jéÒ¥---Ï=÷ÜÎ;Ï;gV2t{ ÀhXœ#œ<yòıû÷»ººX,VHHHmm­P(œ<y²P(d0999ÙÙÙíííMMM¡ĞĞPƒŠŠŠjhh0Ãçó‰¥ÈéÓ§‹D¢àà`™L¦T*ïŞ½iº.*—Ë™L&ù´°°ÃáÜ¸q£¡¡¡··—¼Å, —ËMHH(,,¼téRyy9ãB¡0<<œX´Ü²eñMß××—Åb!„ˆõFË½Àq¼··wÔ¨Q!///b“Á`øùùˆUÙºººğğp¢ÛS§N‰D"‘(**ŠhnÚ´i5˜<¯¼¼<==½²²rõêÕ†ÕÖÖFDD „0›<y²Y6›M¬Óvtt@ —Ëíø3‘‘‘‹/^±b…V«¥ÓéD9NïééQ©T×¯_ÿè£rrr®]»öå—_Z–mÿxÂ‹áØ±c»ººÊÊÊ‚ƒƒ¹\®P(¬©©Y´hÑíÛ·Ùl6yš*$$D©TçºĞÿ=ágVB¡Pôz=†aááá%%%………«V­2­iú+Œ8EEEi4„PPPPaaáÄ‰-Ö××Ÿ<y266600¸¨’<	‡"çgd	Él/D"Ñ¸qãÃL;`4ÍJ¬nÕß`r8œ½{÷VTT”””dddìØ±Ã`0Øˆ†ayVÇ7lØ —Ë³³³y<BˆËåßğBmmmNNN/¾øâ„	BëÖ­»}ûvPPYÉºuë†n' xÒ‹!†a¡¡¡W®\	
+
+š0aBII‰ƒƒ‡Ãáñx]]]aaaáááz½¾¶¶!$´Z-B¨¸¸˜H'}}}¡û÷ï/•””ç###sssûúúÆkÚ"‡Ã!o¨©©¡ÓéË—/_¼xñâÅ‹ÊÊÊt:e@@µ`Á>ŸOLx<^UUçôéÓ÷îYùŸÔ–{QVV6à°ğx¼ÊÊJ"g—••ùûûWu"„ÊËËj0¯]»V\\½qãF6›-‘Hx<y§q×„)¹\îêêŠrwwçóù|>ŸÃáØg`ÛÅ‹»ºº¾ıö[""„bbbrss‰Ç999ÑÑÑ3fÌ nyy¹ŸŸŸeÉcï8 O²a1#DMš4‰¸J…¸ê„8Ÿ7qâÄüüü}ûöyxx466&%%544¸»»8pÀËËK$½ñÆ¡ıû÷oß¾!äììüá‡zzzÖÕÕ½şúë¡   ŞŞŞyóæ™5G£Ñ8R©d±X………QQQäKcÇe2™ÄçY@Ã>ùä•J¥P(CAAÁ¦M›òóó:D¥RµZmDD„L&3kËr/²³³Ùlö€c‘——wàÀ‹%“É¶nİêìì\PPpğàA:N£Ñú›ZÌÀÀÀ””âk•J7n\QQÑáÃ‡©T*…B!/p%466ÂïÑº7nüğÃäM;o¼ñÆ&O¼dÉÆår‰÷ª»»{tt4—ËmnnÎÉÉquu5+Ò àIƒ™.OR©T­Vûùù‘§R”Jekkë˜1cL¯ïÈËË‰DË–-“J¥cÆŒ!ÎÀÆ;vlß¾İ2ñÜ¾}Û`0Ø¸İj@¢i___:ŞĞĞàïïO¥R›››FãØ±cm¬%’{A£Ñ:;;Mo°M,÷õõùùù+®8766:::=ÚÎ$FÓÒÒÂ`0|||0kkkÓjµ:Íféõú%K–•¿øâ‹øøx²D(î¿Õı°{~†©¢¢ÇqÓ«š«««{zzÂÃÃÉ•vË À .3B,oec±XÄÕ(–˜L&yLKKKNNÇ³:ıš1cFZZÚìÙ³mŸ	3hÖ4q—BÈ¥*Ó½°?"„LSBÃ0rU­­­íÖ­[fõÇ;}út«¡FPPù´§§'--mÉ’%‰ä§Ÿ~zóÍ7É—
+ãfMƒßåÅJ¡¡¡–  Åï`Fh§¦¦&¹\nú"•J«ªªfÎœI\eju6›İ_Nµ8Üà8ny…B±Æ ‹+++13ı‡ VGf„~˜€aîÉI„à·‰ğÑ@"`˜W   C!  €!  €!  €.–ö2ı÷Ğ  ğÄ€!  €!  €!  €íwğ/ÖÀğñòi+?¯ñÛÙñÌ„ o—ÇÙ" `‚!  €!  €!  €!  €!  €íÉ¼jT¡P”––vww{yyEDDĞh4µZ-‰ñÇóòòBˆJ¥zzz’?Òk›T*e0ııâ#P(b±˜Ïç›•www744<òşŠÅb6›íììü«;  Ãİ8#
+…|ğL&sttÌËËûğÃu:]gggvvö ¶rşüùúúz±XÜØØxæÌ™óçÏ¸‰ÑhÌÌÌtq±r? ãŸ}öÙ#tC,ß¸qÃ²¼½½ıÇ|„€''§o¾ùæ‘7t'OœfbË–-¡¬¬¬E‹Í›7üåË—“uÊÊÊ†´Ë €ß'mF¨×ë?ûì³—_~™˜$ÍŸ?ÿĞ¡Cùùù<!d4%	‡Ã!ç:
+…B£ÑxyyQ(ÇF#ã
+…ÂÍÍ|Ìf³©T*†aD„…BA=óÌ3®®®¡yóæíİ»wùòå†Y­I(**
+		!Jp—Édt:İÍÍ!¤Óé***ôz=FCµ··ët:.—K£Ñˆ^a&•JMgiD¦7İwÓ­Ì†E¡PôôôxyyaÖ_@Ó¡pssÓétR©ÔÛÛ{0Ï£zî¹çfÏM<Ş¿xxxmmík¯½–••E¥R—.]:yòä;wî\¿~¨æïï?tı ü<i‰°¦¦ÆÙÙÙt©pÃ†F£Q£Ñ¨TªÔÔT:.
+_}õU>ŸŸ‘‘QQQÁf³åryRR’F£¹xñ¢Z­7n\tt4ùÇqŸØØX„Pjjjllì”)SL¥R©Dvùæ›olÔ¼sçÎúõëB
+…âÈ‘#®®®&LXµjUzzºV«=yòäk¯½–’’¢V«™L¦D"Ù¶m[OOÏ…KtU   IDATˆ?>55µ»»›J¥2'''£Ñh¶Ù(ãçÎ«¯¯wqqÑh4ÉÉÉ
+…Â,`HHˆÙPp¹Üˆˆˆüüü„„„ßö€ÙÇÃÃÃÃÃ!TZZ*—Ë7lØpåÊ•ĞĞPbxÃÃÃkjjÜÜÜ|}}ıüüT*•——×Pw ğ»ñ¤%Â¶¶6³I1iÓh4Û¶mc±X999¥¥¥T*õşıû»wï¦Ñh7oŞÌÌÌ\¸pammíÎ;GİØØH>®©©ÉÊÊŠU*•---“&M""çääŒ5Ê`0”””<õÔS‘‘‘Vk"„C[[1ÿ+))	X·nV«MOOÇq|ıúõååå‰‰‰mmm®®®ÉÉÉ¡óçÏWUU444¼ÿşûl6;77·´´´¥¥ÅÁÁa÷îİ†:uJ¯×wtt˜m5vìX¢İÒÒR‰D²gÏ
+…òİwßeeeÍš5Ë, …B1ŠÍ›7óx¼œœœÇrĞBrrrZZBhîÜ¹GÙ´iNïêêZ¼xñİ»wæÎ«R©|||.^¼hu  Ì<iç1#Ö$IƒA«Õ"„|}}‰«T˜L¦Ñh
+…#''';;»½½½©©	!äãã3zôhbCòqpp°L&S*•wïŞŒŒ$W;FBB1Õë¯&BH.—3™Lâ1Ç+//OOO¯¬¬\½z5±”Jàr¹			………—.]*//'~$Ë××—Íf#„œƒH$ŠŠŠ"¶š6mZ[êêêÂÃÃ‰L:U$Y´:l6»½½!ÔÑÑ!\.´ãôH._¾ìçç7aÂ„PSS“X,<yòÄ‰»ºº<xàååuâÄ‰ÂÂÂªª*.—›šš:´½ ü^<i3B??¿ììlÇÉìrıúõºººÅ‹S©T³Êl6›œ>†„„ „ÈWÉÇ†…‡‡—””®ZµŠ¬ğôÓOÓMR5B¦É‰Çãíİ»·¢¢¢¤¤$##cÇä‰ºúúú“'OÆÆÆªÕj¢Ğ¬ç†‘)–x`u+«•‰o	ö†a¦z8HIIùÛßşF<>yòäš5k’’’ˆ§ÇOMM%{¾hÑ"«× €¥'mFÀf³³²²ˆ§===?ıôÓÔ©S-kòx¼®®®°°°ğğp½^_[[k#ldddnnn__¹äø°59™¢®]»V\\½qãF6›-‘HÈj **jÁ‚|>¿¿X@@@II	ñ¸¼¼ÜöV<¯²²’HÃeeeV/!±:r¹œHóîîî|>ŸÏçs8Ûûş›jkkO=õñ”ÉdJ¥RâqKK‹‹‹Ë‘#GöìÙC”‡††MG ¿7OÚŒ!´iÓ¦'N{xx444DDDL›6­¹¹Ù¬ÚÄ‰óóó÷íÛçááÑØØ˜””Ô×××_Ì   ŞŞŞyóæØz5i4‡ÃQ*•,+000%%E hµZ*•@¬è^¸p!**ê“O>Q©T
+…Â`0xzzš…Š‰‰)((8xğ N§Ñh
+%44Ôl+âd$B("""//ïÀ,K&“mİºÕlÊhu(BÃê÷è¯^½:kÖ,r’š˜˜8şü%K–Ğh´úúú«W¯R(”¸¸¸’’ƒÁ R©>øàƒ¡í0 à÷3]²{bà8.‘HÔjµ§§'q2¬?R©T­VûùùÑétÕŒFã;¶oßn;šíš·oß6sæÌAi4š––ƒáããC|¸wtt(•ÊqãÆ)•ÊÖÖV___:ŞĞĞàïïoy;ãäMÛ[‰Åâ¾¾>???ËEÑş†â‹/¾ˆ÷ññ!+…Âı·ºmïşà²ı3LF£±¼¼Ü`0„‡‡û¥×ëËÊÊh4Ú”)S†Ûº. `Øzg„!ÃL?Ám°ç>¹–––œœ7`´]sÆŒiii³gÏÆ0ŒÁ`™¾êîîîîîb±Xä¿éïÖ`FÜI²½•=£a:
+…‚¸idÀ­†…B	7-¡Ñh‘‘‘CÕ ÀïÔ“™•J3fÌÌ™3eM¶lÙ²îîîAük¿¥R¹|ùò¡î  <æíímç?X°¦ŸŸß uê·õ{é'  üzOÚU£   ÀCD  `DƒD  `DƒD  `D{2ï#¿¡P8¬n± €A3B   #$B   #$B   #œ#öêèèèèèê^  À`òõõ…D  `Dƒ¥Q   #$B   #$B   #$B   #$B   #Úÿ¶E1³{Q±    IEND®B`‚Yimage/png            1   <   Z   i   €   ’   ¨   ®   Ø   Ù  ¦ç  ¦ñ  ¦õ  ¦ş  §  §@  «s  °‹  °”  °  °Ì  ´İ  Ğ  Ğ¨  Ğ±  Òº  Ø²  1                           ;
