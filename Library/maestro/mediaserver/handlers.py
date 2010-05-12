@@ -153,8 +153,12 @@ class JsVerifyDetailHandler(JsHandler):
             
     def post(self, directory, file_name, test_path):
         try:
-            print 'posted results: ', directory, file_name
-            self.write('results noted.')
+            results = []
+            for key in self.request.arguments.keys():
+                if key.endswith("-results"):
+                    results.append((key,self.request.arguments[key]))
+            print 'posted results: ', directory, file_name, results
+            self.write('<html><body>results noted. %s </body></html>' % ''.join(["<div>%s : %s</div>" % (key,val) for key,val in results]))
         except Exception,e:
             print e
 
