@@ -35,12 +35,12 @@ def order_sources(source,source_map,result):
         result.append(source)
         source.used = True
 
-def expand_inline_asset_sources(inline,basedir,source_node=SourceNode, prepend_lines=[], append_lines=[], default_scope=None):
+def expand_inline_asset_sources(inline,basedir,source_node=SourceNode, attributes={}, prepend_lines=[], append_lines=[], default_scope=None):
     """
     Expand a source string
     """
     m = {}
-    source = source_node('',basedir,source=inline)
+    source = source_node('',basedir,source=inline,attributes=attributes)
     m[''] = source
     ensure_includes(source.includes,m,basedir,source_node=source_node)
 

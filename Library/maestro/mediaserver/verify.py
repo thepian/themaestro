@@ -72,17 +72,33 @@ class VerifySource(object):
         soup = BeautifulSoup(self.source)
         scripts = soup.findAll('script',type="text/pagespec", language=re.compile('.+'))
         specs = []
+        form_result_names = []
+        index = 1
         for script in scripts:
             # script["name"] or index counter
-            lines = expand_inline_asset_sources(script.string,structure.JS_DIR, source_node=JsSourceNode, default_scope = 'verify/inner.scope.js')
+            attributes = {
+                "language" : script["language"],
+                "type" : script["type"]
+            }
+            if "id" in script:
+                attributes["id"] = script["id"]
+            if "name" in script:
+                attributes["name"] = script["name"]
+            else:
+                attributes["name"] = script["language"] + str(index)
+            attributes["result_name"] = attributes["name"] + "-result"
+            form_result_names.append(attributes["result_name"])
+            lines = expand_inline_asset_sources(script.string,structure.JS_DIR, attributes=attributes, source_node=JsSourceNode, default_scope = 'verify/inner.scope.js')
             specs.append('\n'.join(lines)) #TODO do lines end with \n ?
             script.extract()
+            ++index
             
         #TODO improve the decorate_lines interface
         JsSourceNode.decorate_lines(specs,[JsSourceNode('','',source='')],basedir=structure.JS_DIR,default_scope="verify/outer.scope.js")
 
         new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
-        new_form.insert(0,'<input type="hidden" name="a-result" value=""') #TODO script name or index 
+        for name in form_result_names:
+            new_form.insert(0,'<input type="hidden" name="%s" value="">' % name)
         soup.body.append(new_form)
 
         soup.body.append("\n");
@@ -137,24 +153,10 @@ class VerifySource(object):
         
         morphed = self.soup.prettify()
         self.new_form["action"] = form_action
-        self.new_form.insert(0, xsrf_form_html)
+        if not hasattr(self,"xsrf_added"):
+            self.new_form.insert(0, xsrf_form_html)
+            self.xsrf_added = True
         return morphed
-        
-        language = self.get_language(self.script)
-        if language == "verify":
-            src = join(structure.JS_DIR,self.js_path)
-            lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)
-            info = {
-                "form_action": form_action,
-                "xsrf_form_html": xsrf_form_html,
-                "script": '\n'.join(lines),
-                "verify_script": self.script.group(3),
-                "lead": self.source[:self.script.start()],
-                "tail": self.source[self.script.end():]
-            }
-            return self.verify_template % info
-        else:
-            return self.source
 
 
         

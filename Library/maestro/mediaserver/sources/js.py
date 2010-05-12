@@ -9,6 +9,7 @@ from base import SourceNode
 
 include_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*\)\s*;')
 insert_statement = re.compile(r'@insert\s*\(\s*\)\s*;')
+attributes_statement = re.compile(r'@attributes\s*\(\s*\)\s*;')
 
 class JsSourceNode(SourceNode):
     
@@ -32,14 +33,22 @@ class JsSourceNode(SourceNode):
                 pass
             return line[:m.start(0)] + include + line[m.end(0):]
         return line
+        
+    def decorated(self,base,attributes=None):
+        if attributes:
+            a = attributes_statement.search(base)
+            if a:
+                return base[:a.start()] + attributes + ";" + base[a.end()+1:]
+        return base
 
     @classmethod
     def decorate_lines(cls,lines,ordered_sources,basedir=None,default_scope=None):
         for source in ordered_sources:
             scope = source.scope or cls.read_scope(default_scope,basedir)
+            attributes = source.attributes
             if scope:
                 parts = insert_statement.split(scope,1)
-                lines.insert(0,parts[0])
-                lines.append(parts[1])
+                lines.insert(0,source.decorated(parts[0],attributes=attributes))
+                lines.append(source.decorated(parts[1],attributes=attributes))
         return lines
 

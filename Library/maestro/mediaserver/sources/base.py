@@ -4,6 +4,9 @@ from os.path import join,isdir,exists
 
 from thepian.conf import structure
 
+from simplejson import JSONEncoder
+encoder = JSONEncoder()
+
 scope_statement = re.compile(r'@scope [^"]*"([^"]+)"')
 requires_statement = re.compile(r'@requires [^"]*"([^"]+)"')
 
@@ -11,7 +14,7 @@ class SourceNode(object):
     
     used = False
     
-    def __init__(self,path,basedir,source=None):
+    def __init__(self,path,basedir,source=None,attributes={}):
         """
         Loads the source code for the node from *path* unless *source* is specified.
         Then determines scope, includes and requires
@@ -41,6 +44,8 @@ class SourceNode(object):
             if m:
                 self.get_scope(m.groups()[0]) 
         self.includes = [join(basedir,i) for i in includes]
+        
+        self.attributes = encoder.encode(attributes)
         
     def __repr__(self):
         return self.path

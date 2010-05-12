@@ -138,22 +138,7 @@ class JsVerifyHandler(JsHandler):
             print e
         
 class JsVerifyDetailHandler(JsHandler):
-    
-    
-    def getVerifyPage(self,path):
-        if path not in self.verify_doms:
-            import html5lib
-            from xml.etree import cElementTree 
-            p = join(structure.JS_DIR,path)
-            # parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilders("dom"))
-            parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("etree", cElementTree))
-            with open(p) as f:
-                doc = parser.parse(f)
-                self.verify_doms[path] = doc
-            
-        return self.verify_doms[path]
         
-    
     def get(self, directory, file_name, test_path):
         try:
             path = join(directory,'verify')
@@ -164,7 +149,15 @@ class JsVerifyDetailHandler(JsHandler):
             self.write(verify.render(xsrf_form_html = self.xsrf_form_html()))
         except Exception,e:
             print e
+            import traceback; traceback.print_exc()
             
+    def post(self, directory, file_name, test_path):
+        try:
+            print 'posted results: ', directory, file_name
+            self.write('results noted.')
+        except Exception,e:
+            print e
+
         
 class JsVerifyAllHandler(tornado.web.RequestHandler):
     
