@@ -17,6 +17,12 @@ class VerifySource(object):
         if path not in cls.sources:
             cls.sources[path] = VerifySource(name[:-3],path = path,js_path = js_path)
         return cls.sources[path]
+        
+    @classmethod
+    def discard(cls,base,name):
+        path = join(base,name+".html")
+        if path in cls.sources:
+            del cls.sources[path]
     
     @classmethod
     def list(cls,base):
@@ -97,6 +103,7 @@ class VerifySource(object):
         JsSourceNode.decorate_lines(specs,[JsSourceNode('','',source='')],basedir=structure.JS_DIR,default_scope="verify/outer.scope.js")
 
         new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
+        new_form.insert(0,'<button type="submit">Submit result</button>')
         for name in form_result_names:
             new_form.insert(0,'<input type="hidden" name="%s" value="">' % name)
         soup.body.append(new_form)
@@ -156,6 +163,9 @@ class VerifySource(object):
         if not hasattr(self,"xsrf_added"):
             self.new_form.insert(0, xsrf_form_html)
             self.xsrf_added = True
+            
+        # print morphed
+        
         return morphed
 
 

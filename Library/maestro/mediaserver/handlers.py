@@ -147,6 +147,7 @@ class JsVerifyDetailHandler(JsHandler):
                 raise tornado.web.HTTPError(404)
             
             self.write(verify.render(xsrf_form_html = self.xsrf_form_html()))
+            VerifySource.discard(path,file_name[:-3])
         except Exception,e:
             print e
             import traceback; traceback.print_exc()
