@@ -103,6 +103,9 @@ class VerifySource(object):
         JsSourceNode.decorate_lines(specs,[JsSourceNode('','',source='')],basedir=structure.JS_DIR,default_scope="verify/outer.scope.js")
 
         new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
+        xsrf_input = Tag(soup, "input", attrs=[("type","hidden"),("name","_xsrf"),("value","")])
+        new_form.append(xsrf_input)
+        self.xsrf_input = xsrf_input
         new_form.insert(0,'<button type="submit">Submit result</button>')
         for name in form_result_names:
             new_form.insert(0,'<input type="hidden" name="%s" value="">' % name)
@@ -156,16 +159,13 @@ class VerifySource(object):
         self.tail_script = ElementTree.SubElement(self.doc.find("body"),"script", type="text/javascript")
                     
                     
-    def render(self,form_action="",xsrf_form_html=""):
+    def render(self,form_action="",xsrf_token=""):
         
-        morphed = self.soup.prettify()
         self.new_form["action"] = form_action
-        if not hasattr(self,"xsrf_added"):
-            self.new_form.insert(0, xsrf_form_html)
-            self.xsrf_added = True
-            
+        self.xsrf_input["value"] = xsrf_token
+
+        morphed = self.soup.prettify()
         # print morphed
-        
         return morphed
 
 

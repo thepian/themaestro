@@ -151,8 +151,8 @@ class JsVerifyDetailHandler(JsHandler):
             if not verify.source:
                 raise tornado.web.HTTPError(404)
             
-            self.write(verify.render(xsrf_form_html = self.xsrf_form_html()))
-            VerifySource.discard(path,file_name[:-3])
+            self.write(verify.render(xsrf_token = self.xsrf_token))
+            VerifySource.discard(path,file_name[:-3]) #TODO configure in application settings
         except Exception,e:
             print e
             import traceback; traceback.print_exc()
