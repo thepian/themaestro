@@ -152,21 +152,26 @@ class JsVerifyDetailHandler(JsHandler):
                 raise tornado.web.HTTPError(404)
             
             self.write(verify.render(xsrf_token = self.xsrf_token))
-            VerifySource.discard(path,file_name[:-3]) #TODO configure in application settings
+            VerifySource.discard(path,file_name[:-3]) #TODO configure in application settings, drop-js-cache
         except Exception,e:
             print e
             import traceback; traceback.print_exc()
             
     def post(self, directory, file_name, test_path):
         try:
-            results = []
-            for key in self.request.arguments.keys():
-                if key.endswith("-results"):
-                    results.append((key,self.request.arguments[key]))
+            results = VerifySource.posted_results(self.request.arguments)
             print 'posted results: ', directory, file_name, results
-            self.write('<html><body>results noted. %s </body></html>' % ''.join(["<div>%s : %s</div>" % (key,val) for key,val in results]))
+            info = {
+                "SITE_TITLE": "pagespec.com",
+                "MEDIA_URL": "",
+                "messages": None,
+                "title": "Results for %s %s" % (directory,file_name),
+                "parts": [{ "name":key, "result":val } for key,val in results]
+            }
+            self.render("verify/results.html",**info)
         except Exception,e:
             print e
+            import traceback; traceback.print_exc()
 
         
 class JsVerifyAllHandler(tornado.web.RequestHandler):

@@ -5,6 +5,7 @@ from thepian.conf import structure
 
 from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources, expand_inline_asset_sources
 
+import simplejson
     
 class VerifySource(object):
     
@@ -32,7 +33,16 @@ class VerifySource(object):
             if test.endswith(".js"):
                 specs.append(cls.get(base,test))
         return specs
-        
+
+    decoder = simplejson.JSONDecoder()
+    
+    @classmethod
+    def posted_results(cls,arguments):
+        results = []
+        for key in arguments.keys():
+            if key.endswith("-result"):
+                print arguments[key]
+                results.append((key[:-7],cls.decoder.decode(arguments[key])))
     
     verify_template = """
 %(lead)s

@@ -7,6 +7,7 @@ class Application(tornado.web.Application):
         self.ioloop = ioloop
         p = __path__[0]
         template_path = structure.TEMPLATES_DIR # (p+'/templates',structure.TEMPLATES_DIR)
+        print 'templates from: ',template_path
         settings = dict(
             # blog_title=u"Tornado Blog",
             debug=True,
