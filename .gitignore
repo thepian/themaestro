@@ -30,3 +30,4 @@ man/
 devdb
 testdb
 .mr.developer.cfg
+*.log
