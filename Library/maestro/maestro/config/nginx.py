@@ -6,8 +6,6 @@ from subprocess import Popen, PIPE
 from thepian.conf import structure
 from thepian.conf.project_tree import ProjectTree
 
-from themaestro.conf import templates
-
 CONF_DIRS = [
     '/opt/local/etc/nginx/',
     '/usr/local/etc/nginx/',
