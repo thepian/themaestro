@@ -21,23 +21,25 @@ class Command(object):
         from thepian.conf import structure
         from os.path import join
         
-        structure.ensure_target_dirs()
+        from thepian.conf import ensure_target_tree
+        ensure_target_tree(structure.PROJECT_DIR)
         #TODO part add_themaestro functionality
 
         import logging
         LOG_FILENAME = join(structure.PROJECT_DIR,'testing.log')
         logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
                 
-        from mediaserver import Application
-        import tornado.httpserver
+        from mediaserver import Application, HTTPServer
         import tornado.ioloop
         import tornado.autoreload
+        
+        sock_path = join(structure.PROJECT_DIR,"mediasite.sock")
 
         # print "js dir =", structure.JS_DIR
         # tornado.options.parse_command_line()
         ioloop = tornado.ioloop.IOLoop.instance()
-        http_server = tornado.httpserver.HTTPServer(Application(ioloop=ioloop))
-        http_server.listen(8888)
+        http_server = HTTPServer(Application(ioloop=ioloop))
+        http_server.listen(0,address = sock_path)
         
         tornado.autoreload.start(io_loop=ioloop)
         ioloop.start()
