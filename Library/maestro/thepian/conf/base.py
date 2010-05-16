@@ -1,7 +1,6 @@
 import os, imp, net, fs
 from os.path import dirname,abspath,join,split,exists,expanduser,isfile,isdir
-from pwd import getpwnam,getpwuid
-from grp import getgrnam
+from pwd import getpwuid
 from subprocess import Popen
 
 import global_structure
@@ -9,98 +8,6 @@ import global_settings
 from project_tree import ProjectTree, ensure_target_tree
 
 from UserDict import UserDict
-
-import stat
-
-def require_directory(path, uid, gid, mod = stat.S_IRUSR+stat.S_IWUSR+stat.S_IXUSR+stat.S_IRGRP+stat.S_IWGRP+stat.S_IXGRP+stat.S_IROTH+stat.S_IXOTH):
-    """default mod = user:rwx group:rwx other:rx"""
-    fs.makedirs(path)
-    os.chown(path, uid, gid)
-    os.chmod(path, mod)
-
-class FileArea(object):
-    """Area on filesystem with particular access requirements
-    """    
-    user = "thepian"
-    group = "thepian"
-    base = "/Sites"
-    
-    def __init__(self,user,group):
-        self.user = user
-        self.group = group
-
-    def apply(self):
-        uname, upass, self.uid, nop, nop, nop, nop = getpwnam(self.user)
-        gname, gpass, self.gid, nop = getgrnam(self.group)    
-        
-    def require_directory(self,path,**kwargs):
-        if not hasattr(self,'uid') or not hasattr(self,'gid'):  
-            self.apply()
-        require_directory(path, self.uid, self.gid,**kwargs)
-        
-class Feature(object):
-    name = None
-    pid_path = None
-    found = False
-    
-    def __init__(self,structure):
-        pass
-        
-    def __unicode__(self):
-        return 'Feature %s' % (self.name,)
-    
-    def reload(self):
-        pass
-
-class HostsFeature(Feature):
-    name = "hosts"
-    
-    def __init__(self,structure):
-        etc_file = "/etc/hosts"
-        if exists(etc_file):
-            self.ETC_FILE = etc_file
-            self.found = True
-
-class NginxFeature(Feature):
-    name = "nginx"
-
-    def __init__(self,structure):
-        for etc in structure.ETC_DIRECTORIES:
-            etc_file = join(etc,'nginx','nginx.conf')
-            if exists(etc_file):
-                self.ETC_FILE = etc_file
-                self.NGINX_ETC_DIR = join(etc,'nginx')
-                self.NGINX_SITES_ENABLED = join(etc, 'nginx', 'sites-enabled')
-                self.NGINX_SITES_AVAILABLE = join(etc, 'nginx', 'sites-available')
-                self.found = True
-                break
-                
-        for d in structure.PID_DIRECTORIES:
-            if (exists(join(d,"nginx.pid"))):
-                self.pid_path = join(d,"nginx.pid")
-                break
-
-    def reload(self):
-        if self.pid_path:
-            sp = Popen('kill -HUP `cat %s`' % self.pid_path,env=None,shell=True)
-            sts = os.waitpid(sp.pid, 0)            
-        
-    
-class MemcachedFeature(Feature):
-    name = "memcached"
-    
-class SpreadFeature(Feature):
-    pass
-    
-class PostgresFeature(Feature):
-    pass
-    
-class DjangoMailerFeature(Feature):
-    pass
-    
-class DjangoWebFeature(Feature):
-    pass
-
 
 
 class Machine(UserDict):
@@ -132,23 +39,9 @@ class Machine(UserDict):
         if self.known:
             self.NICK = self.data['NICK']
             
-
         self.effective_uid = os.getuid()
         self.effective_user = getpwuid(self.effective_uid)[0]
-        self.uploads_area = FileArea(self.data['shard_user'],self.data['shard_group'])
-        self.downloads_area = FileArea(self.data['shard_user'],self.data['shard_group'])
-        self.etc_area = FileArea(self.data['etc_user'],self.data['etc_group'])
-        self.pid_area = FileArea(self.data['log_user'],self.data['log_group'])
-        self.log_area = FileArea(self.data['log_user'],self.data['log_group'])
-        self.backups_area = FileArea(self.data['log_user'],self.data['log_group'])
 
-    #def __getitem__(self,index):
-    #    print 'looking up machine[%s]' % index
-    #    return self.data[index]
-
-    #def get(self,index,d=None):
-    #    return self.data.get(index,d)
-        
     def describe(self):
         return [
             u'cluster=%s mac=%s nick=%s pool=%s own=%s' % (self.data['cluster'],self.data['mac'],self.data['nick'],self.data['pool_ip'],self.data['own_ip']),
@@ -188,11 +81,6 @@ class Structure(ProjectTree):
     # Generated from SHARD_AFFINITY by inverting the dict
     AFFINITY_TO_SHARD = {}
 
-    # NginX directory locations to use on this machine
-    NGINX_ETC_DIR = None
-    NGINX_SITES_ENABLED = None
-    NGINX_SITES_AVAILABLE = None
-
     INCOMPLETE = None
     #TODO consider:
     # source_tree = ProjectTree
@@ -222,66 +110,6 @@ class Structure(ProjectTree):
         if not hasattr(self,index):
             raise AttributeError("Attribute '%s' not found using structure[..]" % index)
         return getattr(self,index)
-
-    def ensure_target_dirs(self):
-        """Check the project for directories in the target tree, and create any that are missing"""
-        #TODO check to see if project type is extended
-        ensure_target_tree(self.PROJECT_DIR)
-        
-    def determine_installation(self):
-        """Determine nginx, logrotate, spread toolkit, memcached, postgresql
-        """
-        self.USR_BIN_DIR = fs.first_exists(('/usr/local/bin','/usr/bin'))
-        self.features = {}
-        hosts = HostsFeature(self)
-        if hosts.found:
-            self.features['hosts'] = hosts
-        nginx = NginxFeature(self)
-        if nginx.found:
-            self.features['nginx'] = nginx
-        memcached = MemcachedFeature(self)
-        if memcached.found:
-            self.features['memcached'] = memcached
-        spread = SpreadFeature(self)
-        if spread.found:
-            self.features['spread'] = spread
-        postgres = PostgresFeature(self)
-        if postgres.found:
-            self.features['postgres'] = postgres
-        django_mailer = DjangoMailerFeature(self)
-        if django_mailer.found:
-            self.features['django_mailer'] = django_mailer
-        django_web = DjangoWebFeature(self)
-        if django_web.found:
-            self.features['django_web'] = django_web
-        
-        for etc in self.ETC_DIRECTORIES:
-            if exists(join(etc,'nginx','nginx.conf')):
-                self.NGINX_ETC_DIR = join(etc,'nginx')
-                self.NGINX_SITES_ENABLED = join(etc, 'nginx', 'sites-enabled')
-                self.NGINX_SITES_AVAILABLE = join(etc, 'nginx', 'sites-available')
-                break;
-                
-        if not isdir(self.LOG_DIR):
-            self.INCOMPLETE = "Log directory missing, %s" % self.LOG_DIR
-        elif not isdir(self.UPLOADS_DIR):
-            self.INCOMPLETE = "Uploads directory missing, %s" % self.UPLOADS_DIR
-        elif not isdir(self.DOWNLOADS_DIR):
-            self.INCOMPLETE = "Log directory missing, %s" % self.DOWNLOADS_DIR
-        #TODO check database
-
-    def hook_installation(self):
-        """Hook up the installation to make the project available
-        Make sure directories are present
-        """
-        self.machine.uploads_area.require_directory(self.UPLOADS_DIR)
-        self.machine.downloads_area.require_directory(self.DOWNLOADS_DIR)
-        self.machine.backups_area.require_directory(self.BACKUPS_DIR)
-        self.machine.log_area.require_directory(self.LOG_DIR)
-        self.machine.pid_area.require_directory(self.PID_DIR)
-        if self.NGINX_ETC_DIR:
-            self.machine.etc_area.require_directory(self.NGINX_SITES_ENABLED)
-            self.machine.etc_area.require_directory(self.NGINX_SITES_AVAILABLE)
 
     def blend(self, mod):
         """Blend a module into the structure, usually used to blend conf.structure into thepian.conf.structure"""
@@ -345,11 +173,6 @@ class Structure(ProjectTree):
     description = property(describe)
     machine = property(describe)
 
-    features = {}
-        
-    def describe_features(self):
-        return [u'features detected....'] + [unicode(self.features[f]) for f in self.features]
-        
     def get_subdomain_list(self):
         """ pairs of (subdomain,type)"""
         return [('www','www'),(self.MEDIA_SUBDOMAIN,'media')] +  [(sub,'shard') for sub in self.SHARD_NAMES + self.DEDICATED_SHARD_NAMES]
@@ -379,8 +202,7 @@ class Structure(ProjectTree):
         if not '%s_SETTINGS_MODULE' % self.COMMAND_VARIABLE_PREFIX in os.environ: 
             os.environ['%s_SETTINGS_MODULE' % self.COMMAND_VARIABLE_PREFIX] = 'development' #TODO development vs production
         return os.environ['%s_SETTINGS_MODULE' % self.COMMAND_VARIABLE_PREFIX]
-
-    
+            
 
 class Dependency(object):
     
@@ -416,13 +238,17 @@ class Settings(object):
     'some value'
     """
     
-    __file__ = None
+    __file__ = ''
     
     def __init__(self):
         # update this dict from global structure (but only for ALL_CAPS settings)
         for name in dir(global_settings):
             if name == name.upper():
                 setattr(self, name, getattr(global_settings, name))
+                
+    def __repr__(self):
+        return '''settings %s
+''' % (self.__file__[:-4])
 
     def blend(self, mod):
         """Blend a module into the structure, usually used to blend conf.development or conf.production into thepian.conf.settings"""

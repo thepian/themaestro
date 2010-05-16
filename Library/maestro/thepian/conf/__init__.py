@@ -6,8 +6,8 @@ It can be used independent of Django
 import sys, os
 from os.path import dirname,abspath,realpath,join,split,exists,expanduser,isfile
 
-from thepian.conf.base import FileArea, Feature, Machine, Structure, Dependency, Settings
-from thepian.conf.project_tree import find_basedir, make_project_tree    
+from thepian.conf.base import Machine, Structure, Dependency, Settings
+from thepian.conf.project_tree import find_basedir, make_project_tree, ensure_target_tree    
 
 dependency = Dependency()
 
@@ -41,14 +41,12 @@ def use_default_structure():
     script_file_name = realpath(sys.argv[0] or sys.executable)
     structure.SCRIPT_PATH = script_file_name
     structure.apply_basedir(*find_basedir(abspath(structure.SCRIPT_PATH)))
-    structure.determine_installation()
 
 def use_structure(mod):
     """Used by the shell to run of the current sys.path and merge a structure.py module into
     the thepian.conf.structure object."""
     structure.apply_basedir(*find_basedir(dirname(abspath(mod.__file__))))
     structure.blend(mod)
-    structure.determine_installation()
     
 def use_cluster(name):
     structure.set_cluster(structure.CLUSTERS.get(name,structure.CLUSTERS['live']))
@@ -87,7 +85,6 @@ def import_structure(directory,structure_name='structure'):
         _already_imported[k] = struct
     finally:
         f.close()
-        struct.determine_installation()
         return struct
         
 def create_structure(directory,structure_name="structure",extended=False):

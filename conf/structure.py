@@ -7,6 +7,10 @@ ADMINS = (
 DEFAULT_SITE_TITLE = "Thepian Maestro Site"
 DEFAULT_HOSTNAME = "www.themaestro.local"
 
+FEATURES = (
+    'hosts', 'nginx'
+)
+
 CLUSTERS = {
     'live': { 'domains': ('themaestro.thepia.net',), 
         'media':'media.themaestro.thepia.net',

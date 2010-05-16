@@ -2,6 +2,8 @@
 
 REPOSITORIES_PATH = "/repositories"
 
+FEATURES = ()
+
 TUPLE_STRUCTURE = ("CLUSTERS", "SERVERS", "DEV_MACHINES", "SHARD_NAMES", "DEDICATED_SHARD_NAMES" )
 
 # Must be defined by the project. Must contain at least one cluster definition. The first entry is used as the default for unknown servers/nodes
@@ -66,9 +68,6 @@ AFFINITY_EXPIRY = "Mdy, 01-Jan-2038 00:00:00 GMT"
 
 # Used to encode affinity checksum, this must be overridden in structure.py for anything going live
 AFFINITY_SECRET = "some random number"
-
-ETC_DIRECTORIES = ('/etc','/usr/local/etc','/opt/local/etc')
-PID_DIRECTORIES = ('/opt/local/var/run','/var/run')
 
 THUMBNAIL_PROCESSORS = (
     'thepian.assets.processors.colorspace',

@@ -3,6 +3,12 @@ import fs
 from os.path import dirname,abspath,join,split,exists,expanduser,isfile
 import shutil
 
+from thepian.conf import structure
+from base import features, ensure_areas, install_features
+
+
+
+
 def copy_template(style, template_prefix, name, directory, other_name=''):
     """
     Copies either a Thepian application layout template or a Thepian project
