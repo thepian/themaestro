@@ -30,16 +30,23 @@ class Command(object):
         logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
                 
         from mediaserver import Application, HTTPServer
+        import tornado.httpserver
         import tornado.ioloop
         import tornado.autoreload
         
-        sock_path = join(structure.PROJECT_DIR,"mediasite.sock")
-
         # print "js dir =", structure.JS_DIR
         # tornado.options.parse_command_line()
         ioloop = tornado.ioloop.IOLoop.instance()
-        http_server = HTTPServer(Application(ioloop=ioloop))
-        http_server.listen(0,address = sock_path)
+
+        sock_path = join(structure.PROJECT_DIR,"mediasite.sock")
+        port_no = structure.MEDIASERVER_PORT
+        if port_no:
+            print port_no
+            http_server = tornado.httpserver.HTTPServer(Application(ioloop=ioloop))
+            http_server.listen(port_no)
+        else:
+            http_server = HTTPServer(Application(ioloop=ioloop))
+            http_server.listen(0,address = sock_path)
         
         tornado.autoreload.start(io_loop=ioloop)
         ioloop.start()

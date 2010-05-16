@@ -44,6 +44,8 @@ DEV_MACHINES = ('192.168.9.94','192.168.9.95',)
 
 DJANGO_PORT = 8881
 
+MEDIASERVER_PORT = 8889
+
 # Used by thepian.conf.Affinity to assign a random affinity number
 # This number cannot be changed once a cluster is deployed, it is also restricted to an 64k integer
 # The square root is taken to spread it on two directory levels
