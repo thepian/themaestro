@@ -20,9 +20,9 @@ CLUSTERS = {
         'media':'media.themaestro.local', 
         'upstream_protocol': 'fastcgi', 'upstream_port': '8881', 
         'upstream_socket': '/tmp/themaestro',
-        'shard_user':'thepian', 'shard_group':'thepian',
-        'etc_user':'thepian', 'etc_group':'thepian',
-        'log_user':'thepian','log_group':'nobody'
+        'shard_user':'henrikvendelbo', 'shard_group':'wheel',
+        'etc_user':'henrikvendelbo', 'etc_group':'wheel',
+        'log_user':'henrikvendelbo','log_group':'nobody'
         },
     'dev': { 'domains': ('themaestro.dev.local',), 
         'media':'media.themaestro.dev.local',

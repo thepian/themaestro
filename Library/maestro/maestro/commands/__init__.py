@@ -20,6 +20,7 @@ from thepian.conf.project_tree import find_basedir
 def execute_from_command_line(argv=None):
     """
     A simple method that runs a ManagementUtility.
+    obsolete
     """
     import os, sys
     from os.path import realpath

@@ -360,8 +360,6 @@ def main():
     except Exception, e:
         print 'structure conf failed:: ',e
 
-main()
-
 def _test():
     print "sys.path = ["
     for dir in sys.path:
@@ -370,3 +368,7 @@ def _test():
 
 if __name__ == '__main__':
     _test()
+else:
+    main()
+
+    

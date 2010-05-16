@@ -25,11 +25,12 @@ setup(name='themaestro',
       setup_requires=['setuptools',],
       install_requires= ['Django','theapps','thepian-lib','tornado','docutils','ipython'],
       entry_points= {
-        'console_scripts':[
-            'syspath = about:dummy_cmdline',
-            'maestro = themaestro.commands:maestro_execute_from_command_line',
-            'django = themaestro.commands:django_execute_from_command_line',
-        ],
+        # switched to maestro executable
+        # 'console_scripts':[
+        #     'syspath = about:dummy_cmdline',
+        #     'maestro = themaestro.commands:maestro_execute_from_command_line',
+        #     'django = themaestro.commands:django_execute_from_command_line',
+        # ],
       },
       classifiers=[
         'Development Status :: Alpha',
