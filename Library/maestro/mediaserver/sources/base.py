@@ -42,7 +42,7 @@ class SourceNode(object):
                 includes.extend(m.groups())
             m = scope_statement.search(line)
             if m:
-                self.get_scope(m.groups()[0]) 
+                self.scope = self.get_scope(m.groups()[0]) 
         self.includes = [join(basedir,i) for i in includes]
         
         self.attributes = encoder.encode(attributes)
@@ -51,12 +51,11 @@ class SourceNode(object):
         return self.path
     
     def get_scope(self,name):
-        # print 'scope',name
         try:
             with open(join(self.basedir,name)) as f:
-                self.scope = f.read()
+                return f.read()
         except:
-            pass
+            return ''
 
     @classmethod
     def read_scope(self,name,basedir):
