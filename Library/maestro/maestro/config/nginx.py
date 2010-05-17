@@ -92,7 +92,7 @@ def _make_from_examples():
         if exists(d):
             if not exists(d+"nginx.conf") and exists(d+"nginx.conf.example"):
                 # fs.copy_file(p+"nginx.conf.example",p+"nginx.conf")
-                Popen("sudo cp %s %s" % (p+"nginx.conf.example",p+"nginx.conf"), shell=True).communicate()
+                Popen("sudo cp %s %s" % (d+"nginx.conf.example",d+"nginx.conf"), shell=True).communicate()
                 print >>sys.stderr, "Created %s nginx.conf from example, please review A.S.A.P." % d
                 break
             if not exists(d+"mime.types") and exists(d+"mime.types.example"):

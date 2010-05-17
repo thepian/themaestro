@@ -110,6 +110,12 @@ class Structure(ProjectTree):
         if not hasattr(self,index):
             raise AttributeError("Attribute '%s' not found using structure[..]" % index)
         return getattr(self,index)
+        
+    def __repr__(self):
+        return """features (%s) %s""" % (
+        ', '.join([f for f in self.FEATURES]),
+        super(Structure,self).__repr__(),
+        )
 
     def blend(self, mod):
         """Blend a module into the structure, usually used to blend conf.structure into thepian.conf.structure"""
