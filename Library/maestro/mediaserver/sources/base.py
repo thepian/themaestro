@@ -30,9 +30,10 @@ class SourceNode(object):
             except IOError:
                 try:
                     self._lines = [line for line in fileinput.FileInput(files=(join(self.basedir,self.path),))]
-                except IOError:
+                except IOError, e:
                     self._lines = []
-                    print "failed to load Asset Source: '%s'" % self.path
+                    print "failed to load Asset Source: '%s'" % self.path, e
+                    import traceback; traceback.print_exc()
         else:
             self._lines = source.split('\n')
         includes = []
@@ -47,8 +48,13 @@ class SourceNode(object):
         
         self.attributes = encoder.encode(attributes)
         
+        self.stashes = set()
+        
     def __repr__(self):
         return self.path
+        
+    def prepend_stashes(self,lines):
+        return lines
     
     def get_scope(self,name):
         try:

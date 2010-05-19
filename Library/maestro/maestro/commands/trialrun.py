@@ -41,7 +41,6 @@ class Command(object):
         sock_path = join(structure.PROJECT_DIR,"mediasite.sock")
         port_no = structure.MEDIASERVER_PORT
         if port_no:
-            print port_no
             http_server = tornado.httpserver.HTTPServer(Application(ioloop=ioloop))
             http_server.listen(port_no)
         else:
