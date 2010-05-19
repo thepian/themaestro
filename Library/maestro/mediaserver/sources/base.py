@@ -14,7 +14,7 @@ class SourceNode(object):
     
     used = False
     
-    def __init__(self,path,basedir,source=None,attributes={}):
+    def __init__(self,path,basedir,source=None,lines=None,attributes={}):
         """
         Loads the source code for the node from *path* unless *source* is specified.
         Then determines scope, includes and requires
@@ -24,15 +24,18 @@ class SourceNode(object):
         self.path = path
         self.basedir = basedir
         self.scope = None
-        if not source:
+        if lines:
+            self._lines = lines
+        elif source is None:
             try:
                 self._lines = [line for line in fileinput.FileInput(files=(self.path,))]
             except IOError:
                 try:
                     self._lines = [line for line in fileinput.FileInput(files=(join(self.basedir,self.path),))]
-                except IOError:
+                except IOError, e:
                     self._lines = []
-                    print "failed to load Asset Source: '%s'" % self.path
+                    print "failed to load Asset Source: '%s'" % self.path, e
+                    import traceback; traceback.print_exc()
         else:
             self._lines = source.split('\n')
         includes = []
@@ -47,8 +50,13 @@ class SourceNode(object):
         
         self.attributes = encoder.encode(attributes)
         
+        self.stashes = set()
+        
     def __repr__(self):
         return self.path
+        
+    def prepend_stashes(self,lines):
+        return lines
     
     def get_scope(self,name):
         try:

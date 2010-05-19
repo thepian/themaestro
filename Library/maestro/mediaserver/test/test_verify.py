@@ -20,8 +20,9 @@ def test_load():
 </html>
 """
     verify = VerifySource('file','file/verify/file.html','file.js',just_script)
-    assert verify.doc != None
-    assert len(verify.scripts) == 1
+    assert verify.soup != None
+    assert verify.new_form != None
+    assert verify.new_script != None
     
 def notest_re():
     just_script = """<script type="text/pagespec" language="verify" >

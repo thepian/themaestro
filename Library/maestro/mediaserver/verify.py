@@ -109,8 +109,7 @@ class VerifySource(object):
             script.extract()
             ++index
             
-        #TODO improve the decorate_lines interface
-        JsSourceNode.decorate_lines(specs,[JsSourceNode('','',source='')],basedir=structure.JS_DIR,default_scope="verify/outer.scope.js")
+        specs = JsSourceNode('',structure.JS_DIR,lines=specs).decorated_lines(default_scope="verify/outer.scope.js")
 
         new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
         xsrf_input = Tag(soup, "input", attrs=[("type","hidden"),("name","_xsrf"),("value","")])

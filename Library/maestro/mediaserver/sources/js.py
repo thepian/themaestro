@@ -8,11 +8,13 @@ from thepian.conf import structure
 from base import SourceNode
 
 include_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*\)\s*;')
-include_with_scope_statement = re.compile(r'@include\s*\(\s*"([^"]+)","([^"]+)"\s*\)\s*;')
+include_with_scope_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)\s*;')
 insert_statement = re.compile(r'@insert\s*\(\s*\)\s*;')
 attributes_statement = re.compile(r'@attributes\s*\(\s*\)\s*;')
-fold_statement = re.compile(r'@fold\s*\(\s*\)\s*;')
-unfold_statement = re.compile(r'@unfold\s*\(\s*\)\s*;')
+stash2_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
+stash1_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*\)\s*;')
+fold_statement = re.compile(r'@fold\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
+unfold_statement = re.compile(r'@unfold\s*\(\s*"([^"]+)"\s*\)\s*;')
 
 class JsSourceNode(SourceNode):
     
@@ -48,24 +50,54 @@ class JsSourceNode(SourceNode):
             scope = self.get_scope(m.group(2))
             parts = insert_statement.split(scope,1)
             if parts:
-                include = parts[0] + include + parts[1]
+                include = self.decorated(parts[0],attributes=self.attributes) + include + self.decorated(parts[1],attributes=self.attributes)
             return line[:m.start(0)] + include + line[m.end(0):]
         return line
         
+    folding_code = """
+var __folded_%s__ = %s;
+"""
+
+    unfolding_code = """
+    eval((function(){
+        var res = [];
+        var map = __folded_%(name)s__;
+        for(var n in map) res.push('var '+n+' = __folded_%(name)s__['+n+'];');
+        return res.join(' ');
+    })());
+"""
     def decorated(self,base,attributes=None):
         result = base
+
+        # Stash functions etc listed by @stash(..) into a stash for later
+        while(True):
+            stash = stash1_statement.search(result)
+            if stash:
+                # print stash.group(1), "marked"
+                self.stashes.add(stash.group(1))
+                code = "" # self.folding_code % (fold.group(1),fold.group(2))
+                result = result[:stash.start()] + code + result[stash.end()+1:]
+            else:
+                break
         
         # Fold functions etc listed by @fold(..) into a stash for later
-        fold = fold_statement.search(result)
-        if fold:
-            # -- folding code
-            result = result[:fold.start()] + "" + result[fold.end()+1:]
+        while(True):
+            fold = fold_statement.search(result)
+            if fold:
+                # -- folding code
+                code = self.folding_code % (fold.group(1),fold.group(2))
+                result = result[:fold.start()] + code + result[fold.end()+1:]
+            else:
+                break
             
         # Unfold functions etc stash named by @unfold(..)
-        unfold = unfold_statement.search(result)
-        if unfold:
-            # -- folding code
-            result = result[:unfold.start()] + "" + result[unfold.end()+1:]
+        while(True):
+            unfold = unfold_statement.search(result)
+            if unfold:
+                code = self.unfolding_code % { 'name':unfold.group(1) }
+                result = result[:unfold.start()] + code + result[unfold.end()+1:]
+            else:
+                break
 
         a = attributes_statement.search(result)
         if a:
@@ -86,4 +118,22 @@ class JsSourceNode(SourceNode):
                 lines.insert(0,source.decorated(parts[0],attributes=attributes))
                 lines.append(source.decorated(parts[1],attributes=attributes))
         return lines
+        
+    def decorated_lines(self,default_scope=None):
+        scope = self.scope
+        if not scope and default_scope:
+            scope = self.get_scope(default_scope)
+        lines = self.lines[:]
+        if scope:
+            parts = insert_statement.split(scope,1)
+            if parts:
+                lines.insert(0,self.decorated(parts[0],attributes=self.attributes))
+                lines.append(self.decorated(parts[1],attributes=self.attributes))
+            else:
+                pass #TODO warning scope has no @insert statement
+        return lines
 
+    def prepend_stashes(self,lines):
+        for s in self.stashes:
+            lines.insert(0,self.folding_code % (s,"{}"))
+        return lines
