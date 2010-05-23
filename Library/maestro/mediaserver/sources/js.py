@@ -59,12 +59,12 @@ var __folded_%s__ = %s;
 """
 
     unfolding_code = """
-    eval((function(){
-        var res = [];
-        var map = __folded_%(name)s__;
-        for(var n in map) res.push('var '+n+' = __folded_%(name)s__['+n+'];');
-        return res.join(' ');
-    })());
+eval((function(){
+    var res = [];
+    var map = __folded_%(name)s__;
+    for(var n in map) res.push('var '+n+' = __folded_%(name)s__['+n+'];');
+    return res.join(' ');
+})());
 """
     stashall_code = """
 __folded_%(name)s__ = %(value)s;

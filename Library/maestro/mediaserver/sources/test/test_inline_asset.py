@@ -12,6 +12,7 @@ result = """\
 %s
 })();
 
+
 """
 
 def test_scoping():
