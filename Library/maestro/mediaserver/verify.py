@@ -3,7 +3,7 @@ import os, re
 from os.path import join,isdir,exists
 from thepian.conf import structure
 
-from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources, expand_inline_asset_sources
+from sources import CssSourceNode,JsSourceNode, JsScopeNode, newer_assets, combine_asset_sources, expand_inline_asset_sources
 
 import simplejson
     
@@ -84,6 +84,7 @@ class VerifySource(object):
             with open(join(structure.JS_DIR,self.path)) as f:
                 self.source = f.read()
 
+        # print join(structure.JS_DIR,self.path), self.source
         from BeautifulSoup import BeautifulSoup, Tag
         soup = BeautifulSoup(self.source)
         scripts = soup.findAll('script',type="text/pagespec", language=re.compile('.+'))
@@ -109,7 +110,7 @@ class VerifySource(object):
             script.extract()
             ++index
             
-        specs = JsSourceNode('',structure.JS_DIR,lines=specs).decorated_lines(default_scope="verify/outer.scope.js")
+        outer = JsScopeNode('verify/outer.scope.js',structure.JS_DIR,lines=specs)
 
         new_form = Tag(soup, "form", attrs=[("id","results"),("method","post")])
         xsrf_input = Tag(soup, "input", attrs=[("type","hidden"),("name","_xsrf"),("value","")])
@@ -123,7 +124,7 @@ class VerifySource(object):
         soup.body.append("\n");
         
         new_script = Tag(soup, "script", attrs=[("type","text/javascript")])
-        new_script.insert(0, '\n'.join(specs))
+        new_script.insert(0, '\n'.join(outer.decorated_lines()))
         soup.body.append(new_script)
 
         self.soup = soup

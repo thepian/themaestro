@@ -66,20 +66,32 @@ var __folded_%s__ = %s;
         return res.join(' ');
     })());
 """
+    stashall_code = """
+__folded_%(name)s__ = %(value)s;
+"""
     def decorated(self,base,attributes=None):
         result = base
 
         # Stash functions etc listed by @stash(..) into a stash for later
         while(True):
-            stash = stash1_statement.search(result)
+            stash = stash2_statement.search(result)
             if stash:
-                # print stash.group(1), "marked"
                 self.stashes.add(stash.group(1))
-                code = "" # self.folding_code % (fold.group(1),fold.group(2))
-                result = result[:stash.start()] + code + result[stash.end()+1:]
+                code = self.stashall_code % { "name": stash.group(1), "value": stash.group(2) }
+                result = result[:stash.start()] + code + result[stash.end():]
             else:
                 break
         
+        # Pull functions etc out of predefined stash 
+        while(True):
+            stash = stash1_statement.search(result)
+            if stash:
+                self.stashes.add(stash.group(1))
+                code = self.unfolding_code % { 'name':stash.group(1) }
+                result = result[:stash.start()] + code + result[stash.end():]
+            else:
+                break
+
         # Fold functions etc listed by @fold(..) into a stash for later
         while(True):
             fold = fold_statement.search(result)
@@ -133,7 +145,27 @@ var __folded_%s__ = %s;
                 pass #TODO warning scope has no @insert statement
         return lines
 
+    def stash_init_lines(self):
+        lines = []
+        print self.stashes
+        for s in self.stashes:
+            lines.append(self.folding_code % (s,"{}"))
+        return lines
+        
     def prepend_stashes(self,lines):
         for s in self.stashes:
             lines.insert(0,self.folding_code % (s,"{}"))
         return lines
+
+class JsScopeNode(JsSourceNode):
+    
+    def __init__(self,scope,basedir,source=None,lines=None,attributes={}):
+        super(JsScopeNode,self).__init__('',basedir,source,lines,attributes)
+        self.scope = self.get_scope(scope)
+        
+    def decorated_lines(self):
+        lines = super(JsScopeNode,self).decorated_lines()
+        lines[0:0] = self.stash_init_lines()
+        return lines
+        
+    
