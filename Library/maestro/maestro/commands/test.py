@@ -10,5 +10,5 @@ class Command(object):
         import py 
         print sys.path, args
         # args = ['Library/maestro/mediaserver/sources/jsparser']
-        args = ['Library/maestro/mediaserver']
+        args = ['Library/maestro/mediaserver','Library/maestro/ecmatic']
         py.test.cmdline.main(args)
