@@ -338,6 +338,7 @@ def main():
     #TODO base it on the common dir of executable and library
     sys.path.append(join(dirname(dirname(sys.executable)),"src","tornado"))
     sys.path.append(join(dirname(dirname(sys.executable)),"src","thepian-lib"))
+    sys.path.append(join(dirname(dirname(sys.executable)),"Library","PyMeta-0.4.0"))
 
     # paths_in_sys = addsitepackages(paths_in_sys)
 
