@@ -11,6 +11,7 @@ include_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*\)\s*;')
 include_with_scope_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)\s*;')
 insert_statement = re.compile(r'@insert\s*\(\s*\)\s*;')
 attributes_statement = re.compile(r'@attributes\s*\(\s*\)\s*;')
+stash3_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
 stash2_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
 stash1_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*\)\s*;')
 fold_statement = re.compile(r'@fold\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
@@ -54,9 +55,8 @@ class JsSourceNode(SourceNode):
             return line[:m.start(0)] + include + line[m.end(0):]
         return line
         
-    folding_code = """
-var __folded_%s__ = %s;
-"""
+    folding_code = """\
+var __folded_%s__ = %s; """
 
     unfolding_code = """
 eval((function(){
@@ -69,9 +69,24 @@ eval((function(){
     stashall_code = """
 __folded_%(name)s__ = %(value)s;
 """
+
+    stashone_code = """
+__folded_%(name)s__.%(entry)s = %(value)s;
+"""
+
     def decorated(self,base,attributes=None):
         result = base
 
+        # Stash single functions etc specified by 3rd param @stash(..) into a stash for later
+        while(True):
+            stash = stash3_statement.search(result)
+            if stash:
+                self.stashes.add(stash.group(1))
+                code = self.stashone_code % { "name": stash.group(1), "entry": stash.group(2), "value": stash.group(3) }
+                result = result[:stash.start()] + code + result[stash.end():]
+            else:
+                break
+        
         # Stash functions etc listed by @stash(..) into a stash for later
         while(True):
             stash = stash2_statement.search(result)

@@ -63,9 +63,9 @@ def expand_inline_asset_sources(inline,basedir,source_node=SourceNode, attribute
         lines[0:0] = prepend_lines
     if len(append_lines) > 0:
         lines.extend(append_lines)
-    source.prepend_stashes(lines)
-    for s in ordered_sources:
-        s.prepend_stashes(lines)
+    # source.prepend_stashes(lines)
+    # for s in ordered_sources:
+    #     s.prepend_stashes(lines)
     return lines
     
     
