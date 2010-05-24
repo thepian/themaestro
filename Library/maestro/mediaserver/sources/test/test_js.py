@@ -5,7 +5,7 @@ from mediaserver.sources.js import JsSourceNode
 def test_decorated():
     js = JsSourceNode('',structure.JS_DIR,source='x;')
     
-    assert js.decorated(' @stash("abc",abc); ') == " \n__folded_abc__ = abc;\n "
+    assert js.decorated('1@stash("abc",abc);2') == "1\n__folded_abc__ = abc;\n2"
     assert "abc" in js.stashes
 
     assert js.decorated(' @stash("map",{ "one":1, "two":2 }); ') == ' \n__folded_map__ = { "one":1, "two":2 };\n '

@@ -10,12 +10,13 @@ from base import SourceNode
 include_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*\)\s*;')
 include_with_scope_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)\s*;')
 insert_statement = re.compile(r'@insert\s*\(\s*\)\s*;')
-attributes_statement = re.compile(r'@attributes\s*\(\s*\)\s*;')
-stash3_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
-stash2_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
-stash1_statement = re.compile(r'@stash\s*\(\s*"([^"]+)"\s*\)\s*;')
-fold_statement = re.compile(r'@fold\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*;')
-unfold_statement = re.compile(r'@unfold\s*\(\s*"([^"]+)"\s*\)\s*;')
+
+decorator_statement = re.compile(r'@(\w+\s*\([^\)]*\)\s*);')
+
+attributes_statement = re.compile(r'attributes\s*\(\s*\)\s*')
+stash3_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*')
+stash2_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*')
+stash1_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*\)\s*')
 
 class JsSourceNode(SourceNode):
     
@@ -62,7 +63,7 @@ var __folded_%s__ = %s; """
 eval((function(){
     var res = [];
     var map = __folded_%(name)s__;
-    for(var n in map) res.push('var '+n+' = __folded_%(name)s__['+n+'];');
+    for(var n in map) res.push('var '+n+' = __folded_%(name)s__.'+n+';');
     return res.join(' ');
 })());
 """
@@ -75,65 +76,50 @@ __folded_%(name)s__.%(entry)s = %(value)s;
 """
 
     def decorated(self,base,attributes=None):
-        result = base
+        result = []
+        decs = decorator_statement.split(base)
+        for filler,decorator in zip(decs[::2],decs[1::2]):
 
-        # Stash single functions etc specified by 3rd param @stash(..) into a stash for later
-        while(True):
-            stash = stash3_statement.search(result)
+            # Stash single functions etc specified by 3rd param @stash(..) into a stash for later
+            stash = stash3_statement.match(decorator)
             if stash:
                 self.stashes.add(stash.group(1))
                 code = self.stashone_code % { "name": stash.group(1), "entry": stash.group(2), "value": stash.group(3) }
-                result = result[:stash.start()] + code + result[stash.end():]
-            else:
-                break
-        
-        # Stash functions etc listed by @stash(..) into a stash for later
-        while(True):
-            stash = stash2_statement.search(result)
+                result.append(filler)
+                result.append(code)
+                continue
+            
+            # Stash functions etc listed by @stash(..) into a stash for later
+            stash = stash2_statement.match(decorator)
             if stash:
                 self.stashes.add(stash.group(1))
                 code = self.stashall_code % { "name": stash.group(1), "value": stash.group(2) }
-                result = result[:stash.start()] + code + result[stash.end():]
-            else:
-                break
-        
-        # Pull functions etc out of predefined stash 
-        while(True):
-            stash = stash1_statement.search(result)
+                result.append(filler)
+                result.append(code)
+                continue
+
+            # Pull functions etc out of predefined stash 
+            stash = stash1_statement.match(decorator)
             if stash:
                 self.stashes.add(stash.group(1))
                 code = self.unfolding_code % { 'name':stash.group(1) }
-                result = result[:stash.start()] + code + result[stash.end():]
-            else:
-                break
+                result.append(filler)
+                result.append(code)
+                continue
 
-        # Fold functions etc listed by @fold(..) into a stash for later
-        while(True):
-            fold = fold_statement.search(result)
-            if fold:
-                # -- folding code
-                code = self.folding_code % (fold.group(1),fold.group(2))
-                result = result[:fold.start()] + code + result[fold.end()+1:]
-            else:
-                break
+            # @attributes();
+            a = attributes_statement.match(decorator)
+            if a:
+                result.append(filler)
+                result.append(attributes)
+                continue
+                
+            result.append(filler)
+            result.append("/* %s */" % decorator)    
             
-        # Unfold functions etc stash named by @unfold(..)
-        while(True):
-            unfold = unfold_statement.search(result)
-            if unfold:
-                code = self.unfolding_code % { 'name':unfold.group(1) }
-                result = result[:unfold.start()] + code + result[unfold.end()+1:]
-            else:
-                break
+        result.append(decs[-1])
 
-        a = attributes_statement.search(result)
-        if a:
-            if attributes:
-                result = result[:a.start()] + attributes + ";" + result[a.end()+1:]
-            else:
-                result = result[:a.start()] + result[a.end()+1:]
-
-        return result
+        return ''.join(result)
 
     @classmethod
     def decorate_lines(cls,lines,ordered_sources,basedir=None,default_scope=None):
@@ -150,7 +136,7 @@ __folded_%(name)s__.%(entry)s = %(value)s;
         scope = self.scope
         if not scope and default_scope:
             scope = self.get_scope(default_scope)
-        lines = self.lines[:]
+        lines = [self.decorated(line) for line in self.lines]
         if scope:
             parts = insert_statement.split(scope,1)
             if parts:
@@ -162,7 +148,6 @@ __folded_%(name)s__.%(entry)s = %(value)s;
 
     def stash_init_lines(self):
         lines = []
-        print self.stashes
         for s in self.stashes:
             lines.append(self.folding_code % (s,"{}"))
         return lines
