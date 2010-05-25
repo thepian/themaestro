@@ -40,9 +40,12 @@ class VerifySource(object):
     def posted_results(cls,arguments):
         results = []
         for key in arguments.keys():
+            parts = key.split("_")
+            if len(parts) > 1 and len(parts[0]) > 0:
+                results.append((key,arguments[key][0]))
             if key.endswith("-result"):
-                print arguments[key]
-                results.append((key[:-7],cls.decoder.decode(arguments[key])))
+                results.append((key[:-7],arguments[key][0]))
+        return results
     
     verify_template = """
 %(lead)s
