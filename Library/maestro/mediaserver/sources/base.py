@@ -48,7 +48,8 @@ class SourceNode(object):
                 self.scope = self.get_scope(m.groups()[0]) 
         self.includes = [join(basedir,i) for i in includes]
         
-        self.attributes = encoder.encode(attributes)
+        self.attributes_json = encoder.encode(attributes)
+        self.attributes = attributes
         
         self.stashes = set()
         

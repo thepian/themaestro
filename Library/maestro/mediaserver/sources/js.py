@@ -1,3 +1,11 @@
+"""
+
+Script constants
+ @script.name
+ @script.path
+ @script.search
+ @script.language
+"""
 from __future__ import with_statement
 import fs, re
 from fs.filters import fnmatch
@@ -13,6 +21,7 @@ insert_statement = re.compile(r'@insert\s*\(\s*\)\s*;')
 
 decorator_statement = re.compile(r'@(\w+\s*\([^\)]*\)\s*);')
 
+script_constant = re.compile(r'script\.(\w+)')
 attributes_statement = re.compile(r'attributes\s*\(\s*\)\s*')
 stash3_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*')
 stash2_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*')
@@ -52,7 +61,7 @@ class JsSourceNode(SourceNode):
             scope = self.get_scope(m.group(2))
             parts = insert_statement.split(scope,1)
             if parts:
-                include = self.decorated(parts[0],attributes=self.attributes) + include + self.decorated(parts[1],attributes=self.attributes)
+                include = self.decorated(parts[0]) + include + self.decorated(parts[1])
             return line[:m.start(0)] + include + line[m.end(0):]
         return line
         
@@ -75,7 +84,7 @@ __folded_%(name)s__ = %(value)s;
 __folded_%(name)s__.%(entry)s = %(value)s;
 """
 
-    def decorated(self,base,attributes=None):
+    def decorated(self,base):
         result = []
         decs = decorator_statement.split(base)
         for filler,decorator in zip(decs[::2],decs[1::2]):
@@ -107,11 +116,16 @@ __folded_%(name)s__.%(entry)s = %(value)s;
                 result.append(code)
                 continue
 
+            const = script_constant.match(decorator)
+            if const:
+                result.append(filler)
+                result.append(self.attributes[const.group(1)])
+                
             # @attributes();
             a = attributes_statement.match(decorator)
             if a:
                 result.append(filler)
-                result.append(attributes)
+                result.append(self.attributes_json)
                 continue
                 
             result.append(filler)
@@ -125,11 +139,10 @@ __folded_%(name)s__.%(entry)s = %(value)s;
     def decorate_lines(cls,lines,ordered_sources,basedir=None,default_scope=None):
         for source in ordered_sources:
             scope = source.scope or cls.read_scope(default_scope,basedir)
-            attributes = source.attributes
             if scope:
                 parts = insert_statement.split(scope,1)
-                lines.insert(0,source.decorated(parts[0],attributes=attributes))
-                lines.append(source.decorated(parts[1],attributes=attributes))
+                lines.insert(0,source.decorated(parts[0]))
+                lines.append(source.decorated(parts[1]))
         return lines
         
     def decorated_lines(self,default_scope=None):
@@ -140,8 +153,8 @@ __folded_%(name)s__.%(entry)s = %(value)s;
         if scope:
             parts = insert_statement.split(scope,1)
             if parts:
-                lines.insert(0,self.decorated(parts[0],attributes=self.attributes))
-                lines.append(self.decorated(parts[1],attributes=self.attributes))
+                lines.insert(0,self.decorated(parts[0]))
+                lines.append(self.decorated(parts[1]))
             else:
                 pass #TODO warning scope has no @insert statement
         return lines
