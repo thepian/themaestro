@@ -202,6 +202,10 @@ u/d/l %(UPLOADS_DIR)s %(DOWNLOADS_DIR)s %(LOG_DIR)s
         self.TOOLS_DIR = expanduser("~/Sites/tools")
         self.PID_DIR = join("/var/run",self.PROJECT_NAME)
         
+        from fs import filters
+        dirs = fs.listdir(self.PROJECT_DIR, filters=(filters.fnmatch("*site"),))
+        self.SITES = dict(zip([n[:-5] for n in dirs] , [join(self.PROJECT_DIR,n) for n in dirs]))
+        
     def apply_source_basedir(self,repo_dir,basedir):
         self.REPO_DIR = repo_dir 
 

@@ -44,22 +44,5 @@ def test_find_basedir():
     assert single_sample == base
     assert "single" == t
 
-    # src root of simple project
-    repo,base,t = find_basedir(join(simple_sample,"src"))
-    assert join(simple_sample,"src") == repo
-    assert join(simple_sample,"src") == base
-    assert t == "src"
-    
-    # Subdir of src root of simple project
-    repo,base,t = find_basedir(join(simple_sample,"src","conf"))
-    assert join(simple_sample,"src") == repo
-    assert join(simple_sample,"src") == base
-    assert t == "src"
-    
-    # release root of simple project
-    repo,base,t = find_basedir(join(simple_sample,"release"))
-    assert join(simple_sample,"release") == repo
-    assert join(simple_sample,"release") == base
-    assert t == "release"
     
     
