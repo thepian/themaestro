@@ -9,6 +9,7 @@ urls = [
     (r"/images/(.*)", StaticFileHandler, {"path": structure.MEDIASITE_DIRS[0] + "/images"}),
     (r"/demo/(.*)", StaticFileHandler, {"path": structure.MEDIASITE_DIRS[0] + "/demo"}),
     (r"/css/(\w+\.css)", CssHandler),
+    (r"/js/(\w+)/verify/assets/(\w+\.\w+)", VerifyAssetsHandler, { "path": structure.JS_DIR + "/"}),
     (r"/js/(\w+\.js)/verify/(.*)", JsVerifyHandler),
     (r"/js/(\w+)/(\w+\.js)/verify/(.*)", JsVerifyDetailHandler),
     (r"/js/verify", JsVerifyAllHandler),

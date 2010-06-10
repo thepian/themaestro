@@ -194,6 +194,13 @@ class JsVerifyAllHandler(tornado.web.RequestHandler):
     def get(self):
         self.render("verify/all.html")
         
+class VerifyAssetsHandler(tornado.web.StaticFileHandler):
+    
+    def get(self,base,asset):
+        path = "%s/verify/assets/%s" % (base,asset)
+        tornado.web.StaticFileHandler.get(self,path)
+        
+        
 class JoHandler(tornado.web.RequestHandler):
 
     def get(self, file_name):
