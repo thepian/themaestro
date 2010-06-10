@@ -172,12 +172,18 @@ class VerifySource(object):
         self.tail_script = ElementTree.SubElement(self.doc.find("body"),"script", type="text/javascript")
                     
                     
-    def render(self,form_action="",xsrf_token=""):
+    def render(self,form_action="",xsrf_token="", arguments = {}):
         
         self.new_form["action"] = form_action
         self.xsrf_input["value"] = xsrf_token
 
         morphed = self.soup.prettify()
+        print arguments
+        if "debug" in arguments:
+            morphed = morphed.replace("conditional_debugger;","debugger;")
+        else:
+            morphed = morphed.replace("conditional_debugger;","")
+            
         # print morphed
         return morphed
 

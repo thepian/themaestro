@@ -151,22 +151,37 @@ class JsVerifyDetailHandler(JsHandler):
             if not verify.source:
                 raise tornado.web.HTTPError(404)
             
-            self.write(verify.render(xsrf_token = self.xsrf_token))
+            self.write(verify.render(xsrf_token = self.xsrf_token, arguments = self.request.arguments))
             VerifySource.discard(path,file_name[:-3]) #TODO configure in application settings, drop-js-cache
         except Exception,e:
             print e
             import traceback; traceback.print_exc()
             
+    def split_part(self,key,val):
+        import urllib, cgi
+        r = { "name":key, "result": cgi.escape(urllib.unquote(val)) }
+        sub_keys = key.split("__")
+        if len(sub_keys) == 3:
+            r["spec"] = sub_keys[0].replace("_"," ")
+            r["example"] = sub_keys[1].replace("_"," ")
+            r["subject"] = sub_keys[2] # index
+        else:
+            r["spec"] = key
+            r["example"] = ""
+            r["subject"] = "nil"
+            
+        return r
+            
     def post(self, directory, file_name, test_path):
         try:
             results = VerifySource.posted_results(self.request.arguments)
-            print 'posted results: ', directory, file_name, results
+            # print 'posted results: ', directory, file_name, results
             info = {
                 "SITE_TITLE": "pagespec.com",
                 "MEDIA_URL": "",
                 "messages": None,
                 "title": "Results for %s %s" % (directory,file_name),
-                "parts": [{ "name":key, "result":val } for key,val in results]
+                "parts": [self.split_part(key,val) for key,val in results]
             }
             self.render("verify/results.html",**info)
         except Exception,e:
