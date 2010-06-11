@@ -34,8 +34,8 @@ class SourceNode(object):
                     self._lines = [line for line in fileinput.FileInput(files=(join(self.basedir,self.path),))]
                 except IOError, e:
                     self._lines = []
-                    print "failed to load Asset Source: '%s'" % self.path, e
-                    import traceback; traceback.print_exc()
+                    print "failed to load Asset Source: '%s' in '%s' (source=%s)" % (self.path, self.basedir, source), e
+                    import traceback; traceback.print_stack()
         else:
             self._lines = source.split('\n')
         includes = []

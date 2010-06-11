@@ -90,6 +90,15 @@ class VerifySource(object):
         # print join(structure.JS_DIR,self.path), self.source
         from BeautifulSoup import BeautifulSoup, Tag
         soup = BeautifulSoup(self.source)
+        
+        # Expand includes for all inline JavaScript
+        scripts = soup.findAll('script',type="text/javascript")
+        for script in scripts:
+            if "src" not in script and script.string is not None:
+                lines = expand_inline_asset_sources(script.string,structure.JS_DIR, source_node=JsSourceNode)
+                script.string.replaceWith('\n'.join(lines)) 
+            
+        # Construct JavaScript for all inline PageScript
         scripts = soup.findAll('script',type="text/pagespec", language=re.compile('.+'))
         specs = []
         form_result_names = []
@@ -106,6 +115,8 @@ class VerifySource(object):
                 attributes["name"] = script["name"]
             else:
                 attributes["name"] = script["language"] + str(index)
+            if "title" in script: attributes["title"] = script["title"]
+            if "delay" in script: attributes["delay"] = script["delay"]
             attributes["result_name"] = attributes["name"] + "-result"
             form_result_names.append(attributes["result_name"])
             lines = expand_inline_asset_sources(script.string,structure.JS_DIR, attributes=attributes, source_node=JsSourceNode, default_scope = 'verify/inner.scope.js')
@@ -178,7 +189,6 @@ class VerifySource(object):
         self.xsrf_input["value"] = xsrf_token
 
         morphed = self.soup.prettify()
-        print arguments
         if "debug" in arguments:
             morphed = morphed.replace("conditional_debugger;","debugger;")
         else:
@@ -186,8 +196,4 @@ class VerifySource(object):
             
         # print morphed
         return morphed
-
-
-        
-    
 

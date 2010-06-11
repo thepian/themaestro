@@ -19,10 +19,11 @@ include_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*\)\s*;')
 include_with_scope_statement = re.compile(r'@include\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)\s*;')
 insert_statement = re.compile(r'@insert\s*\(\s*\)\s*;')
 
-decorator_statement = re.compile(r'@(\w+\s*\([^\)]*\)\s*);')
+decorator_statement = re.compile(r'@(\w+\s*\([^\)]*\)\s*)[;,]')
 
 script_constant = re.compile(r'script\.(\w+)')
 attributes_statement = re.compile(r'attributes\s*\(\s*\)\s*')
+map_attributes_statement = re.compile(r'map_attributes\s*\(\s*\)\s*')
 stash3_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*')
 stash2_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*,\s*([^\)]*)\s*\)\s*')
 stash1_statement = re.compile(r'stash\s*\(\s*"([^"]+)"\s*\)\s*')
@@ -120,7 +121,14 @@ __folded_%(name)s__.%(entry)s = %(value)s;
             if const:
                 result.append(filler)
                 result.append(self.attributes[const.group(1)])
-                
+
+            # @map_attributes(),
+            a = map_attributes_statement.match(decorator)
+            if a:
+                result.append(filler)
+                result.append(self.attributes_json[1:-1]+",")
+                continue
+            
             # @attributes();
             a = attributes_statement.match(decorator)
             if a:
