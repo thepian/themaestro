@@ -109,14 +109,14 @@ class VerifySource(object):
                 "language" : script["language"],
                 "type" : script["type"]
             }
-            if "id" in script:
+            if script.has_key("id"):
                 attributes["id"] = script["id"]
-            if "name" in script:
+            if script.has_key("name"):
                 attributes["name"] = script["name"]
             else:
                 attributes["name"] = script["language"] + str(index)
-            if "title" in script: attributes["title"] = script["title"]
-            if "delay" in script: attributes["delay"] = script["delay"]
+            if script.has_key("title"): attributes["title"] = script["title"]
+            if script.has_key("delay"): attributes["delay"] = script["delay"]
             attributes["result_name"] = attributes["name"] + "-result"
             form_result_names.append(attributes["result_name"])
             lines = expand_inline_asset_sources(script.string,structure.JS_DIR, attributes=attributes, source_node=JsSourceNode, default_scope = 'verify/inner.scope.js')
