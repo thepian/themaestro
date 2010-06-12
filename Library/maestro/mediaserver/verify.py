@@ -122,7 +122,7 @@ class VerifySource(object):
             lines = expand_inline_asset_sources(script.string,structure.JS_DIR, attributes=attributes, source_node=JsSourceNode, default_scope = 'verify/inner.scope.js')
             specs.append('\n'.join(lines)) #TODO do lines end with \n ?
             script.extract()
-            ++index
+            index += 1
             
         outer = JsScopeNode('verify/outer.scope.js',structure.JS_DIR,lines=specs)
 
