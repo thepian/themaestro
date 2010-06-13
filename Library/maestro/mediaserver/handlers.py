@@ -131,7 +131,10 @@ class JsVerifyHandler(JsHandler):
 
             specs = VerifySource.list(src)
             #TODO if index.html exists use that
-            self.render("verify/index.html", title="Specs for %s - %s" % (file_name,test_path), source = source, specs = specs)
+            self.render("verify/index.html", 
+                title="Specs for %s - %s" % (file_name,test_path), 
+                reload_url='../verify/',
+                source = source, specs = specs)
         except Exception,e:
             print e
             
@@ -146,6 +149,11 @@ class JsVerifyDetailHandler(JsHandler):
         
     def get(self, directory, file_name, test_path):
         try:
+            print 'browser id =', 'new'
+            print 'useragent', self.request.headers.get("User-Agent")
+            print 'page url =', self.request.headers.get("Referer","??")
+            print 'pipeline =', 'na'
+            print 'page stage', 'loaded vs poll no vs other'
             path = join(directory,'verify')
             verify = VerifySource.get(path,file_name[:-3])
             if not verify.source:
@@ -180,6 +188,7 @@ class JsVerifyDetailHandler(JsHandler):
                 "SITE_TITLE": "pagespec.com",
                 "MEDIA_URL": "",
                 "messages": None,
+                "reload_url": "../verify/",
                 "title": "Results for %s %s" % (directory,file_name),
                 "parts": [self.split_part(key,val) for key,val in results]
             }
