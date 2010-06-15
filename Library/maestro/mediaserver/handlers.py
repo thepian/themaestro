@@ -1,5 +1,5 @@
 from __future__ import with_statement
-import os
+import os, fs
 from os.path import join,isdir
 
 from thepian.conf import structure
@@ -20,39 +20,61 @@ class HomeHandler(tornado.web.RequestHandler):
             self.application.ioloop.stop()
         self.write('done.')
 
+class DirectoryHandler(tornado.web.RequestHandler):
+    
+    def get(self):
+        print join(structure.PROJECT_DIR,"mediasite") + self.request.path
+        info = {
+            "list": os.listdir(join(structure.PROJECT_DIR,"mediasite") + self.request.path), 
+            "path": self.request.path,
+            "SITE_TITLE": "PageSpec",
+            "MEDIA_URL": ""
+        }
+        self.render("directory.html",**info)
+        
 class CssHandler(tornado.web.RequestHandler):
 
-    def get(self,file_name):
+    def getSource(self, file_name):
+        from fs.dependency import changed_since, newer_group
+
+        src = join(structure.CSS_DIR,file_name)
+        if not isdir(src):
+            raise tornado.web.HTTPError(404)
+        target = join(structure.MEDIASITE_DIRS[-1],"css",file_name)
+        text = None
+        srcs = []
+        srcs = fs.listdir(structure.CSS_DIR,recursed=True,full_path=True)
+        #TODO record dependency with target
+        if newer_group(srcs,target) or self.request.headers.get("force",False):
+            lines = combine_asset_sources(src,structure.CSS_DIR,source_node=CssSourceNode)
+            with open(target,"w") as f:
+                text = ''.join(lines)
+                f.write(text)
+                f.flush()
+
+        if not text:
+            with open(target,"r") as f:
+                text = f.read()
+        return text
+        
+    def get(self, file_name):
+        from os.path import join,isdir
+
+        header_ip = 'X-Real-IP' in self.request.headers or 'X-Forwarded-For' in self.request.headers
+        if header_ip:
+            self.acceleratedGet(file_name)
+        else:
+            text = self.getSource(file_name)
+            self.write(text)
+            self.set_header("Content-Type","text/css")
+
+    def getX(self,file_name):
         try:
             return self.get2(file_name)
         except Exception,e:
             print '...',e
             import traceback; traceback.print_exc()
             
-    def get2(self,file_name):
-        header_ip = 'X-Real-IP' in self.request.headers or 'X-Forwarded-For' in self.request.headers
-        src = join(structure.CSS_DIR,file_name)
-        if not isdir(src):
-            raise tornado.web.HTTPError(404)
-        target = join(structure.MEDIASITE_DIRS[-1],"css",file_name)
-        text = None
-        if newer_assets(src,target):
-            lines = combine_asset_sources(src,structure.CSS_DIR,source_node=CssSourceNode)
-            with open(target,"w") as f:
-                text = ''.join(lines)
-                f.write(text)
-                f.flush()
-                
-        self.set_header("Content-Type","text/css")
-        if header_ip:
-            # if nginx in front accelerate
-            self.set_header('X-Accel-Redirect',"/targetmedia/css/"+file_name)
-        else:
-            if not text:
-                with open(target,"r") as f:
-                    text = f.read()
-            self.write(text) 
-
 
 class JsHandler(tornado.web.RequestHandler):
 
