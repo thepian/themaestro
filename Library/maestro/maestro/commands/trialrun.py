@@ -23,10 +23,6 @@ class Command(object):
         from os.path import join
         
         sys.path.append(structure.PROJECT_DIR)
-        for d in fs.listdir(structure.PROJECT_DIR,filters=(fs.filters.only_directories,)):
-            if d.endswith("site"):
-                # add to site list
-                pass
         
         from thepian.conf import ensure_target_tree
         ensure_target_tree(structure.PROJECT_DIR)

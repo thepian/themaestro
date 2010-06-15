@@ -2,8 +2,12 @@ from thepian.conf import structure
 import tornado.web, tornado.httpserver
 from urls import urls
 
+import logging
+# import multiprocessing
+import signal
+
 import socket
-import os.path, os
+import os.path, os, sys
 try:
     import fcntl
 except ImportError:
@@ -67,3 +71,40 @@ class Application(tornado.web.Application):
         # 
         #     application = tornado.web.Application([
         #     ])
+
+def runapp(config, port):
+
+    try:
+        http_server = HTTPServer(Application(config),
+                                                    no_keep_alive=config['HTTPServer']['no_keep_alive'],
+                                                    xheaders=config['HTTPServer']['xheaders'])
+        http_server.listen(port)
+        tornado.ioloop.IOLoop.instance().start()
+
+    except KeyboardInterrupt:
+        pass #shutdown()
+
+    except Exception, out:
+        logging.error(out)
+        pass #shutdown()
+
+def shutdown():
+
+    logging.debug('%s: shutting down' % __appname__)
+    for child in children:
+        try:
+            if child.is_alive():
+                logging.debug("%s: Terminating child: %s" % (__appname__, child.name))
+                child.terminate()
+        except AssertionError:
+            logging.error('%s: Dead child encountered' % __appname__)
+
+    logging.debug('%s: shutdown complete' % __appname__)
+    sys.exit(0)
+
+
+def signal_handler(sig, frame):
+
+    # We can shutdown from sigterm or keyboard interrupt so use a generic function
+    shutdown()
+

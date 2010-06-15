@@ -134,6 +134,17 @@ class Structure(ProjectTree):
                     value = (value,) # In case the user forgot the comma.
                 setattr(self, name, value)
 
+        def get_port():
+            port_no = self.MEDIASERVER_PORT
+            while True:
+                port_no += 1
+                yield port_no - 1
+            
+        self.SITES = dict(zip(
+            [n[:-5] for n in self.SITE_DIRS] , 
+            [dict(path=join(self.PROJECT_DIR,n),port=get_port(),package='mediaserver') for n in self.SITE_DIRS]
+        ))
+        
         # Create a map from affinity number to shard name
         self.AFFINITY_TO_SHARD = {}
         for name in self.SHARD_AFFINITY:
