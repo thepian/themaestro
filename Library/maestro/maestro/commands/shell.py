@@ -1,4 +1,4 @@
-import os
+import sys,os,fs
 from optparse import make_option, OptionParser
 
 class Command(object):
@@ -21,6 +21,8 @@ class Command(object):
                             option_list=self.option_list)
 
     def __call__(self, *args, **options):
+        from thepian.conf import structure
+        sys.path.append(structure.PROJECT_DIR)
         use_plain = options.get('plain', False)
 
         try:

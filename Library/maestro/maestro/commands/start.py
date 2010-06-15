@@ -1,9 +1,8 @@
-import sys,os,fs
 from optparse import make_option, OptionParser
 
 class Command(object):
     
-    help = 'Run a trial with tornado'
+    help = 'Start the services needed to run the site'
     args = '[?]'
     option_list = ()
     
@@ -21,12 +20,6 @@ class Command(object):
     def __call__(self,*args,**options):
         from thepian.conf import structure
         from os.path import join
-        
-        sys.path.append(structure.PROJECT_DIR)
-        for d in fs.listdir(structure.PROJECT_DIR,filters=(fs.filters.only_directories,)):
-            if d.endswith("site"):
-                # add to site list
-                pass
         
         from thepian.conf import ensure_target_tree
         ensure_target_tree(structure.PROJECT_DIR)
