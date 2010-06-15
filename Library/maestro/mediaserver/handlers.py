@@ -36,7 +36,8 @@ class CssHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(404)
         target = join(structure.MEDIASITE_DIRS[-1],"css",file_name)
         text = None
-        if newer_assets(src,target):
+        # if newer_assets(src,target): TODO add old dependencies list
+        if newer_assets(structure.CSS_DIR,join(structure.MEDIASITE_DIRS[-1],"css")):
             lines = combine_asset_sources(src,structure.CSS_DIR,source_node=CssSourceNode)
             with open(target,"w") as f:
                 text = ''.join(lines)
