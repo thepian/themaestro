@@ -47,7 +47,7 @@ class HTTPServer(tornado.httpserver.HTTPServer):
 
 
 class Application(tornado.web.Application):
-    def __init__(self,ioloop=None):
+    def __init__(self,site,ioloop=None):
         self.ioloop = ioloop
         p = __path__[0]
         template_path = structure.TEMPLATES_DIR # (p+'/templates',structure.TEMPLATES_DIR)
@@ -72,13 +72,13 @@ class Application(tornado.web.Application):
         #     application = tornado.web.Application([
         #     ])
 
-def runapp(config, port):
+def runapp(site):
 
     try:
-        http_server = HTTPServer(Application(config),
-                                                    no_keep_alive=config['HTTPServer']['no_keep_alive'],
-                                                    xheaders=config['HTTPServer']['xheaders'])
-        http_server.listen(port)
+        http_server = HTTPServer(Application(site))
+        # no_keep_alive=config['HTTPServer']['no_keep_alive'],
+        # xheaders=config['HTTPServer']['xheaders'])
+        http_server.listen(site["port"])
         tornado.ioloop.IOLoop.instance().start()
 
     except KeyboardInterrupt:

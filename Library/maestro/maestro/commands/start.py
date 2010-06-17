@@ -1,3 +1,4 @@
+import sys, os, fs
 from optparse import make_option, OptionParser
 
 class Command(object):
@@ -25,27 +26,23 @@ class Command(object):
         ensure_target_tree(structure.PROJECT_DIR)
         #TODO part add_themaestro functionality
 
+        sys.path.append(structure.PROJECT_DIR)
+        
         import logging
         LOG_FILENAME = join(structure.PROJECT_DIR,'testing.log')
         logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
-                
+        
         from mediaserver import Application, HTTPServer
         import tornado.httpserver
         import tornado.ioloop
         import tornado.autoreload
         
-        # print "js dir =", structure.JS_DIR
-        # tornado.options.parse_command_line()
         ioloop = tornado.ioloop.IOLoop.instance()
-
-        sock_path = join(structure.PROJECT_DIR,"mediasite.sock")
-        port_no = structure.MEDIASERVER_PORT
-        if port_no:
-            http_server = tornado.httpserver.HTTPServer(Application(ioloop=ioloop))
-            http_server.listen(port_no)
-        else:
-            http_server = HTTPServer(Application(ioloop=ioloop))
-            http_server.listen(0,address = sock_path)
+        for n in structure.SITES:
+            site = structure.SITES[n]
+            if site.package == "mediaserver":
+                http_server = tornado.httpserver.HTTPServer(Application(site,ioloop=ioloop))
+                http_server.listen(site["port"])
         
         tornado.autoreload.start(io_loop=ioloop)
         ioloop.start()
