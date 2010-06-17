@@ -210,6 +210,7 @@ def symlink_local_nginx(cluster_names=('staged','dev')):
 def update_local_nginx(conf_lines):
     """ Save lines to local nginx enabled configuration and restart nginx
     """
+    fs.make_path(features["nginx"].NGINX_SITES_ENABLED)
     enabled_conf_path = join(features["nginx"].NGINX_SITES_ENABLED, structure.PROJECT_NAME+".local.conf")
     try:
         with open(enabled_conf_path,"w") as conf_file:
