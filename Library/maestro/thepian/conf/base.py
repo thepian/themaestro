@@ -135,7 +135,7 @@ class Structure(ProjectTree):
                 setattr(self, name, value)
 
         def make_site(name):
-            return dict(path=join(self.PROJECT_DIR,n),package='mediaserver',name=name[:-4])
+            return dict(path=join(self.PROJECT_DIR,n),package='mediaserver',name=name[:-4],dirname=name)
             
         dirs = [make_site(n) for n in self.SITE_DIRS]
         port_no = self.MEDIASERVER_PORT

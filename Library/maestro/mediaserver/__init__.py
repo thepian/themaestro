@@ -1,6 +1,6 @@
 from thepian.conf import structure
 import tornado.web, tornado.httpserver
-from urls import urls
+from urls import urls as default_urls
 
 import logging
 # import multiprocessing
@@ -49,6 +49,10 @@ class HTTPServer(tornado.httpserver.HTTPServer):
 class Application(tornado.web.Application):
     def __init__(self,site,ioloop=None):
         self.ioloop = ioloop
+        try:
+            urls = __import__('conf.%s.urls' % site["dirname"],{},{},[])
+        except ImportError,e:
+            urls = default_urls
         p = __path__[0]
         template_path = structure.TEMPLATES_DIR # (p+'/templates',structure.TEMPLATES_DIR)
         # print 'templates from: ',template_path

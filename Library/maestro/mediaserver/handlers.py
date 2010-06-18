@@ -23,7 +23,7 @@ class HomeHandler(tornado.web.RequestHandler):
 class DirectoryHandler(tornado.web.RequestHandler):
     
     def get(self):
-        print join(structure.PROJECT_DIR,"mediasite") + self.request.path
+        # print join(structure.PROJECT_DIR,"mediasite") + self.request.path
         info = {
             "list": os.listdir(join(structure.PROJECT_DIR,"mediasite") + self.request.path), 
             "path": self.request.path,
@@ -75,7 +75,12 @@ class CssHandler(tornado.web.RequestHandler):
             print '...',e
             import traceback; traceback.print_exc()
             
+class StaticFallbackHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.set_header('X-Accel-Redirect',"/static_fallback"+self.request.path)
+        # self.set_header("Content-Type","text/javascript")
 
+# @cache_control(False)
 class JsHandler(tornado.web.RequestHandler):
 
     def __init__(self, application, request, transforms=None):

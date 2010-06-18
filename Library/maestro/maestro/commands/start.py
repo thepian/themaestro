@@ -40,7 +40,7 @@ class Command(object):
         ioloop = tornado.ioloop.IOLoop.instance()
         for n in structure.SITES:
             site = structure.SITES[n]
-            if site.package == "mediaserver":
+            if site["package"] in ("tornado", "mediaserver"):
                 http_server = tornado.httpserver.HTTPServer(Application(site,ioloop=ioloop))
                 http_server.listen(site["port"])
         
