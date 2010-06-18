@@ -10,3 +10,9 @@
 [submodule "src/tornado"]
 	path = src/tornado
 	url = git://github.com/facebook/tornado.git
+[submodule "src/thepiandjango"]
+	path = src/thepiandjango
+	url = git@github.com:thepian/thepiandjango.git
+[submodule "src/redis-py"]
+	path = src/redis-py
+	url = http://github.com/andymccurdy/redis-py.git

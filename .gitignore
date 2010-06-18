@@ -23,8 +23,8 @@ src/thepiandjango
 docs/_build
 include/python2.6
 lib/python2.6
-repos/
-src/
+#repos/
+#src/
 docs/html/
 man/
 devdb
