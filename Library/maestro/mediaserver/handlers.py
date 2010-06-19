@@ -23,9 +23,9 @@ class HomeHandler(tornado.web.RequestHandler):
 class DirectoryHandler(tornado.web.RequestHandler):
     
     def get(self):
-        # print join(structure.PROJECT_DIR,"mediasite") + self.request.path
+        # print self.application.site['path']
         info = {
-            "list": os.listdir(join(structure.PROJECT_DIR,"mediasite") + self.request.path), 
+            "list": os.listdir(self.application.site['path'] + self.request.path), 
             "path": self.request.path,
             "SITE_TITLE": "PageSpec",
             "MEDIA_URL": ""
@@ -104,7 +104,7 @@ class JsHandler(tornado.web.RequestHandler):
                 f.flush()
 
         self.set_header("Content-Type","text/javascript")
-        self.set_header('X-Accel-Redirect',"/targetmedia/js/"+file_name)
+        self.set_header('X-Accel-Redirect',"/target/js/"+file_name)
         
     def getSource(self, file_name):
         from os.path import join,isdir

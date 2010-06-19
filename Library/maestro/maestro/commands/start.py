@@ -26,7 +26,7 @@ class Command(object):
         ensure_target_tree(structure.PROJECT_DIR)
         #TODO part add_themaestro functionality
 
-        sys.path.append(structure.PROJECT_DIR)
+        sys.path.insert(0,structure.PROJECT_DIR)
         
         import logging
         LOG_FILENAME = join(structure.PROJECT_DIR,'testing.log')

@@ -48,9 +48,11 @@ class HTTPServer(tornado.httpserver.HTTPServer):
 
 class Application(tornado.web.Application):
     def __init__(self,site,ioloop=None):
+        self.site = site
         self.ioloop = ioloop
         try:
-            urls = __import__('conf.%s.urls' % site["dirname"],{},{},[])
+            allurls = __import__('conf.urls',{},{},[]).urls
+            urls = getattr(allurls,site['dirname'],default_urls)
         except ImportError,e:
             urls = default_urls
         p = __path__[0]
@@ -58,9 +60,9 @@ class Application(tornado.web.Application):
         # print 'templates from: ',template_path
         settings = dict(
             # blog_title=u"Tornado Blog",
-            debug=True,
-            template_path=template_path,
-            static_path=structure.MEDIASITE_DIRS[0],
+            debug=True, #TODO config
+            template_path=template_path, #TODO change?
+            static_path=site['path'],
             # ui_modules={"Entry": EntryModule},
             xsrf_cookies=True,
             cookie_secret="11oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
