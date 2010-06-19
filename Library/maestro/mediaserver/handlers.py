@@ -31,69 +31,7 @@ class DirectoryHandler(tornado.web.RequestHandler):
             "MEDIA_URL": ""
         }
         self.render("directory.html",**info)
-        
-class StaticSiteHandler(tornado.web.RequestHandler):
-    """
-    Serve static the content located in the site specific static file directory
-    """
-    def __init__(self, application, request):
-        RequestHandler.__init__(self, application, request)
-        self.root = os.path.abspath(application.site["path"]) + os.path.sep
-
-    def head(self):
-        self.get()
-
-    def get(self):
-        abspath = os.path.abspath(os.path.join(self.root, self.request.path))
-        print abspath
-        if not abspath.startswith(self.root):
-            raise HTTPError(403, "%s is not in root static directory", path)
-        if not os.path.exists(abspath):
-            raise HTTPError(404)
-        if not os.path.isfile(abspath):
-            raise HTTPError(403, "%s is not a file", path)
-
-        stat_result = os.stat(abspath)
-        modified = datetime.datetime.fromtimestamp(stat_result[stat.ST_MTIME])
-
-        self.set_header("Last-Modified", modified)
-        if "v" in self.request.arguments:
-            self.set_header("Expires", datetime.datetime.utcnow() + \
-                                       datetime.timedelta(days=365*10))
-            self.set_header("Cache-Control", "max-age=" + str(86400*365*10))
-        else:
-            self.set_header("Cache-Control", "public")
-        mime_type, encoding = mimetypes.guess_type(abspath)
-        if mime_type:
-            self.set_header("Content-Type", mime_type)
-
-        # Check the If-Modified-Since, and don't send the result if the
-        # content has not been modified
-        ims_value = self.request.headers.get("If-Modified-Since")
-        if ims_value is not None:
-            date_tuple = email.utils.parsedate(ims_value)
-            if_since = datetime.datetime.fromtimestamp(time.mktime(date_tuple))
-            if if_since >= modified:
-                self.set_status(304)
-                return
-
-        header_ip = 'X-Real-IP' in self.request.headers or 'X-Forwarded-For' in self.request.headers
-        if header_ip:
-            print "/root/%s" % join(self.application.site["dirname"], file_name)
-            self.set_header('X-Accel-Redirect',"/root/%s" % join(self.application.site["dirname"], file_name))
-        else:
-            self.write(abspath,stat_result)
-            
-    def write(self,abspath,stat_result):
-        self.set_header("Content-Length", stat_result[stat.ST_SIZE])
-        file = open(abspath, "rb")
-        try:
-            self.write(file.read())
-        finally:
-            file.close()
-
-
-        
+                
 class CssHandler(tornado.web.RequestHandler):
 
     def getSource(self, file_name):
@@ -102,7 +40,7 @@ class CssHandler(tornado.web.RequestHandler):
         src = join(structure.CSS_DIR,file_name)
         if not isdir(src):
             raise tornado.web.HTTPError(404)
-        target = join(structure.MEDIASITE_DIRS[-1],"css",file_name)
+        target = join(self.application.site["target_path"],"css",file_name)
         text = None
         srcs = []
         srcs = fs.listdir(structure.CSS_DIR,recursed=True,full_path=True)
@@ -118,6 +56,25 @@ class CssHandler(tornado.web.RequestHandler):
             with open(target,"r") as f:
                 text = f.read()
         return text
+
+    def acceleratedGet(self, file_name):
+        from os.path import join,isdir
+        from distutils.dep_util import newer_group
+
+        src = join(structure.CSS_DIR,file_name)
+        if not isdir(src):
+            raise tornado.web.HTTPError(404)
+        target = join(self.application.site["target_path"],"css",file_name)
+        if newer_assets(src,target) or self.request.headers.get("force",False):
+            lines = combine_asset_sources(src,structure.CSS_DIR,source_node=CssSourceNode)
+            with open(target,"w") as f:
+                text = ''.join(lines)
+                f.write(text)
+                f.flush()
+
+        self.set_header("Content-Type","text/css")
+        self.set_header('X-Accel-Redirect',"/root/target/%s/css/%s" % (self.application.site["dirname"], file_name))
+
         
     def get(self, file_name):
         from os.path import join,isdir
@@ -166,7 +123,7 @@ class JsHandler(tornado.web.RequestHandler):
                 f.flush()
 
         self.set_header("Content-Type","text/javascript")
-        self.set_header('X-Accel-Redirect',"/target/js/"+file_name)
+        self.set_header('X-Accel-Redirect',"/root/target/%s/js/%s" % (self.application.site["dirname"], file_name))
         
     def getSource(self, file_name):
         from os.path import join,isdir
