@@ -1,8 +1,8 @@
 from __future__ import with_statement
-import os, fs, os.path
+import os, fs, os.path, logging
 from os.path import join,isdir
 
-from thepian.conf import structure
+from thepian.conf import structure, settings
 from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources
 
 import tornado.web
@@ -10,7 +10,7 @@ import tornado.template
 
 from verify import VerifySource
 
-class HomeHandler(tornado.web.RequestHandler):
+class MediaHomeHandler(tornado.web.RequestHandler):
     
     def get(self):
         self.render("mediahome.html")
@@ -28,7 +28,7 @@ class DirectoryHandler(tornado.web.RequestHandler):
             "list": os.listdir(self.application.site['path'] + self.request.path), 
             "path": self.request.path,
             "SITE_TITLE": "PageSpec",
-            "MEDIA_URL": ""
+            "MEDIA_URL": settings.MEDIA_URL
         }
         self.render("directory.html",**info)
                 
@@ -74,7 +74,7 @@ class CssHandler(tornado.web.RequestHandler):
 
         self.set_header("Content-Type","text/css")
         self.set_header('X-Accel-Redirect',"/root/target/%s/css/%s" % (self.application.site["dirname"], file_name))
-
+        logging.log(logging.INFO, "served /root/target/%s/css/%s" % (self.application.site["dirname"], file_name))
         
     def get(self, file_name):
         from os.path import join,isdir

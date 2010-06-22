@@ -3,7 +3,7 @@ from handlers import *
 from tornado.web import StaticFileHandler
 
 urls = [
-    (r"^/$", HomeHandler),
+    (r"^/$", MediaHomeHandler),
     (r"/static/(.*)", StaticFileHandler, {"path": structure.MEDIASITE_DIRS[0]}),
     (r"/960gs/(.*)", StaticFileHandler, {"path": structure.MEDIASITE_DIRS[0] + "/960gs"}),
     (r"/images/(.*)", StaticFileHandler, {"path": structure.MEDIASITE_DIRS[0] + "/images"}),
