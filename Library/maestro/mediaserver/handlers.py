@@ -78,7 +78,6 @@ class CssHandler(tornado.web.RequestHandler):
         
     def get(self, file_name):
         from os.path import join,isdir
-
         header_ip = 'X-Real-IP' in self.request.headers or 'X-Forwarded-For' in self.request.headers
         if header_ip:
             self.acceleratedGet(file_name)
@@ -114,7 +113,7 @@ class JsHandler(tornado.web.RequestHandler):
         src = join(structure.JS_DIR,file_name)
         if not isdir(src):
             raise tornado.web.HTTPError(404)
-        target = join(structure.MEDIASITE_DIRS[-1],"js",file_name)
+        target = join(self.application.site["target_path"],"js",file_name)
         if newer_assets(src,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)
             with open(target,"w") as f:
@@ -132,7 +131,7 @@ class JsHandler(tornado.web.RequestHandler):
         src = join(structure.JS_DIR,file_name)
         if not isdir(src):
             raise tornado.web.HTTPError(404)
-        target = join(structure.MEDIASITE_DIRS[-1],"js",file_name)
+        target = join(self.application.site["target_path"],"js",file_name)
         text = None
         if newer_assets(src,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)

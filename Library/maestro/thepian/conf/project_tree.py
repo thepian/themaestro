@@ -11,6 +11,7 @@ TARGET_DIRECTORY_STRUCTURE = (
     join('target','mediasite','fonts'),
     join('target','mediasite','objects'),
     join('target','mediasite','renderings'),
+    join('target','apisite','js'),
 )
 
 RELEASE_DIRECTORY_STRUCTURE = (
