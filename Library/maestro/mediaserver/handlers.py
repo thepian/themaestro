@@ -194,11 +194,11 @@ class JsVerifyDetailHandler(JsHandler):
         
     def get(self, directory, file_name, test_path):
         try:
-            print 'browser id =', 'new'
-            print 'useragent', self.request.headers.get("User-Agent")
-            print 'page url =', self.request.headers.get("Referer","??")
-            print 'pipeline =', 'na'
-            print 'page stage', 'loaded vs poll no vs other'
+            # print 'browser id =', 'new'
+            # print 'useragent', self.request.headers.get("User-Agent")
+            # print 'page url =', self.request.headers.get("Referer","??")
+            # print 'pipeline =', 'na'
+            # print 'page stage', 'loaded vs poll no vs other'
             path = join(directory,'verify')
             verify = VerifySource.get(path,file_name[:-3])
             if not verify.source:
