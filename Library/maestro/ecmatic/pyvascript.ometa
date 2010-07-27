@@ -1,0 +1,136 @@
+grammar = line*:l emptyline* end -> l
+
+hspace    = ' ' | '\t'
+vspace    = '\n'
+optspace  = ?(self.parenthesis) (hspace | '\\'? vspace | comment)* | (hspace | '\\' vspace)* comment?
+mandspace = ?(self.parenthesis) (hspace | '\\'? vspace | comment)+ | (hspace | '\\' vspace)+ comment?
+
+indentation = hspace*:i ?(len(i) == self.indent_stack[-1])
+indent      = hspace*:i ?(len(i) > self.indent_stack[-1]) !(self.indent_stack.append(len(i)))
+dedent      = !(self.dedent())
+
+comment  = '#' line_rest:c -> ['comment', c]
+emptyline = hspace* ('\\' | comment)?:c vspace
+block     = emptyline* indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
+line      = emptyline*:e indentation stmt:s optspace (vspace | end) -> s
+line_rest = (~vspace :x)*:x -> ''.join(x)
+
+stmt = pass | global | continue | break | return | raise | while
+     | if | def | for | try | augassign | assign
+
+global = "global" mandspace innercsv('name'):names -> ['global', names]
+
+continue = "continue"              -> ['continue']
+break    = "break"                 -> ['break']
+
+pass   = "pass"                    -> ['pass']
+return = "return" mandspace expr:e -> ['return', e]
+raise  = "raise" mandspace expr:e  -> ['raise', e]
+
+augassign = get:l optspace
+            ("+=" | "-=" | "*=" | "/=" | "//=" | "%=" | "^=" | "&=" | "|=" | "~=" | "<<=" | ">>="):op
+            optspace expr:r
+            -> ['augassign', op, l, r]
+assign = get:l optspace '=' optspace assign:r -> ['assign', l, r]
+       | expr
+expr = ifexpr
+     | innerifexpr
+innerifexpr = orop
+orop  = orop:l optspace "or":op andop:r -> ['binop', op, l, r]
+      | andop
+andop = andop:l optspace "and":op notop:r -> ['binop', op, l, r]
+      | notop
+notop = optspace "not":op mandspace notop:r -> ['unop', op, r]
+      | cmpop
+comparison = ( "in"                 -> 'in'
+             | "not" mandspace "in" -> 'not in'
+             | "is" mandspace "not" -> 'is not'
+             | "is"                 -> 'is'
+             ):x mandspace -> x
+           | "<" | "<=" | ">" | ">=" | "!=" | "=="
+cmpop = cmpop:l optspace comparison:op optspace bitor:r -> ['binop', op, l, r]
+      | bitor
+bitor = bitor:l optspace '|':op bitxor:r -> ['binop', op, l, r]
+      | bitxor
+bitxor = bitxor:l optspace '^':op bitand:r -> ['binop', op, l, r]
+      | bitand
+bitand = bitand:l optspace '&':op shift:r -> ['binop', op, l, r]
+      | shift
+shift = shift:l optspace ("<<" | ">>"):op addop:r -> ['binop', op, l, r]
+      | addop
+addop = addop:l optspace ('+' | '-'):op mulop:r -> ['binop', op, l, r]
+      | mulop
+mulop = mulop:l optspace ('*' | '/' | '//' | '%'):op unop:r -> ['binop', op, l, r]
+      | unop
+unop  = optspace ('-' | '+' | '~'):op unop:e -> ['unop', op, e]
+      | callable
+
+callable = optspace
+         ( new
+         | lambda
+         | deflambda
+         | get
+         )
+
+get = get:obj optspace '.' optspace name:n        -> ['get', obj, n]
+    | get:obj optspace '[' csv('expr'):elem ']'   -> ['getitem', obj, elem]
+    | get:obj optspace '(' csv('expr'):params ')' -> ['call', obj, params]
+    | immediate
+
+immediate = number
+          | string
+          | list
+          | tuple
+          | dict
+          | set
+          | name
+          | '(' !(self.enter_paren()) expr:ix optspace ')' !(self.leave_paren()) -> ix
+
+new = "new" mandspace get:c -> ['new', c]
+
+name_start   = letter | '$' | '_'
+name_rest    = name_start | digit
+iname        = name_start:s name_rest*:r   -> s + ''.join(r)
+iskeyword :x = ?(self.is_keyword(x))
+name         = iname:n ~iskeyword(n)       -> ['name', n]
+
+escaped_char = '\\' :x -> ('\\' + x).decode('string_escape')
+string3 :e = match_string(e) (escaped_char | ~(?(len(e) != 3) vspace | match_string(e)) anything)*:c match_string(e) -> ''.join(c)
+string2 = string3('"""') | string3("'''") | string3('"') | string3("'")
+string = (string2:s optspace -> s)+:s -> ['string', ''.join(s)]
+
+hexdigit     = letterOrDigit:x !(self.hex_digits.find(x.lower())):v ?(v >= 0)  -> v
+hexlit       = hexlit:n hexdigit:d                                             -> (n * 16 + d)
+             | hexdigit
+number       = "0x" hexlit:n                                                   -> ['hexnumber', n]
+             | digit+:ws ('.' digit+:fs                                        -> ['number', float('%s.%s' % (''.join(ws), ''.join(fs)))]
+                         | -> ['number'])                                      -> ['number', int(''.join(ws))]
+
+innercsv :rule = optspace (apply(rule):e optspace ',' optspace -> e)*:es (?(rule != 'tupleexpr' or len(es)) optspace apply(rule):l !(es.append(l)))? optspace -> es
+csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
+list  = '[' csv('expr'):v       ']' -> ['list'] + v
+tuple = '(' csv('tupleexpr'):v  ')' -> ['tuple'] + v
+dict  = '{' csv('dictexpr'):v   '}' -> ['dict'] + v
+set   = '{' csv('expr'):v       '}' -> ['set'] + v
+
+tupleexpr = expr
+dictexpr  = string:k optspace ':' optspace expr:v -> ['dictkv', k, v]
+
+ifexpr = innerifexpr:t mandspace "if" mandspace innerifexpr:cond mandspace "else" mandspace expr:f -> ['ifexpr', cond, t, f]
+
+if    = "if" mandspace expr:cond optspace ':' block:body elif*:ei else?:e -> ['if', [cond, body]] + [ei] + ([e] if e else [])
+elif  = emptyline* indentation "elif" mandspace expr:cond optspace ':' block:body -> [cond, body]
+else  = emptyline* indentation "else" optspace ':' block:body -> body
+
+while = "while" mandspace expr:cond optspace ':' block:body -> ['while', cond, body]
+
+for   = "for" mandspace name:var mandspace "in" mandspace expr:data optspace ':' block:body -> ['for', var, data, body]
+
+def   = !(self.get_indent()):i "def" mandspace !(self.indent_stack.append(i)) name:name optspace '(' csv('name'):args ')' optspace ':' block:body !(self.indent_stack.pop()) -> ['func', name, args, body]
+deflambda = !(self.get_indent()):i "def" ~~(hspace | '(') !(self.enter_deflambda(i)) optspace '(' csv('name'):args ')' optspace ':' block:body !(self.leave_deflambda()) -> ['func', None, args, body]
+lambda = "lambda" mandspace csv('name'):args optspace ':' expr:e -> ['func', None, args, [e]]
+
+try = "try" optspace ':' block:body
+      emptyline* indentation "except" mandspace name:err optspace ':' block:errbody
+      (emptyline* indentation "finally" optspace ':' block)?:finbody
+      -> ['try', body, err, errbody] + ([finbody] if finbody else [])
