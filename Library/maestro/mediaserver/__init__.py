@@ -54,7 +54,7 @@ class Application(tornado.web.Application):
             allurls = __import__('conf.urls',{},{},[]).urls
             urls = getattr(allurls,site['dirname'],default_urls)
         except ImportError,e:
-            loggining.error('no urls for %s using defaults' % site['dirname'], e)
+            logging.error('no urls for %s using defaults' % site['dirname'], e)
             urls = default_urls
         p = __path__[0]
         template_path = structure.TEMPLATES_DIR # (p+'/templates',structure.TEMPLATES_DIR)
