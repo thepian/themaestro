@@ -71,7 +71,7 @@ class Structure(ProjectTree):
     
     """
     
-    __file__ = None
+    __file__ = ''
     #__package__ = None
     __doc__ = None
 

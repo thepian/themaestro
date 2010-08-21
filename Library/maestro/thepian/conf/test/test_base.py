@@ -1,10 +1,10 @@
-import sys
+import sys, os.path
 
 def test_base_Settings_class():
     from thepian.conf import global_settings
     from thepian.conf.base import Settings
     settings = Settings()
-    assert settings.__file__ == None
+    assert settings.__file__ == ''
     for name in dir(global_settings):
         if name == name.upper():
             assert getattr(settings,name) == getattr(global_settings,name)
@@ -29,7 +29,7 @@ def test_base_Structure_class():
     from thepian.conf import global_structure
     from thepian.conf.base import Structure
     structure = Structure()
-    assert structure.__file__ == None
+    assert structure.__file__ == ''
     
     # All entries in global_structure are found in a new structure
     for name in dir(global_structure):
@@ -38,6 +38,8 @@ def test_base_Structure_class():
             
     # All entries in global_structure are found after blending in a blank structure module
     from samples import sample_structure
+    single_sample_path = os.path.join(os.path.dirname(__file__),"samples","single_sample")
+    structure.apply_basedir(single_sample_path, single_sample_path, 'single')
     structure.blend(sample_structure)
     for name in dir(sample_structure):
         if name == name.upper():

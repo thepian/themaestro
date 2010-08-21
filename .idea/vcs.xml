@@ -3,6 +3,10 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="" />
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/pyfacebook" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/theapps" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/thepian-lib" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/tornado" vcs="Git" />
   </component>
 </project>
 
