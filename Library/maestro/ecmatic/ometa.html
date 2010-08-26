@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head><title>OMeta/Squeak 2</title></head>
+<body>
+<h2>OMeta/Squeak 2<!--<font color=red><i>(Release Candidate)</i></font>--></h2>
+This is the current version of OMeta/Squeak.
+It is available as a Monticello package from the <a href=http://squeaksource.com/OMeta.html>OMeta Squeaksource project page</a>.
+<!--
+This is the release candidate for OMeta/Squeak 2: <a href=OMeta2-rc.sar>OMeta2-rc.sar</a>. So far I have tested it on the 3.8,
+3.10, Cobalt, and Moshi images.
+I would like to do some QA before making this the official release of OMeta/Squeak 2, so please let me know if you find any bugs /
+issues, or have any other feedback &mdash; I'm hoping to publish this on SqueakMap sometime next week. Thanks!
+<table align=right><tr><td>-- Alex 5/22/09</td></tr></table>
+<br><br>
+<b><u>Note</u>:</b> If you're using OS X, you'll want to control-click on the link above and do a "Download linked file"
+to prevent the file from being unzipped automatically.<br>
+-->
+
+<h3>Getting Started</h3>
+A good place to start is the <tt>OMeta2Examples</tt> class. Look at the class comment &mdash; it contains a few examples that
+illustrate, among other things, the new public interface of the OMeta/Squeak grammars.
+
+<h3>Syntax and New Features</h3>
+OMeta/Squeak 2 has all of the features of the original OMeta/Squeak and then some, but its syntax is closer to that of
+<a href=http://tinlizzie.org/ometa-js>OMeta/JS</a>. As a result, porting old OMeta/Squeak grammars to the new version will take a
+little bit of editing. I believe the new, more light-weight syntax is well worth the trouble.
+
+<h4>Rule Applications</h4>
+... are now written without the pointy brackets (<tt>&lt;&gt;</tt>), e.g., <tt>expr</tt>.
+Arguments should be passed using parentheses, e.g., <tt>listOf(#expr. ',')</tt>. Note that (i)
+the arguments are separated by periods, not commas (because comma is a valid message name is Smalltalk), and (ii)
+there should be no spaces between the rule name and the open parenthesis.<br><br>
+Super rule applications are now written using the caret symbol (<tt>^</tt>), e.g., <tt>^digit</tt> invokes the super-grammar's
+version of the <tt>digit</tt> rule. You can also pass arguments to a super rule application, e.g., <tt>^rrr(a1. a2)</tt>.
+
+<h4>Rule declarations</h4>
+The new syntax for rule declarations uses <tt>=</tt> instead of <tt>::=</tt>, e.g.,<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>identifier = letter (letter | digit)*</tt></td></tr></table>
+
+<h4>Semantic Actions and Predicates</h4>
+
+In the previous version of OMeta/Squeak</i>, the syntax for semantic actions was<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>![</tt><i>...squeak expr...</i><tt>]</tt></td></tr></table><br>
+and<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>=> [</tt><i>...squeak expr...</i><tt>]</tt></td></tr></table><br>
+
+The <i>new syntax</i> for semantic actions is<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>[</tt><i>...squeak expr..</i><tt>]</tt></td></tr></table><br>
+(note that there's no "<tt>!</tt>") and<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>-&gt; [</tt><i>...squeak expr...</i><tt>]</tt></td></tr></table><br>
+
+The syntax for semantic predicates has not changed:<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>?[</tt><i>...squeak expr...</i><tt>]</tt></td></tr></table>
+
+<h4><font color=red>New Feature:</font> <i>"Consumed-By" Operators</i></h4>
+
+The new <i>consumed-by</i> operator (<tt>&lt;</tt><i>...</i><tt>&gt;</tt>), inspired by a similar feature in Ian's COLA parser framework, returns a sub-sequence of the input that contains the elements matched by the enclosed OMeta/Squeak expression. This can be really convenient &mdash; for example, instead of writing<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>letter:x (letter | digit)*:xs -&gt; [String withAll: (xs addFirst: x; yourself)]</tt></td></tr></table><br>
+you can now write<br><br>
+<table><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td><td><tt>&lt;letter (letter | digit)*&gt;</tt></td></tr></table><br>
+And since result is always a <tt>SequenceableCollection</tt> of the same <i>species</i> as the one underlying the input stream, this works
+equally well for <tt>String</tt>s, <tt>Array</tt>s, <tt>OrderedCollection</tt>s, etc.<br><br>
+
+There is also a new <i>index-consumed-by</i> operator (@<tt>&lt;...&gt;</tt>)</li> that returns an association with the start and
+end indices of the elements consumed by the enclosed expression (i.e., <i>startIdx</i> <tt> -> </tt> <i>endIdx</i>).
+
+<h4>Other Changes / New Features?</h4>
+I believe this covers all the changes and new features; please let me know if you notice that I've missed something.
+
+<h3>Known Issues</h3>
+
+<bl>
+<li>This implementation uses Squeak's array literals (<tt>{...}</tt>), so it won't work on other flavors of Smalltalk.
+I'll fix this over the next few days.</li>
+<li>The Squeak debugger complains about OMeta rules &mdash; <i>syntax error</i> &mdash; because it doesn't know about OMeta syntax.
+I have a plan to fix this, but it's part of a bigger project (the
+<a href=http://awarth.blogspot.com/2008/09/omnidebugger.html>OmniDebugger</a>) which will take some time to implement.
+Please let me know if you know of any quick fixes.</li>
+</li>
+</bl>
+</body>
+</html>

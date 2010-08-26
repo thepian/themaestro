@@ -10,8 +10,9 @@ class Command(object):
         import py 
         print sys.path, args
         # args = ['Library/maestro/mediaserver/sources/jsparser']
-        args = [
-            'Library/maestro/thepian/conf',
-            'Library/maestro/mediaserver',
-            'Library/maestro/ecmatic']
+        if not args:
+            args = [
+                'Library/maestro/thepian/conf',
+                'Library/maestro/mediaserver',
+                'Library/maestro/ecmatic']
         py.test.cmdline.main(args)
