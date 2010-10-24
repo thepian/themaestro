@@ -47,8 +47,9 @@ class CssHandler(tornado.web.RequestHandler):
         #TODO record dependency with target
         if newer_group(srcs,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.CSS_DIR,source_node=CssSourceNode)
-            with open(target,"w") as f:
-                text = ''.join(lines)
+            import codecs
+            with codecs.open(target,"w",encoding="utf-8") as f:
+                text = u''.join(lines)
                 f.write(text)
                 f.flush()
 
@@ -67,8 +68,9 @@ class CssHandler(tornado.web.RequestHandler):
         target = join(self.application.site["target_path"],"css",file_name)
         if newer_assets(src,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.CSS_DIR,source_node=CssSourceNode)
-            with open(target,"w") as f:
-                text = ''.join(lines)
+            import codecs
+            with codecs.open(target,"w",encoding="utf-8") as f:
+                text = u''.join(lines)
                 f.write(text)
                 f.flush()
 
@@ -107,6 +109,7 @@ class JsHandler(tornado.web.RequestHandler):
         self.js_loader = tornado.template.Loader(structure.JS_DIR)
         
     def acceleratedGet(self, file_name):
+        import codecs
         from os.path import join,isdir
         from distutils.dep_util import newer_group
 
@@ -116,8 +119,8 @@ class JsHandler(tornado.web.RequestHandler):
         target = join(self.application.site["target_path"],"js",file_name)
         if newer_assets(src,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)
-            with open(target,"w") as f:
-                text = ''.join(lines)
+            with codecs.open(target,"w", encoding="utf-8") as f:
+                text = u''.join(lines)
                 f.write(text)
                 f.flush()
 
@@ -125,6 +128,7 @@ class JsHandler(tornado.web.RequestHandler):
         self.set_header('X-Accel-Redirect',"/root/target/%s/js/%s" % (self.application.site["dirname"], file_name))
         
     def getSource(self, file_name):
+        import codecs
         from os.path import join,isdir
         from distutils.dep_util import newer_group
 
@@ -135,8 +139,8 @@ class JsHandler(tornado.web.RequestHandler):
         text = None
         if newer_assets(src,target) or self.request.headers.get("force",False):
             lines = combine_asset_sources(src,structure.JS_DIR,source_node=JsSourceNode)
-            with open(target,"w") as f:
-                text = ''.join(lines)
+            with codecs.open(target,"w",encoding="utf-8") as f:
+                text = u''.join(lines)
                 f.write(text)
                 f.flush()
 
