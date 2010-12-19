@@ -1,8 +1,8 @@
-from textwrap import dedent
-from twisted.trial import unittest
-from pymeta.runtime import ParseError, OMetaBase, EOFError
-from pymeta.grammar import OMetaGrammar
 from pymeta.builder import TreeBuilder, moduleFromGrammar
+from pymeta.grammar import OMetaGrammar
+from pymeta.runtime import _MaybeParseError, OMetaBase, EOFError, expected
+from textwrap import dedent
+import unittest
 
 class HandyWrapper(object):
     """
@@ -21,21 +21,21 @@ class HandyWrapper(object):
         rule.
         @param: Rule name.
         """
-        def doIt(str):
+        def doIt(s):
             """
-            @param str: The string to be parsed by the wrapped grammar.
+            @param s: The string to be parsed by the wrapped grammar.
             """
-            obj = self.klass(str)
+            obj = self.klass(s)
             ret, err = obj.apply(name)
             try:
-                extra, err = obj.input.head()
+                extra, _ = obj.input.head()
             except EOFError:
                 try:
                     return ''.join(ret)
                 except TypeError:
                     return ret
             else:
-                raise ParseError(err.args[0], err.args[1], "trailing garbage in input: %r" % (extra,))
+                raise err
         return doIt
 
 
@@ -66,7 +66,7 @@ class OMetaTestCase(unittest.TestCase):
         """
         g = self.compile("digit = '1'")
         self.assertEqual(g.digit("1"), "1")
-        self.assertRaises(ParseError, g.digit, "4")
+        self.assertRaises(_MaybeParseError, g.digit, "4")
 
 
     def test_multipleRules(self):
@@ -78,7 +78,7 @@ class OMetaTestCase(unittest.TestCase):
                           aLetter = 'a'
                           """)
         self.assertEqual(g.digit("1"), "1")
-        self.assertRaises(ParseError, g.digit, "4")        
+        self.assertRaises(_MaybeParseError, g.digit, "4")
 
 
     def test_escapedLiterals(self):
@@ -95,7 +95,7 @@ class OMetaTestCase(unittest.TestCase):
         """
         g = self.compile("stuff = 17 0x1F -2 0177")
         self.assertEqual(g.stuff([17, 0x1f, -2, 0177]), 0177)
-        self.assertRaises(ParseError, g.stuff, [1, 2, 3])
+        self.assertRaises(_MaybeParseError, g.stuff, [1, 2, 3])
 
 
     def test_star(self):
@@ -106,7 +106,7 @@ class OMetaTestCase(unittest.TestCase):
         self.assertEqual(g.xs(""), "")
         self.assertEqual(g.xs("x"), "x")
         self.assertEqual(g.xs("xxxx"), "xxxx")
-        self.assertRaises(ParseError, g.xs, "xy")
+        self.assertRaises(_MaybeParseError, g.xs, "xy")
 
 
     def test_plus(self):
@@ -116,8 +116,8 @@ class OMetaTestCase(unittest.TestCase):
         g = self.compile("xs = 'x'+")
         self.assertEqual(g.xs("x"), "x")
         self.assertEqual(g.xs("xxxx"), "xxxx")
-        self.assertRaises(ParseError, g.xs, "xy")
-        self.assertRaises(ParseError, g.xs, "")
+        self.assertRaises(_MaybeParseError, g.xs, "xy")
+        self.assertRaises(_MaybeParseError, g.xs, "")
 
 
     def test_sequencing(self):
@@ -126,7 +126,7 @@ class OMetaTestCase(unittest.TestCase):
         """
         g = self.compile("twelve = '1' '2'")
         self.assertEqual(g.twelve("12"), "2");
-        self.assertRaises(ParseError, g.twelve, "1")
+        self.assertRaises(_MaybeParseError, g.twelve, "1")
 
 
     def test_alternatives(self):
@@ -137,7 +137,7 @@ class OMetaTestCase(unittest.TestCase):
         self.assertEqual(g.digit("0"), "0")
         self.assertEqual(g.digit("1"), "1")
         self.assertEqual(g.digit("2"), "2")
-        self.assertRaises(ParseError, g.digit, "3")
+        self.assertRaises(_MaybeParseError, g.digit, "3")
 
 
     def test_optional(self):
@@ -166,7 +166,7 @@ class OMetaTestCase(unittest.TestCase):
         """
         g = self.compile("foo = ~'0' anything")
         self.assertEqual(g.foo("1"), "1")
-        self.assertRaises(ParseError, g.foo, "0")
+        self.assertRaises(_MaybeParseError, g.foo, "0")
 
 
     def test_ruleValue(self):
@@ -226,8 +226,8 @@ class OMetaTestCase(unittest.TestCase):
            """)
         self.assertEqual(g.double_bits("00"), 0)
         self.assertEqual(g.double_bits("11"), 1)
-        self.assertRaises(ParseError, g.double_bits, "10")
-        self.assertRaises(ParseError, g.double_bits, "01")
+        self.assertRaises(_MaybeParseError, g.double_bits, "10")
+        self.assertRaises(_MaybeParseError, g.double_bits, "01")
 
 
     def test_parens(self):
@@ -269,7 +269,7 @@ class OMetaTestCase(unittest.TestCase):
         self.assertEqual(g.baz("18"), [1, 8])
         self.assertEqual(g.baz("08"), [0, 8])
         self.assertEqual(g.baz("29"), [2, 9])
-        self.assertRaises(ParseError, g.foo, "28")
+        self.assertRaises(_MaybeParseError, g.foo, "28")
 
 
     def test_patternMatch(self):
@@ -386,6 +386,8 @@ class OMetaTestCase(unittest.TestCase):
         """)
         self.assertEqual(g.broken('ab'), 'ab')
 
+
+
 class PyExtractorTest(unittest.TestCase):
     """
     Tests for finding Python expressions in OMeta grammars.
@@ -416,9 +418,9 @@ class PyExtractorTest(unittest.TestCase):
         self.findInGrammar('{x: "]",\ny: "["}')
 
         o = OMetaBase("foo(x[1]])\nbaz = ...\n")
-        self.assertRaises(ParseError, o.pythonExpr)
+        self.assertRaises(_MaybeParseError, o.pythonExpr)
         o = OMetaBase("foo(x[1]\nbaz = ...\n")
-        self.assertRaises(ParseError, o.pythonExpr)
+        self.assertRaises(_MaybeParseError, o.pythonExpr)
 
 
 class MakeGrammarTest(unittest.TestCase):

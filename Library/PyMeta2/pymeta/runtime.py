@@ -1,16 +1,29 @@
 # -*- test-case-name: pymeta.test.test_runtime -*-
-
 """
 Code needed to run a grammar after it has been compiled.
 """
+import operator
+
+# The public parse error
 class ParseError(Exception):
+    pass
+
+# The internal ParseError
+class _MaybeParseError(Exception):
     """
     ?Redo from start
     """
+
+    @property
+    def position(self):
+        return self.args[0]
+
+    @property
+    def error(self):
+        return self.args[1]
+
     def __init__(self, *a):
         Exception.__init__(self, *a)
-        self.position = a[0]
-        self.error = a[1]
         if len(a) > 2:
             self.message = a[2]
 
@@ -18,31 +31,64 @@ class ParseError(Exception):
         if other.__class__ == self.__class__:
             return (self.position, self.error) == (other.position, other.error)
 
-    def __repr__(self):
-        return 'Parse error%s at char %d: %s' % (self.error and ' (%s)' % self.error or '', self.position, self.message)
+    def formatReason(self):
+        if self.error is None:
+            return ''
+        if len(self.error) == 1:
+            if self.error[0][0] == 'message':
+                return self.error[0][1]
+            elif self.error[0][2] == None:
+                return 'expected a ' + self.error[0][1]
+            else:
+                return 'expected the %s %s' % (self.error[0][1], self.error[0][2])
+        else:
+            bits = []
+            for s in self.error:
+                if s[2] is None:
+                    desc = "a " + s[1]
+                else:
+                    desc = repr(s[2])
+                    if s[1] is not None:
+                        desc = "%s %s" % (s[1], desc)
+                bits.append(desc)
 
-    def __str__(self):
-        return repr(self)
+            return "expected one of %s, or %s" % (', '.join(bits[:-1]), bits[-1])
 
-class EOFError(ParseError):
+    def formatError(self, input):
+        """
+        Return a pretty string containing error info about string parsing failure.
+        """
+        lines = input.split('\n')
+        counter = 0
+        line_number = 1
+        column = 0
+        for line in lines:
+            new_counter = counter + len(line) + 1
+            if new_counter > self.position:
+                column = self.position - counter
+                break
+            else:
+                counter = new_counter
+                line_number += 1
+        reason = self.formatReason()
+        return ('\n' + line + '\n' + (' ' * column + '^') +
+                "\nParse error at line %s, column %s: %s\n" % (line_number,
+                                                               column,
+                                                               reason))
+
+class EOFError(_MaybeParseError):
     def __init__(self, position):
-        ParseError.__init__(self, position, eof())
+        _MaybeParseError.__init__(self, position, eof())
 
 
-def expected(val):
+def expected(typ, val=None):
     """
     Return an indication of expected input and the position where it was
     expected and not encountered.
     """
 
-    return [("expected", val)]
+    return [("expected", typ, val)]
 
-def expectedOneOf(vals):
-    """
-    Return an indication of multiple possible expected inputs.
-    """
-
-    return [("expected", x) for x in vals]
 
 def eof():
     """
@@ -50,25 +96,23 @@ def eof():
     """
     return [("message", "end of input")]
 
-
 def joinErrors(errors):
     """
     Return the error from the branch that matched the most of the input.
     """
-    errors.sort(reverse=True, key=lambda x: x.position)
-    results = []
-    pos = errors[0].position
+    errors.sort(reverse=True, key=operator.itemgetter(0))
+    results = set()
+    pos = errors[0][0]
     for err in errors:
-        if pos == err.position:
-            e = err.error
+        if pos == err[0]:
+            e = err[1]
             if e is not None:
                 for item in e:
-                    if item not in results:
-                        results.append(item)
+                        results.add(item)
         else:
             break
 
-    return ParseError(pos, results)
+    return [pos, list(results)]
 
 
 class character(str):
@@ -121,10 +165,10 @@ class InputStream(object):
     def head(self):
         if self.position >= len(self.data):
             raise EOFError(self.position)
-        return self.data[self.position], ParseError(self.position, None)
+        return self.data[self.position], [self.position, None]
 
     def nullError(self):
-        return ParseError(self.position, None)
+        return [self.position, None]
 
     def tail(self):
         if self.tl is None:
@@ -168,6 +212,11 @@ class ArgInput(object):
 
     def tail(self):
         return self.parent
+
+
+
+    def nullError(self):
+        return self.parent.nullError()
 
 
     def getMemo(self, name):
@@ -218,10 +267,19 @@ class OMetaBase(object):
 
         self.currentError = self.input.nullError()
 
-    def considerError(self, error):
-        if error is not None:
-            self.currentError = joinErrors([error, self.currentError])
+    @classmethod
+    def parse(cls, source):
+        try:
+            parser = cls(source)
+            return parser.apply('grammar')[0]
+        except _MaybeParseError:
+            raise ParseError(parser.currentError.formatError(source))
 
+    def considerError(self, error):
+        if isinstance(error, _MaybeParseError):
+            error = error.args
+        if error and error[1] and error[0] > self.currentError[0]:
+            self.currentError = _MaybeParseError(*error)
 
     def superApply(self, ruleName, *args):
         """
@@ -244,8 +302,8 @@ class OMetaBase(object):
         """
         r = getattr(self, "rule_"+ruleName, None)
         if r is not None:
-            return self._apply(r, ruleName, args)
-
+            val, err = self._apply(r, ruleName, args)
+            return val, _MaybeParseError(*err)
         else:
             raise NameError("No rule named '%s'" %(ruleName,))
     rule_apply = apply
@@ -274,7 +332,7 @@ class OMetaBase(object):
             try:
                 memoRec = self.input.setMemo(ruleName,
                                              [rule(), self.input])
-            except ParseError:
+            except _MaybeParseError:
                 #print "Failed", rule
                 raise
             #print "Success", rule
@@ -289,13 +347,13 @@ class OMetaBase(object):
 
                         memoRec = oldPosition.setMemo(ruleName,
                                                      [ans, self.input])
-                    except ParseError:
+                    except _MaybeParseError:
                         break
             self.input = oldPosition
 
         elif isinstance(memoRec, LeftRecursion):
             memoRec.detected = True
-            raise ParseError(None, None)
+            raise _MaybeParseError(None, None)
         self.input = memoRec[1]
         return memoRec[0]
 
@@ -321,7 +379,7 @@ class OMetaBase(object):
             return val, p
         else:
             self.input = i
-            raise ParseError(p.position, expected(wanted))
+            raise _MaybeParseError(p[0], expected(None, wanted))
 
     rule_exactly = exactly
 
@@ -341,7 +399,7 @@ class OMetaBase(object):
                 m = self.input
                 v, _ = fn()
                 ans.append(v)
-            except ParseError, e:
+            except _MaybeParseError, e:
                 self.input = m
                 break
         return ans, e
@@ -360,26 +418,26 @@ class OMetaBase(object):
                 ret, err = f()
                 errors.append(err)
                 return ret, joinErrors(errors)
-            except ParseError, e:
+            except _MaybeParseError, e:
                 errors.append(e)
                 self.input = m
-        raise joinErrors(errors)
+        raise _MaybeParseError(*joinErrors(errors))
 
 
     def _not(self, fn):
         """
-        Call the given function. Raise ParseError iff it does not.
+        Call the given function. Raise _MaybeParseError iff it does not.
 
         @param fn: A callable of no arguments.
         """
         m = self.input
         try:
             fn()
-        except ParseError, e:
+        except _MaybeParseError, e:
             self.input = m
             return True, self.input.nullError()
         else:
-            raise self.input.nullError()
+            raise _MaybeParseError(*self.input.nullError())
 
     def eatWhitespace(self):
         """
@@ -401,13 +459,13 @@ class OMetaBase(object):
 
     def pred(self, expr):
         """
-        Call the given function, raising ParseError if it returns false.
+        Call the given function, raising _MaybeParseError if it returns false.
 
         @param expr: A callable of no arguments.
         """
         val, e = expr()
         if not val:
-            raise e
+            raise _MaybeParseError(*e)
         else:
             return True, e
 
@@ -424,8 +482,8 @@ class OMetaBase(object):
             self.input = InputStream.fromIterable(v)
         except TypeError:
             e = self.input.nullError()
-            e.error = expected("an iterable")
-            raise e
+            e[1] = expected("an iterable")
+            raise _MaybeParseError(*e)
         expr()
         self.end()
         self.input = oldInput
@@ -464,9 +522,9 @@ class OMetaBase(object):
             for c in tok:
                 v, e = self.exactly(c)
             return tok, e
-        except ParseError:
+        except _MaybeParseError, e:
             self.input = m
-            raise
+            raise _MaybeParseError(e[0], expected("string", tok))
     rule_match_string = match_string
 
     def token(self, tok):
@@ -479,9 +537,10 @@ class OMetaBase(object):
             for c in tok:
                 v, e = self.exactly(c)
             return tok, e
-        except ParseError:
+        except _MaybeParseError, e:
             self.input = m
-            raise
+            
+            raise _MaybeParseError(e[0], expected("token", tok))
 
     rule_token = token
 
@@ -493,8 +552,8 @@ class OMetaBase(object):
         if x.isalpha():
             return x, e
         else:
-            e.error = expected("letter")
-            raise e
+            e[1] = expected("letter")
+            raise _MaybeParseError(*e)
 
     rule_letter = letter
 
@@ -506,8 +565,8 @@ class OMetaBase(object):
         if x.isalnum() or x == '_':
             return x, e
         else:
-            e.error = expected("letter or digit")
-            raise e
+            e[1] = expected("letter or digit")
+            raise _MaybeParseError(*e)
 
     rule_letterOrDigit = letterOrDigit
 
@@ -519,8 +578,8 @@ class OMetaBase(object):
         if x.isdigit():
             return x, e
         else:
-            e.error = expected("digit")
-            raise e
+            e[1] = expected("digit")
+            raise _MaybeParseError(*e)
 
     rule_digit = digit
 
@@ -534,10 +593,12 @@ class OMetaBase(object):
         delimiters = { "(": ")", "[": "]", "{": "}"}
         stack = []
         expr = []
+        lastc = None
+        endchar = None
         while True:
             try:
                 c, e = self.rule_anything()
-            except ParseError, e:
+            except _MaybeParseError, e:
                 endchar = None
                 break
             if c in endChars and len(stack) == 0:
@@ -550,13 +611,19 @@ class OMetaBase(object):
                 elif len(stack) > 0 and c == stack[-1]:
                     stack.pop()
                 elif c in delimiters.values():
-                    raise ParseError(self.input.position, expected("Python expression"))
+                    raise _MaybeParseError(self.input.position, expected("Python expression"))
                 elif c in "\"'":
                     while True:
                         strc, stre = self.rule_anything()
                         expr.append(strc)
-                        if strc == c:
+                        slashcount = 0
+                        while strc == '\\':
+                            strc, stre = self.rule_anything()
+                            expr.append(strc)
+                            slashcount += 1
+                        if strc == c and slashcount % 2 == 0:
                             break
+
         if len(stack) > 0:
-            raise ParseError(self.input.position, expected("Python expression"))
+            raise _MaybeParseError(self.input.position, expected("Python expression"))
         return (''.join(expr).strip(), endchar), e
