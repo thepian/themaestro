@@ -1,33 +1,21 @@
 from pymeta.grammar import OMeta
-from pymeta.runtime import ParseError as OMetaParseError
 import os
 
 def compile(source):
-    return Translator.parse_source(Grammar.parse_source(source))
+    return Translator.parse(Grammar.parse(source))
 
 grammar_path = os.path.join(os.path.dirname(__file__), 'pyvascript.ometa')
 pyva_grammar = open(grammar_path, 'r').read()
 def p(s):
     print s
 
-class ParseError(Exception):
-    pass
-
-class BaseGrammar(object):
-    @classmethod
-    def parse_source(cls, source):
-        try:
-            return cls(source).apply('grammar')[0]
-        except OMetaParseError, e:
-            raise ParseError(e.formatError(source))
-
-class Grammar(BaseGrammar, OMeta.makeGrammar(pyva_grammar, {'p': p})):
+class Grammar(OMeta.makeGrammar(pyva_grammar, {'p': p})):
     keywords = set(('and', 'as', 'break', 'case', 'catch', 'class', 'continue',
         'def', 'default', 'del', 'delete', 'do', 'elif', 'else', 'except',
         'false', 'finally', 'for', 'function', 'if', 'in', 'is', 'instanceof',
         'new', 'not', 'null', 'or', 'pass', 'raise', 'return', 'switch',
-        'this', 'throw', 'true', 'try', 'typeof', 'var', 'void', 'while',
-        'with', 'yield',))
+        'throw', 'true', 'try', 'typeof', 'var', 'void', 'while', 'with',
+        'yield',))
     hex_digits = '0123456789abcdef'
 
     def __init__(self, *args, **kwargs):
@@ -52,9 +40,13 @@ class Grammar(BaseGrammar, OMeta.makeGrammar(pyva_grammar, {'p': p})):
         self.parenthesis = self.parenthesis_stack.pop()
 
     def get_indent(self):
+        start = self.input.position
         for index in reversed(range(self.input.position)):
-            if self.input.data[index] == '\n':
-                return self.input.position - (index + 1)
+            char = self.input.data[index]
+            if char == '\n':
+                return start - (index + 1)
+            elif char != ' ':
+                start = index
         return 0
 
     def dedent(self):
@@ -70,21 +62,25 @@ class Grammar(BaseGrammar, OMeta.makeGrammar(pyva_grammar, {'p': p})):
 
 translator_path = os.path.join(os.path.dirname(__file__), 'pyvascript-translator.ometa')
 pyva_translator = open(translator_path, 'r').read()
-class Translator(BaseGrammar, OMeta.makeGrammar(pyva_translator, {'p': p})):
+class Translator(OMeta.makeGrammar(pyva_translator, {'p': p})):
     op_map = {
         'not': '!',
-        'del': 'delete ',
     }
     binop_map = {
         'or': '||',
         'and': '&&',
         'is': '===',
-        'is not': '!===',
+        'is not': '!==',
     }
     name_map = {
         'None': 'null',
         'True': 'true',
         'False': 'false',
+        'self': 'this',
+        'int': '_$pyva_int',
+        'float': '_$pyva_float',
+        'tuple': 'list',
+        'unicode': 'str',
     }
 
     def __init__(self, *args, **kwargs):
@@ -94,6 +90,11 @@ class Translator(BaseGrammar, OMeta.makeGrammar(pyva_translator, {'p': p})):
         self.global_vars = set()
         self.var_stack = []
         self.temp_var_id = 0
+
+    def get_name(self, name):
+        if name == 'self' and name not in self.global_vars:
+            return name
+        return self.name_map.get(name, name)
 
     def make_temp_var(self, name, prefix='_$tmp'):
         self.temp_var_id += 1
@@ -223,8 +224,12 @@ class Translator(BaseGrammar, OMeta.makeGrammar(pyva_translator, {'p': p})):
 
     def make_func(self, name, args, body):
         if name:
-            self.register_var(name[1])
-            func = '%s = function' % name[1]
+            name = self.get_name(name[1])
+            self.register_var(name)
+            func = '%s = function' % name
+            body += ';'
         else:
             func = 'function'
+        if args and args[0] == self.get_name('self'):
+            args = args[1:]
         return '%s(%s) %s' % (func, ', '.join(args), body)

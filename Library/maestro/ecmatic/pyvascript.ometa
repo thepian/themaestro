@@ -11,20 +11,23 @@ dedent      = !(self.dedent())
 
 comment  = '#' line_rest:c -> ['comment', c]
 emptyline = hspace* ('\\' | comment)?:c vspace
-block     = emptyline* indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
+block     = emptyline+ indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
+block     = optspace stmt:s optspace ~~(vspace | end) -> [s]
 line      = emptyline*:e indentation stmt:s optspace (vspace | end) -> s
 line_rest = (~vspace :x)*:x -> ''.join(x)
 
-stmt = pass | global | continue | break | return | raise | while
+stmt = pass | global | continue | break | return | raise | while | del
      | if | def | for | try | augassign | assign
 
 global = "global" mandspace innercsv('name'):names -> ['global', names]
 
 continue = "continue"              -> ['continue']
 break    = "break"                 -> ['break']
+del      = "del" mandspace get:x   -> ['del', x]
 
 pass   = "pass"                    -> ['pass']
 return = "return" mandspace expr:e -> ['return', e]
+       | "return" optspace ~~(vspace | end) -> ['return']
 raise  = "raise" mandspace expr:e  -> ['raise', e]
 
 augassign = get:l optspace
@@ -72,9 +75,12 @@ callable = optspace
          | get
          )
 
-get = get:obj optspace '.' optspace name:n        -> ['get', obj, n]
-    | get:obj optspace '[' csv('expr'):elem ']'   -> ['getitem', obj, elem]
-    | get:obj optspace '(' csv('expr'):params ')' -> ['call', obj, params]
+slice = expr?:start optspace ':' optspace expr?:end -> ['slice', start, end]
+      | expr:e -> e
+
+get = get:obj optspace '.' optspace name:n           -> ['getattr', obj, n]
+    | get:obj optspace '[' !(self.enter_paren()) slice:s !(self.leave_paren()) ']' -> ['getitem', obj, s]
+    | get:obj optspace '(' csv('expr'):params ')'    -> ['call', obj, params]
     | immediate
 
 immediate = number
@@ -126,8 +132,8 @@ while = "while" mandspace expr:cond optspace ':' block:body -> ['while', cond, b
 
 for   = "for" mandspace name:var mandspace "in" mandspace expr:data optspace ':' block:body -> ['for', var, data, body]
 
-def   = !(self.get_indent()):i "def" mandspace !(self.indent_stack.append(i)) name:name optspace '(' csv('name'):args ')' optspace ':' block:body !(self.indent_stack.pop()) -> ['func', name, args, body]
-deflambda = !(self.get_indent()):i "def" ~~(hspace | '(') !(self.enter_deflambda(i)) optspace '(' csv('name'):args ')' optspace ':' block:body !(self.leave_deflambda()) -> ['func', None, args, body]
+def   = "def" !(self.get_indent()):i mandspace !(self.indent_stack.append(i)) name:name optspace '(' csv('name'):args ')' optspace ':' block:body !(self.indent_stack.pop()) -> ['func', name, args, body]
+deflambda = "def" !(self.get_indent()):i ~~(hspace | '(') !(self.enter_deflambda(i)) optspace '(' csv('name'):args ')' optspace ':' block:body !(self.leave_deflambda()) -> ['func', None, args, body]
 lambda = "lambda" mandspace csv('name'):args optspace ':' expr:e -> ['func', None, args, [e]]
 
 try = "try" optspace ':' block:body
