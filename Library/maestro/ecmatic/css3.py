@@ -25,3 +25,5 @@ quotedString ::= (('"' | '\''):q (~<exactly q> <anything>)*:xs <exactly q>
 """
 TinyCSS = OMeta.makeGrammar(tinyCSSGrammar, globals(), name="TinyCSS")
 
+def compile(source):
+    pass #return Translator.parse_source(TinyCSS.parse_source(source))

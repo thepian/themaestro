@@ -6,21 +6,22 @@ from itertools import chain
 
 ECMAScriptGrammar = """
 
-name ::= <letterOrDigit>+:ls => ''.join(ls)
+grammar = line*:l emptyline* end -> l
 
-tag ::= ('<' <spaces> <name>:n <spaces> <attribute>*:attrs '>'
-         <html>:c
-         '<' '/' <token n> <spaces> '>'
-             => [n.lower(), dict(attrs), c])
+hspace    = ' ' | '\t'
+vspace    = '\n'
+optspace  = ?(self.parenthesis) (hspace | '\\'? vspace | comment)* | (hspace | '\\' vspace)* comment?
+mandspace = ?(self.parenthesis) (hspace | '\\'? vspace | comment)+ | (hspace | '\\' vspace)+ comment?
 
-html ::= (<text> | <tag>)*
+indentation = hspace*:i ?(len(i) == self.indent_stack[-1])
+indent      = hspace*:i ?(len(i) > self.indent_stack[-1]) !(self.indent_stack.append(len(i)))
+dedent      = !(self.dedent())
 
-text ::= (~('<') <anything>)+:t => ''.join(t)
-
-attribute ::= <spaces> <name>:k <token '='> <quotedString>:v => (k, v)
-
-quotedString ::= (('"' | '\''):q (~<exactly q> <anything>)*:xs <exactly q>
-                     => ''.join(xs))
+comment  = '#' line_rest:c -> ['comment', c]
+emptyline = hspace* ('\\' | comment)?:c vspace
+block     = emptyline* indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
+line      = emptyline*:e indentation stmt:s optspace (vspace | end) -> s
+line_rest = (~vspace :x)*:x -> ''.join(x)
 
 """
 ECMAScript = OMeta.makeGrammar(ECMAScriptGrammar, globals(), name="ECMAScript")

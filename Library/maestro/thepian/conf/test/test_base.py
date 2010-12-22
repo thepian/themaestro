@@ -26,6 +26,7 @@ def test_use_settings():
     
     
 def test_base_Structure_class():
+    from os.path import dirname
     from thepian.conf import global_structure
     from thepian.conf.base import Structure
     structure = Structure()
@@ -38,8 +39,9 @@ def test_base_Structure_class():
             
     # All entries in global_structure are found after blending in a blank structure module
     from samples import sample_structure
-    single_sample_path = os.path.join(os.path.dirname(__file__),"samples","single_sample")
-    structure.apply_basedir(single_sample_path, single_sample_path, 'single')
+    repo_dir = basedir = dirname(sample_structure.__file__)
+    structure.apply_basedir(repo_dir, basedir, "single")
+            
     structure.blend(sample_structure)
     for name in dir(sample_structure):
         if name == name.upper():
