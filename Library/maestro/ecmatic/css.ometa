@@ -1,0 +1,5 @@
+
+hspace    = ' ' | '\t'
+vspace    = '\n'
+
+line_rest = (~vspace :x)*:x -> ''.join(x)
