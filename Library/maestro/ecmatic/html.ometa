@@ -1,0 +1,24 @@
+hspace    = ' ' | '\t'
+vspace    = '\n'
+
+name_start = letter | '?' | '!'
+name_rest = name_start | digit
+iname = name_start:s name_rest*:r -> s + ''.join(r)
+isreserved :x = ?(self.is_reserved(x))
+name = iname:n ~isreserved(n)  -> n
+
+string3 :e = match_string(e) (~(match_string(e)) anything)*:c match_string(e) -> ''.join(c)
+string2 = string3('"') | string3("'")
+string = (string2:s -> s)+:s -> ''.join(s)
+
+tag = '<' spaces name:n spaces attribute*:attrs '>' html:c '<' spaces '/' spaces name:n spaces '>'
+        -> [n.lower(), dict(attrs), c]
+
+html = (text | tag)*
+
+text = (~('<') anything)+:t -> ''.join(t)
+
+string_attribute = name:k '=' string:v -> (k, v)
+bool_attribute = name:k (~('=') anything)? -> (k,True)
+attribute = spaces (string_attribute | bool_attribute)  
+attributes = spaces attribute*:attrs spaces -> dict(attrs)
