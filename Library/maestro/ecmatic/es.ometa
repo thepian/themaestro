@@ -3,7 +3,13 @@ vspace    = '\n'
 optspace  = ?(self.parenthesis) (hspace | '\\'? vspace | comment)* | (hspace | '\\' vspace)* comment?
 mandspace = ?(self.parenthesis) (hspace | '\\'? vspace | comment)+ | (hspace | '\\' vspace)+ comment?
 
-comment  = '/' '/' line_rest:c -> ['comment', c]
+comment  = "//" line_rest:c -> ['comment', c]
+
+mlcomment = "/*" (mlcommentChars | empty):cs "*/" -> cs
+mlcommentChars = ~('*') anything (mlcommentChars | empty) || '*' (PostAsteriskCommentChars | "*/")
+PostAsteriskCommentChars = ~('/' || '*') anything (mlcommentChars | empty) || '*' (PostAsteriskCommentChars | "*/")
+
+
 emptyline = hspace* ('\\' | comment)?:c vspace
 block     = emptyline+ indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
 block     = optspace stmt:s optspace ~~(vspace | end) -> [s]
@@ -17,12 +23,11 @@ global = "global" mandspace innercsv('name'):names -> ['global', names]
 
 continue = "continue"              -> ['continue']
 break    = "break"                 -> ['break']
-del      = "del" mandspace get:x   -> ['del', x]
+delete   = "delete" mandspace get:x   -> ['delete', x]
 
-pass   = "pass"                    -> ['pass']
 return = "return" mandspace expr:e -> ['return', e]
        | "return" optspace ~~(vspace | end) -> ['return']
-raise  = "raise" mandspace expr:e  -> ['raise', e]
+throw  = "throw" mandspace expr:e  -> ['throw', e]
 
 augassign = get:l optspace
             ("+=" | "-=" | "*=" | "/=" | "//=" | "%=" | "^=" | "&=" | "|=" | "~=" | "<<=" | ">>="):op
@@ -33,11 +38,11 @@ assign = get:l optspace '=' optspace assign:r -> ['assign', l, r]
 expr = ifexpr
      | innerifexpr
 innerifexpr = orop
-orop  = orop:l optspace "or":op andop:r -> ['binop', op, l, r]
+orop  = orop:l optspace "||":op andop:r -> ['binop', op, l, r]
       | andop
-andop = andop:l optspace "and":op notop:r -> ['binop', op, l, r]
+andop = andop:l optspace "&&":op notop:r -> ['binop', op, l, r]
       | notop
-notop = optspace "not":op mandspace notop:r -> ['unop', op, r]
+notop = optspace "!":op mandspace notop:r -> ['unop', op, r]
       | cmpop
 comparison = ( "in"                 -> 'in'
              | "not" mandspace "in" -> 'not in'

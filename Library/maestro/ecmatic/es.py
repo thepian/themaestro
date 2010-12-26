@@ -23,6 +23,8 @@ def uc(name):
 
 class Grammar(OMeta.makeGrammar(html_grammar, {'p': p, 'uc': uc}, name="EcmaScript")):
     
+    hex_digits = '0123456789abcdef'
+
     keywords = set((
         "break","do","instanceof","typeof","case","else","new","var","catch","finally",
          "return", "void", "continue", "for", "switch", "while", "debugger", "function",

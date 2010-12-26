@@ -21,4 +21,20 @@ class GrammarTestCase(unittest.TestCase):
         
     def test_expression(self):
         result, error = Grammar("a + b - 5").apply("expr")
+        assert result == ['binop', '-', ['binop', '+', 'a', 'b'],['number', 5]]
+
+        result, error = Grammar("a + b * 5").apply("expr")
+        assert result == ['binop', '+', 'a', ['binop', '*', 'b', ['number', 5]]]
+
+        result, error = Grammar("a == b + 5").apply("expr")
+        assert result == ['binop', '==', 'a', ['binop', '+', 'b', ['number', 5]]]
+
+        result, error = Grammar("a == b + 0x5").apply("expr")
+        assert result == ['binop', '==', 'a', ['binop', '+', 'b', ['hexnumber', 5]]]
+        
+        result, error = Grammar("a || b || c").apply("expr")
+        assert result == ['binop', '||', ['binop', '||', 'a', 'b'], 'c']
+
+        result, error = Grammar("a && b && c").apply("expr")
+        assert result == ['binop', '&&', ['binop', '&&', 'a', 'b'], 'c']
 
