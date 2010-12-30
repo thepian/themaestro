@@ -46,7 +46,7 @@ valued = (letter+):name '=' (letter+):value -> (''.join(name),''.join(value))
         g = Grammar("a=b c d=e")
         result,error = g.apply("attributes")
         assert result == [('a','b'),('c',True),('d','e')]
-
+        
 
     def test_optional(self):
         Grammar = OMeta.makeGrammar(r"""
@@ -64,3 +64,9 @@ word_comment = "/*" ' '? letter*:t ' '? "*/" -> ['comment', ''.join(t)]
         result,error = Grammar("/**/").apply("word_comment")
         assert result == ['comment', '']
         
+    def test_builtins(self):
+        # empty char spaces letter anything begin end
+        pass
+
+    def tets_cr_nl_encoding(self):
+        pass
