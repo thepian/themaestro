@@ -1,38 +1,28 @@
+from __future__ import with_statement
 __author__ = 'henrikvendelbo'
 from pymeta.grammar import OMeta
 from pymeta.runtime import ParseError as OMetaParseError
 import os, re
 
 def compile(source):
-    return Translator.parse_source(Grammar.parse_source(source))
+    try:
+        tmp,error = Grammar(source).apply('grammar')
+    except OMetaParseError, e:
+        raise ParseError(e.formatError(source))
+    try:
+        return Grammar(tmp).apply('grammar')[0]
+    except OMetaParseError, e:
+        raise ParseError(e.formatError(source))
 
 grammar_path = os.path.join(os.path.dirname(__file__), 'basic.ometa')
-basic_grammar = open(grammar_path, 'r').read()
-def p(s):
-    print s
+basic_grammar = None
+with open(grammar_path, 'r') as f:
+    basic_grammar = f.read()
 
 class ParseError(Exception):
     pass
 
-class BaseGrammar(object):
-    @classmethod
-    def parse_source(cls, source):
-        try:
-            return cls(source).apply('grammar')[0]
-        except OMetaParseError, e:
-            raise ParseError(e.formatError(source))
-
-# Literal tokens are represented as objects of the form { type: String, value: String }
-# Literal tokens represent number, string, boolean, null and regular expression literals
-def literal(t, val):
-	return { type: t, value: val }
-
-# some regular expressions for faster identifier and whitespace parsing
-ucSpacesRE = re.compile("\\s")
-
-
-
-class Grammar(BaseGrammar, OMeta.makeGrammar(basic_grammar, {'p': p})):
+class Grammar(OMeta.makeGrammar(basic_grammar, {})):
     keywords = set(
      ("break","do","instanceof","typeof","case","else","new","var","catch","finally",
       "return", "void", "continue", "for", "switch", "while", "debugger", "function",
@@ -51,47 +41,41 @@ class Grammar(BaseGrammar, OMeta.makeGrammar(basic_grammar, {'p': p})):
         'yield',))
     hex_digits = '0123456789abcdef'
 
-    def __init__(self, *args, **kwargs):
-        super(Grammar, self).__init__(*args, **kwargs)
-        self.parenthesis = 0
-        self.parenthesis_stack = []
-        self.indent_stack = [0]
-
-    def enter_paren(self):
-        self.parenthesis += 1
-
-    def leave_paren(self):
-        self.parenthesis -= 1
-
-    def enter_deflambda(self, indent):
-        self.indent_stack.append(indent)
-        self.parenthesis_stack.append(self.parenthesis)
-        self.parenthesis = 0
-
-    def leave_deflambda(self):
-        self.indent_stack.pop()
-        self.parenthesis = self.parenthesis_stack.pop()
-
-    def get_indent(self):
-        for index in reversed(range(self.input.position)):
-            if self.input.data[index] == '\n':
-                return self.input.position - (index + 1)
-        return 0
-
-    def dedent(self):
-        # A dedent comes after a '\n'. Put it back, so the outer line
-        # rule can handle the '\n'
-        self.indent_stack.pop()
-        input = self.input.prev()
-        if input.head()[0] == '\n':
-            self.input = input
-
     def is_keyword(self, keyword):
         return keyword in self.keywords
 
+    def is_reserved(self,name):
+        "Is the attribute name reserved"
+        return False
+
+    def eatWhitespace(self):
+        """
+        Consume input until a non-whitespace character is reached.
+        """
+        consumingComment = False
+        while True:
+            try:
+                c, e = self.input.head()
+            except EOFError, e:
+                break
+            t = self.input.tail()
+            if c.isspace() or consumingComment:
+                self.input = t
+                if c == '\n':
+                    consumingComment = False
+            elif c == '#':
+                consumingComment = True
+            else:
+                break
+        return True, e
+    rule_spaces = eatWhitespace
+
 translator_path = os.path.join(os.path.dirname(__file__), 'basic-translator.ometa')
-pyva_translator = open(translator_path, 'r').read()
-class Translator(BaseGrammar, OMeta.makeGrammar(pyva_translator, {'p': p})):
+pyva_translator = None
+with open(translator_path, 'r') as f:
+    pyva_translator = f.read()
+    
+class Translator(OMeta.makeGrammar(pyva_translator, {})):
     op_map = {
         'not': '!',
         'del': 'delete ',

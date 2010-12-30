@@ -1,38 +1,24 @@
-# input characters are represented as ES3 characters, which can be any unicode character
-SourceCharacter = char,
+blocks = (vspace | comment | mlcomment | annotation)*
 
-Whitespace = uc('SP') || uc('TAB') || uc('VT') || uc('FF') || uc('NBSP') || uc('BOM') || uc('Zs'),
-LineTerminator = uc('LF') || uc('CR') || uc('LS') || uc('PS'),
-LineTerminatorSequence = uc('LF') || ~uc('LF') uc('CR') || uc('LS') || uc('PS') || uc('CR') uc('LF'),
+hspace    = ' ' | '\t'
+vspace    = '\n'
 
-Comment = MultiLineComment || SingleLineComment,
+comment  = "//" line_rest:c -> ['comment', c]
 
-# <...> is OMeta's "consumed-by" operator: the value of <...> is the input it consumed
-MultiLineComment = seq("/*") <(MultiLineCommentChars | empty)>:cs seq("*/") -> cs,
-MultiLineCommentChars = MultiLineNotAsteriskChar (MultiLineCommentChars | empty)
-                       || '*' (PostAsteriskCommentChars | &seq("*/")),
-PostAsteriskCommentChars = MultiLineNotForwardSlashOrAsteriskChar (MultiLineCommentChars | empty)
-                          || '*' (PostAsteriskCommentChars | &seq("*/")),
-MultiLineNotAsteriskChar = ~('*') SourceCharacter,
-MultiLineNotForwardSlashOrAsteriskChar = ~('/' || '*') SourceCharacter,
-SingleLineComment = seq("//") <(SingleLineCommentChars | empty)>,
-SingleLineCommentChars = SingleLineCommentChar (SingleLineCommentChars | empty),
-SingleLineCommentChar = ~LineTerminator SourceCharacter,
+mlcomment = "/*" something_star_no_slash*:ssns something_without_star:ws "*/" -> ['mlcomment', ''.join(ssns + [ws])]
 
+something_star_no_slash = (~'*' anything)*:ct '*':ct2 ~'/' -> ''.join(ct + [ct2])
+something_without_star = (~'*' anything)*:ws -> ''.join(ws)
 
-Identifier = IdentifierName:n ~checkReservedWord(n) -> (n),
-IdentifierName = <IdentifierName IdentifierPart>
-                 | IdentifierStart,
+emptyline = hspace* ('\\' | comment)?:c vspace
 
-IdentifierStart = UnicodeLetter || '$' || '_' || '\\' UnicodeEscapeSequence,
-IdentifierPart = IdentifierStart | UnicodeCombiningMark
-                 | UnicodeDigit | UnicodeConnectorPunctuation
-                 | uc('ZWNJ') | uc('ZWJ'),
-UnicodeLetter = uc('L') || uc('Nl'),
-UnicodeCombiningMark = uc('Mn') || uc('Mc'),
-UnicodeDigit = uc('Nd'),
-UnicodeConnectorPunctuation = uc('Pc'),
+line_rest = (~vspace :x)*:x -> ''.join(x)
+
+name_start = letter | '?' | '!'
+name_rest = name_start | digit
+iname = name_start:s name_rest*:r -> s + ''.join(r)
+isreserved :x = ?(self.is_reserved(x))
+name = iname:n ~isreserved(n)  -> n
 
 
-
-# seq empty char cs uc
+annotation = '@' name:n (';' | vspace | end) -> ['annotation', n]
