@@ -5,10 +5,9 @@ mandspace = ?(self.parenthesis) (hspace | '\\'? vspace | comment)+ | (hspace | '
 
 comment  = "//" line_rest:c -> ['comment', c]
 
-mlcomment = "/*" (mlcommentChars | empty):cs "*/" -> cs
-mlcommentChars = ~('*') anything (mlcommentChars | empty) || '*' (PostAsteriskCommentChars | "*/")
-PostAsteriskCommentChars = ~('/' || '*') anything (mlcommentChars | empty) || '*' (PostAsteriskCommentChars | "*/")
-
+mlcomment = "/*" something_star_no_slash*:ssns something_without_star:ws "*/" -> ['mlcomment', ''.join(ssns + [ws])]
+something_star_no_slash = (~'*' anything)*:ct '*':ct2 ~'/' -> ''.join(ct + [ct2])
+something_without_star = (~'*' anything)*:ws -> ''.join(ws)
 
 emptyline = hspace* ('\\' | comment)?:c vspace
 block     = emptyline+ indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
