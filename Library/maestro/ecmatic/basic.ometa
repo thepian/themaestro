@@ -20,5 +20,113 @@ iname = name_start:s name_rest*:r -> s + ''.join(r)
 isreserved :x = ?(self.is_reserved(x))
 name = iname:n ~isreserved(n)  -> n
 
+annotation = annotation_no_params | annotation_params
+annotation_no_params = '@' name:n "()"? (';' | vspace | end) -> ['annotation', n]
+annotation_params = '@' name:n spaces '(' (~')' anything)*:params ')' (';' | vspace | end) -> ['annotation', n,''.join(params)]
 
-annotation = '@' name:n (';' | vspace | end) -> ['annotation', n]
+
+Identifier = IdentifierName:n ~checkReservedWord(n) -> n
+IdentifierName = IdentifierStart:s IdentifierPart*:p -> ''.join([s] + p)
+
+IdentifierStart = UnicodeLetter || '$' || '_'
+IdentifierPart = IdentifierStart | UnicodeCombiningMark
+               | UnicodeDigit | UnicodeConnectorPunctuation
+               | uc('ZWNJ') | uc('ZWJ')
+UnicodeLetter = uc('L') || uc('Nl')
+UnicodeCombiningMark = uc('Mn') || uc('Mc')
+UnicodeDigit = uc('Nd')
+UnicodeConnectorPunctuation = uc('Pc')
+
+checkReservedWord :id = ?(self.is_keyword(id) or self.is_future(id) or id == "null" or id == "true" or id == "false") -> true
+
+Keyword = ("break" | "do" | "instanceof" | "typeof" | "case" | "else" | "new" | "var" | "catch"
+		| "finally" | "return" | "void" | "continue" | "for" | "switch" | "while" | "debugger" 
+		| "function" | "this" | "with" | "default" | "if" | "throw" | "delete" | "in" | "try")
+		:kwname ~IdentifierPart -> kwname
+
+Punctuator = ">>>="
+           | ">>=" | ">>>" | "===" | "!==" | "<<="
+           | "+="  | "-="  | "*="  | "%=" | ">="
+           | "=="  | "!="  | "++"  | "--" | "<<"
+           | ">>"  | "<="  | "&="  | "|=" | "^="
+           | "&&"  | "||"
+           | '{'     | '}'     | '('     | ')'    | '['   | ']'
+           | '.'     | ';'     | ','     | '<'    | '>'   | '!'
+           | '~'     | '='     | '&'     | '|'    | '^'   | '?'
+           | ':'     | '*'     | '%'     | '+'    | '-'
+DivPunctuator = "/=" | '/'
+
+WhitespaceOrLineTerminator = anything:x ?(ucSpacesRE.match(x)) -> x
+
+skip = (WhitespaceOrLineTerminator || Comment)*
+skipNoLine = (Whitespace || SingleLineComment || MultiLineCommentNoNL)*
+skipToEnd = skip end
+
+k :expected = skip Keyword:lexed ?(expected is lexed) -> expected
+
+token :expected = skip (Punctuator || DivPunctuator):lexed ?(expected is lexed) -> expected
+
+sc = skipNoLine ';' || skipNoLine (scanLineTerminator || end || ~~'}')
+
+scanLineTerminator = LineTerminator || ~MultiLineCommentNoNL MultiLineComment
+
+scanPunctNoLineTerminator :expected = skipNoLine  (Punctuator || DivPunctuator):lexed ?(expected is lexed) -> expected
+
+scanIdentifier = skip Identifier:id -> id
+
+scanIdentifierName = skip IdentifierName:id -> id
+
+scanIdentifierNoLineTerminator = skipNoLine Identifier:id -> id
+
+scanLiteral = skip Literal:l -> l
+
+scanDirective = skip ~~(RawStringLiteral):raw StringLiteral:l -> {value:l.value, directive:raw}
+
+
+Block = "{" (SourceElements | empty -> []):stmts "}" -> ast(_fromIdx, "BlockStmt",{},stmts) 
+
+IdPattern = scanIdentifier:id -> ast(_fromIdx, "IdPatt",{name:id},[]) 
+
+StatementList = StatementList:stmts Statement:stmt -> stmts + [ stmt ] | Statement:stmt -> [stmt]
+
+Statement = Block || EmptyStatement
+
+EmptyStatement = ";" -> ast(_fromIdx, "EmptyStmt",{},[])
+
+FunctionDeclaration = k("function") IdPattern:patt
+                      "(" (FormalParameterList | empty -> []):formals ")"
+                      "{" FunctionBody:body "}" -> ast(_fromIdx, "FunctionDecl",{}, [patt,
+                                  ast(_fromIdx, "ParamDecl",{},formals)] + body)
+
+FunctionExpression = k("function") IdPattern:patt
+                     "(" (FormalParameterList | empty -> []):formals ")"
+                     "{" FunctionBody:body "}" ->
+                     ( ast(_fromIdx, "FunctionExpr",{}, [patt,
+                                 ast(_fromIdx, "ParamDecl",{},formals)] + body) )
+                   || k("function") "(" (FormalParameterList | empty -> []):formals ")"
+                     "{" FunctionBody:body "}" -> ast(_fromIdx, "FunctionExpr",{}, [emptyAst(),
+                                 ast(_fromIdx, "ParamDecl",{},formals)] + body) 
+
+FormalParameterList = FormalParameterList:formals "," FormalParameter:formal -> formals + [ formal ]
+                    | FormalParameter:formal -> [formal]
+
+FormalParameter = IdPattern
+
+FunctionBody = (DirectivePrologue | empty -> []):prologue
+                 (SourceElements | empty -> []):src -> prologue + src
+
+
+Program = (DirectivePrologue | empty -> []):prologue
+            (SourceElements | empty -> []):src skipToEnd -> ast(_fromIdx, "Program",{},prologue + src ) 
+
+SourceElements = SourceElements:elts SourceElement:e ->  elts + [e]  | SourceElement:e -> [e]
+
+SourceElement = Declaration || Statement
+
+Declaration = FunctionDeclaration
+
+DirectivePrologue = DirectivePrologue:p Directive:d ->  p + d | Directive:d -> [d]
+
+Directive = scanDirective:dir sc -> ast(_fromIdx, 'PrologueDecl',dir,[]) 
+
+

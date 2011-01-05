@@ -22,7 +22,18 @@ with open(grammar_path, 'r') as f:
 class ParseError(Exception):
     pass
 
-class Grammar(OMeta.makeGrammar(basic_grammar, {})):
+def emptyAst():    
+    return ["Empty"]
+    
+def ast(startPos, tp, attributes, children):
+    return [tp, attributes] + children
+
+
+class Grammar(OMeta.makeGrammar(basic_grammar, {
+ "_fromIdx": 0,
+ "ucSpacesRE": re.compile(r"\s")
+
+})):
     keywords = set(
      ("break","do","instanceof","typeof","case","else","new","var","catch","finally",
       "return", "void", "continue", "for", "switch", "while", "debugger", "function",
@@ -32,6 +43,7 @@ class Grammar(OMeta.makeGrammar(basic_grammar, {})):
     strictFutureKws = set(
      ("implements", "let", "private", "public", "interface", "package",
       "protected", "static", "yield" ))
+      
 
     extraKeywords = set(('and', 'as',  'class', 'continue',
         'def', 'default', 'del', 'delete', 'do', 'elif',
@@ -40,9 +52,17 @@ class Grammar(OMeta.makeGrammar(basic_grammar, {})):
         'this', 'throw', 'true', 'typeof', 'var', 'void',
         'yield',))
     hex_digits = '0123456789abcdef'
+    
+    strictmode = False
 
     def is_keyword(self, keyword):
         return keyword in self.keywords
+
+    def is_future(self,name):
+        "Is the attribute name reserved"
+        if self.strictmode:
+            return name in self.strictFutureKws
+        return name in self.nonStrictFutureKws
 
     def is_reserved(self,name):
         "Is the attribute name reserved"
@@ -69,6 +89,27 @@ class Grammar(OMeta.makeGrammar(basic_grammar, {})):
                 break
         return True, e
     rule_spaces = eatWhitespace
+    
+    def uc(self, cat):
+        """
+        Match and return the given string, consuming any preceding whitespace.
+        """
+        space = re.compile(r"\s")
+        m = self.input
+        try:
+            c, e = self.input.head()
+            # if space.match(c):
+            #     self.input = m
+            #     raise _MaybeParseError(e[0], expected("uc", cat))
+                 
+            return c,e
+        except _MaybeParseError, e:
+            self.input = m
+            
+            raise _MaybeParseError(e[0], expected("uc", cat))
+
+    rule_uc = uc
+
 
 translator_path = os.path.join(os.path.dirname(__file__), 'basic-translator.ometa')
 pyva_translator = None

@@ -42,6 +42,14 @@ class GrammarTestCase(unittest.TestCase):
         result,error = g.apply("annotation")
         assert result == ['annotation', 'abc']
 
+        g = Grammar("""@abc()""")
+        result,error = g.apply("annotation")
+        assert result == ['annotation', 'abc']
+
+        g = Grammar("""@abc("url",5)""")
+        result,error = g.apply("annotation")
+        assert result == ['annotation', 'abc','"url",5']
+
     def test_blocks(self):
         g = Grammar("""\
 // hello""")
@@ -74,3 +82,15 @@ class GrammarTestCase(unittest.TestCase):
         result,error = g.apply("blocks")
         assert result == ['\n',["mlcomment", " hello "],'\n',["comment", " hello"], '\n', ['annotation','abc']]
 
+    def test_k(self):
+        g = Grammar("""typeof""")
+        # result,error = g.apply("Keyword")
+        # assert result == 'typeof'
+        # result,error = g.apply("k","typeof")
+        # assert result == 'typeof'
+        
+    def test_scanIdentifier(self):
+        g = Grammar("""abc""")
+        # result,error = g.apply("scanIdentifier")
+        # assert result == 'abc'
+        
