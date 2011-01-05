@@ -64,8 +64,74 @@ word_comment = "/*" ' '? letter*:t ' '? "*/" -> ['comment', ''.join(t)]
         result,error = Grammar("/**/").apply("word_comment")
         assert result == ['comment', '']
         
+    def fails_test_empty(self):
+#         Grammar = OMeta.makeGrammar(r"""
+# stuff = letter+:letters -> ''.join(letters) | empty -> 'nao'
+# """, {})
+
+        # doesn't seem to work, try alternative
+        Grammar = OMeta.makeGrammar(r"""
+stuff = letters | nothing
+letters = letter+:letters -> ''.join(letters)
+nothing = empty -> 'nao'
+""", {})
+
+        result,error = Grammar("").apply("stuff")
+        assert result == "nao"
+        result,error = Grammar("abc").apply("stuff")
+        assert result == "abc"
+        
+    def test_spaces(self):
+        Grammar = OMeta.makeGrammar(r"""
+spaces_and_letters = spaces letter+:letters -> letters 
+""", {})
+
+        result, error = Grammar(" a").apply("spaces_and_letters")
+        assert result == ['a']
+        
+    def test_tokens(self):
+        Grammar = OMeta.makeGrammar(r"""
+a = token('a') -> ('t','a')
+b = token('b') -> ('t','b')
+t = a | b
+""",{})
+        result, error = Grammar(" a").apply("t")
+        assert result == ('t','a')
+        result, error = Grammar(" b").apply("t")
+        assert result == ('t','b')
+        # result, error = Grammar("\0xa0 a").apply("t")
+        # assert result == ('t','a')
+        result, error = Grammar("\t a").apply("t")
+        assert result == ('t','a')
+        result, error = Grammar("\n a").apply("t")
+        assert result == ('t','a')
+        result, error = Grammar("a\n").apply("t")
+        assert result == ('t','a')
+        # TODO test that we are not at the end
+        
+    def no_test_begin(self):
+        Grammar = OMeta.makeGrammar(r"""
+from_start = begin 'a' -> 'a'
+at_end = 'b' end -> 'b'
+any = (from_start | at_end)*
+""", {})
+        result, error = Grammar(" a").apply("any")
+        assert result == []
+        
+    def test_end(self):
+        Grammar = OMeta.makeGrammar(r"""
+at_end = 'b' end -> 'b|'
+any = (at_end | anything)*
+""", {})
+        result, error = Grammar(" a").apply("any")
+        assert result == [' ','a']
+        result, error = Grammar("b a").apply("any")
+        assert result == ['b',' ','a']
+        result, error = Grammar(" ab").apply("any")
+        assert result == [' ','a','b|']
+        
     def test_builtins(self):
-        # empty char spaces letter anything begin end
+        # char spaces letter anything
         pass
 
     def tets_cr_nl_encoding(self):
