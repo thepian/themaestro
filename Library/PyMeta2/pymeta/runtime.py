@@ -543,7 +543,33 @@ class OMetaBase(object):
             raise _MaybeParseError(e[0], expected("token", tok))
 
     rule_token = token
+    
+    def uc(self,cat):
+        """
+        Match a character with a given Unicode category
+        """
+        import unicodedata
+        x, e = self.rule_anything()
+        if unicodedata.category(x) == cat:
+            return x, e
+        else:
+            e[1] = expected("category:"+ cat)
+            raise _MaybeParseError(*e)
 
+    rule_uc = uc
+    
+    def ub(self,bidi):
+        """
+        Match a character with a given Unicode bidirectional class
+        """
+        import unicodedata
+        x, e = self.rule_anything()
+        if unicodedata.bidirectional(x[0]) is bidi:
+            return x, e
+        else:
+            e[1] = expected("bidi:"+ bidi)
+            raise _MaybeParseError(*e)
+        
     def letter(self):
         """
         Match a single letter.

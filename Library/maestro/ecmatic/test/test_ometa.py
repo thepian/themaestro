@@ -130,6 +130,36 @@ any = (at_end | anything)*
         result, error = Grammar(" ab").apply("any")
         assert result == [' ','a','b|']
         
+    def test_uc(self):
+        import sys
+        # sys.setdefaultencoding('utf-8')
+        import unicodedata
+        assert unicodedata.category(u"a") == "Ll"
+        
+        Grammar = OMeta.makeGrammar(r"""
+letters = UnicodeLetter*
+number = UnicodeDigit*
+
+UnicodeLetter = uc('L') | uc('Nl') | uc('Ll') | uc('Lu')
+UnicodeCombiningMark = uc('Mn') | uc('Mc')
+UnicodeDigit = uc('Nd')
+UnicodeConnectorPunctuation = uc('Pc')
+""",{})
+        result, error = Grammar(u"a").apply("UnicodeLetter")
+        assert result == u'a'
+        result, error = Grammar(u"\u0393").apply("UnicodeLetter")
+        assert result == u'\u0393'
+        result, error = Grammar(u"\u03931").apply("letters")
+        assert result == [u'\u0393']
+        result, error = Grammar(u"123a").apply("number")
+        assert result == [u'1', u'2', u'3']
+        
+    def test_ub(self):
+        # paragraph test ub('B') 
+        # segment test ub('S')
+        # whitespace test ub('WS')
+        pass
+        
     def test_builtins(self):
         # char spaces letter anything
         pass
