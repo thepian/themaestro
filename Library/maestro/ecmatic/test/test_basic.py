@@ -2,7 +2,7 @@ from __future__ import with_statement
 
 import unittest
 
-from ecmatic.basic import Grammar    
+from ecmatic.basic import Grammar, ast    
 
 class GrammarTestCase(unittest.TestCase):
     
@@ -88,6 +88,15 @@ class GrammarTestCase(unittest.TestCase):
         # assert result == 'typeof'
         # result,error = g.apply("k","typeof")
         # assert result == 'typeof'
+        
+    def test_Statement(self):
+        g = Grammar(""";""")
+        result,error = g.apply("sourceElement")
+        assert result == g.ast("empty")
+        
+        g = Grammar("""function abc(){}""")
+        result,error = g.apply("sourceElement")
+        assert result == g.ast("func","abc","",[])
         
     def test_scanIdentifier(self):
         g = Grammar("""abc""")

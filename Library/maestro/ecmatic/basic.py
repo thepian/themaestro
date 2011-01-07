@@ -89,28 +89,11 @@ class Grammar(OMeta.makeGrammar(basic_grammar, {
                 break
         return True, e
     rule_spaces = eatWhitespace
+
+    def ast(self, tp, *children, **attributes):
+        return [tp, attributes] + [c for c in children]
+
     
-    def uc(self, cat):
-        """
-        Match and return the given string, consuming any preceding whitespace.
-        """
-        space = re.compile(r"\s")
-        m = self.input
-        try:
-            c, e = self.input.head()
-            # if space.match(c):
-            #     self.input = m
-            #     raise _MaybeParseError(e[0], expected("uc", cat))
-                 
-            return c,e
-        except _MaybeParseError, e:
-            self.input = m
-            
-            raise _MaybeParseError(e[0], expected("uc", cat))
-
-    rule_uc = uc
-
-
 translator_path = os.path.join(os.path.dirname(__file__), 'basic-translator.ometa')
 pyva_translator = None
 with open(translator_path, 'r') as f:
