@@ -3,9 +3,9 @@ blocks = (vspace | comment | mlcomment | annotation)*
 hspace    = ' ' | '\t'
 vspace    = '\n'
 
-comment  = "//" line_rest:c -> ['comment', c]
+comment  = "//" line_rest:c -> self.ast('comment', c)
 
-mlcomment = "/*" something_star_no_slash*:ssns something_without_star:ws "*/" -> ['mlcomment', ''.join(ssns + [ws])]
+mlcomment = "/*" something_star_no_slash*:ssns something_without_star:ws "*/" -> self.ast('mlcomment', ''.join(ssns + [ws]))
 
 something_star_no_slash = (~'*' anything)*:ct '*':ct2 ~'/' -> ''.join(ct + [ct2])
 something_without_star = (~'*' anything)*:ws -> ''.join(ws)
@@ -21,8 +21,8 @@ isreserved :x = ?(self.is_reserved(x) or x == "null" or x == "true" or x == "fal
 name = iname:n ~isreserved(n)  -> n
 
 annotation = annotation_no_params | annotation_params
-annotation_no_params = '@' name:n "()"? (';' | vspace | end) -> ['annotation', n]
-annotation_params = '@' name:n spaces '(' (~')' anything)*:params ')' (';' | vspace | end) -> ['annotation', n,''.join(params)]
+annotation_no_params = '@' name:n (spaces "()")? (';' | vspace | end) -> self.ast('annotation', n)
+annotation_params = '@' name:n spaces '(' (~')' anything)*:params ')' (';' | vspace | end) -> self.ast('annotation', n,''.join(params))
 
 
 Keyword = ("break" | "do" | "instanceof" | "typeof" | "case" | "else" | "new" | "var" | "catch"
@@ -56,7 +56,7 @@ program = (sourceElements | empty -> []):src skipToEnd -> src
 
 sourceElements = sourceElement*:e ->  e
 
-sourceElement = functionDeclaration | emptyStatement
+sourceElement = functionDeclaration | emptyStatement | comment | mlcomment
 
 emptyStatement = ";" -> self.ast("empty")
 
