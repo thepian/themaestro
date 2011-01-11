@@ -60,7 +60,7 @@ class GrammarTestCase(unittest.TestCase):
 // hello
 // hello""")
         result,error = g.apply("blocks")
-        assert result == ['\n',["comment", {}, " hello"],'\n',["comment", {}, " hello"]]
+        assert result == ['\n',["comment", {}, " hello"],["comment", {}, " hello"]]
 
         g = Grammar("""
 /* hello */
@@ -80,7 +80,7 @@ class GrammarTestCase(unittest.TestCase):
 // hello
 @abc""")
         result,error = g.apply("blocks")
-        assert result == ['\n',["mlcomment", {}, " hello "],'\n',["comment", {}, " hello"], '\n', ['annotation', {}, 'abc']]
+        assert result == ['\n',["mlcomment", {}, " hello "],'\n',["comment", {}, " hello"], ['annotation', {}, 'abc']]
 
     def test_k(self):
         g = Grammar("""typeof""")
@@ -96,10 +96,32 @@ class GrammarTestCase(unittest.TestCase):
         
         g = Grammar("""function abc(){}""")
         result,error = g.apply("sourceElement")
-        assert result == g.ast("func","abc","",[])
+        assert result == g.ast("func","abc",[],[])
+        
         g = Grammar("""function abc(){}""")
         result,error = g.apply("sourceElements")
-        assert result == [g.ast("func","abc","",[])]
+        assert result == [g.ast("func","abc",[],[])]
+        
+        g = Grammar("""/* lead comment */ function abc(){}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("mlcomment"," lead comment "),g.ast("func","abc",[],[])]
+        
+        g = Grammar("""function abc(/* in args */){}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("func","abc",[g.ast("mlcomment"," in args ")],[])]
+        
+        g = Grammar("""function abc(// in args
+def,ghi){}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("func","abc",[g.ast("comment"," in args"),"def,ghi"],[])]
+        
+        g = Grammar("""function abc(){;;}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("func","abc",[],[g.ast("empty"),g.ast("empty")])]
+        
+        g = Grammar("""function abc(){/* in block */;;}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("func","abc",[],[g.ast("mlcomment"," in block "),g.ast("empty"),g.ast("empty")])]
         
     def test_scanIdentifier(self):
         g = Grammar("""abc""")
@@ -111,6 +133,6 @@ class GrammarTestCase(unittest.TestCase):
         function abc(a,b,c) { var hello = 5; }
         function abc(a,b,c) { var hello = 5 }
         function /* abc */ abc(a,b,c) { var hello = 5; }
-        function abc/* abc */(/* abc */a,b,c) {/* abc */ var hello = 5; }
+        function abc/* abc */(/* abc() */a,b,c) {/* abc{} */ var hello = 5; }
         """
         

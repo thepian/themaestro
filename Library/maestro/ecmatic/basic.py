@@ -4,6 +4,15 @@ from pymeta.grammar import OMeta
 from pymeta.runtime import ParseError as OMetaParseError
 import os, re
 
+"""
+
+Comments:
+    When found in odd places comments are taken to be disabled bits of code, and are dropped.
+    
+    Comments before or after statements are preserved in the AST
+    Comments in function declaration arguments are preserved in the AST
+"""
+
 def compile(source):
     try:
         tmp,error = Grammar(source).apply('grammar')

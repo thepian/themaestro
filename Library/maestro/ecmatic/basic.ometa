@@ -12,7 +12,7 @@ something_without_star = (~'*' anything)*:ws -> ''.join(ws)
 
 emptyline = hspace* ('\\' | comment)?:c vspace
 
-line_rest = (~vspace :x)*:x -> ''.join(x)
+line_rest = (~vspace :x)*:x (vspace|end) -> ''.join(x)
 
 name_start = letter | '?' | '!'
 name_rest = name_start | digit
@@ -56,12 +56,15 @@ program = (sourceElements | empty -> []):src skipToEnd -> src
 
 sourceElements = sourceElement*:e ->  e
 
-sourceElement = functionDeclaration | emptyStatement | comment | mlcomment
+sourceElement = functionDeclaration | emptyStatement | (comment:c vspace -> c) | mlcomment
 
 emptyStatement = ";" -> self.ast("empty")
 
-functionDeclaration = token("function") skip name:name skip "(" (~')' anything)*:args ")" skip 
-						"{" sourceElements:body "}" -> self.ast("func", name, ''.join(args), body)
+untilEndParentesis = (~')' anything)+:args -> ''.join(args)
+betweenParentesisWithComments = (comment | mlcomment | untilEndParentesis)*:args -> args
+
+functionDeclaration = token("function") skip name:name skip "(" betweenParentesisWithComments:args ")" skip 
+						"{" sourceElements:body "}" -> self.ast("func", name, args, body)
 
 
 
