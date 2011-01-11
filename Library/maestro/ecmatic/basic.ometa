@@ -2,6 +2,7 @@ blocks = (vspace | comment | mlcomment | annotation)*
 
 hspace    = ' ' | '\t'
 vspace    = '\n'
+lineend	  = '\n' | '\r' | '\l'
 
 comment  = "//" line_rest:c -> self.ast('comment', c)
 
@@ -52,11 +53,24 @@ k :expected = skip Keyword:lexed ?(expected is lexed) -> expected
 
 sc = skipNoLine ';' || skipNoLine (scanLineTerminator || end || ~~'}')
 
+string3 :e = match_string(e) (~(match_string(e)) anything)*:c match_string(e) -> ''.join(c)
+string2 = string3('"') | string3("'")
+string = (string2:s -> s)+:s -> ''.join(s)
+
+regex = token('/') regexBody:b '/' regexFlags:f -> self.ast("regexp", b, flags=f)
+regexFlags = letter*:l -> ''.join(l)
+regexBody = (regexEscape | untilEndRegex)*
+regexEscape = '\\' (~lineend anything):c -> '\\' + c
+untilEndRegex = (~('\\' | '/') anything)*:c -> ''.join(c)
+
+
 program = (sourceElements | empty -> []):src skipToEnd -> src 
 
 sourceElements = sourceElement*:e ->  e
 
-sourceElement = block | functionDeclaration | emptyStatement | (comment:c vspace -> c) | mlcomment
+sourceElement = (block | functionDeclaration | varDeclaration | varAssignmentDeclaration |
+			keywordStatement | simpleStatement | emptyStatement | 
+			(comment:c vspace -> c) | mlcomment)
 
 emptyStatement = ";" -> self.ast("empty")
 
@@ -66,7 +80,25 @@ betweenParentesisWithComments = (comment | mlcomment | untilEndParentesis)*:args
 functionDeclaration = token("function") skip name:name skip "(" betweenParentesisWithComments:args ")" skip 
 						token("{") sourceElements:body token("}") -> self.ast("func", name, args, body)
 
+varDeclaration = token("var") skip name:name skip 
+			(';' | end | vspace) -> self.ast("var", name, [])
+
+varAssignmentDeclaration = token("var") skip name:name token("=") skip restStatement:rest  
+			(';' | end | vspace) -> self.ast("var", name, rest)
+
 block = token("{") sourceElements:body token("}") -> self.ast("block", body)
+
+untilEndStatement = (~(';' | end | vspace) anything)+:bits -> ''.join(bits)
+restStatement = (comment | mlcomment | string | regex | untilEndStatement)+:parts -> parts
+
+keywordStatement = ( token("debugger") | token("continue") | token("break")):keyword 
+			(';' | end | vspace) -> self.ast("simple", keyword, [])
+ 
+simpleStatement = ( token("delete") | token("return") | token("throw") ):keyword 
+			skip untilEndStatement:rest (';' | end | vspace) -> self.ast("simple", keyword, rest)
+
+
+
 
 scanLineTerminator = LineTerminator || ~MultiLineCommentNoNL MultiLineComment
 

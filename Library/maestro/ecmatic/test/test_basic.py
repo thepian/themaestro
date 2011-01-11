@@ -94,6 +94,7 @@ class GrammarTestCase(unittest.TestCase):
         result,error = g.apply("sourceElement")
         assert result == g.ast("empty")
         
+    def test_function(self):
         g = Grammar("""function abc(){}""")
         result,error = g.apply("sourceElement")
         assert result == g.ast("func","abc",[],[])
@@ -123,6 +124,54 @@ def,ghi){}""")
         result,error = g.apply("sourceElements")
         assert result == [g.ast("func","abc",[],[g.ast("mlcomment"," in block "),g.ast("empty"),g.ast("empty")])]
         
+    def test_var(self):
+        g = Grammar("""var abc = def
+        var b = c; var d = e""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("var","abc",['def']),g.ast("var","b",['c']),g.ast("var","d",['e'])]
+        
+        g = Grammar("""var abc
+        var b; var d""")
+        # result,error = g.apply("sourceElements")
+        # assert result == [g.ast("var","abc",[]),g.ast("var","b",[]),g.ast("var","d",[])]
+
+        g = Grammar("""var abc, def
+        var a,b,c; var d,e""")
+        
+        
+    def test_keyword_statements(self):
+        g = Grammar("""debugger; debugger
+        debugger""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("simple","debugger", []),g.ast("simple","debugger", []),g.ast("simple","debugger", [])]
+
+        g = Grammar("""continue; continue
+        continue""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("simple","continue", []),g.ast("simple","continue", []),g.ast("simple","continue", [])]
+
+        g = Grammar("""break; break
+        break""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("simple","break", []),g.ast("simple","break", []),g.ast("simple","break", [])]
+        
+    def test_simple_statements(self):
+        g = Grammar("""delete a; delete b
+        delete c""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("simple","delete", 'a'),g.ast("simple","delete", 'b'),g.ast("simple","delete", 'c')]
+
+        g = Grammar("""return a; return b
+        return c""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("simple","return", 'a'),g.ast("simple","return", 'b'),g.ast("simple","return", 'c')]
+
+        g = Grammar("""throw a; throw b
+        throw c""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("simple","throw", 'a'),g.ast("simple","throw", 'b'),g.ast("simple","throw", 'c')]
+
+        
     def test_block(self):
         g = Grammar("""function abc() {;}""")
         result,error = g.apply("sourceElements")
@@ -140,6 +189,18 @@ def,ghi){}""")
         result,error = g.apply("sourceElements")
         assert result == [g.ast("block",[g.ast("empty")])]
         
+    """
+    function decl
+    var decl
+    assignment
+    function call
+    with
+    switch / if / while / do / for / try / catch / finally 
+    debugger / break / continue / delete / return / throw
+    
+    expression
+    
+    """    
         
     def test_scanIdentifier(self):
         g = Grammar("""abc""")
