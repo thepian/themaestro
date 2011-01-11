@@ -123,6 +123,24 @@ def,ghi){}""")
         result,error = g.apply("sourceElements")
         assert result == [g.ast("func","abc",[],[g.ast("mlcomment"," in block "),g.ast("empty"),g.ast("empty")])]
         
+    def test_block(self):
+        g = Grammar("""function abc() {;}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("func","abc",[],[g.ast("empty")])]
+        
+        g = Grammar("""function abc() {; }""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("func","abc",[],[g.ast("empty")])]
+        
+        g = Grammar(""" {;}""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("block",[g.ast("empty")])]
+        
+        g = Grammar(""" {; }""")
+        result,error = g.apply("sourceElements")
+        assert result == [g.ast("block",[g.ast("empty")])]
+        
+        
     def test_scanIdentifier(self):
         g = Grammar("""abc""")
         # result,error = g.apply("scanIdentifier")

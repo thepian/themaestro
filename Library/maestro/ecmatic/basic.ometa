@@ -56,7 +56,7 @@ program = (sourceElements | empty -> []):src skipToEnd -> src
 
 sourceElements = sourceElement*:e ->  e
 
-sourceElement = functionDeclaration | emptyStatement | (comment:c vspace -> c) | mlcomment
+sourceElement = block | functionDeclaration | emptyStatement | (comment:c vspace -> c) | mlcomment
 
 emptyStatement = ";" -> self.ast("empty")
 
@@ -64,9 +64,9 @@ untilEndParentesis = (~')' anything)+:args -> ''.join(args)
 betweenParentesisWithComments = (comment | mlcomment | untilEndParentesis)*:args -> args
 
 functionDeclaration = token("function") skip name:name skip "(" betweenParentesisWithComments:args ")" skip 
-						"{" sourceElements:body "}" -> self.ast("func", name, args, body)
+						token("{") sourceElements:body token("}") -> self.ast("func", name, args, body)
 
-
+block = token("{") sourceElements:body token("}") -> self.ast("block", body)
 
 scanLineTerminator = LineTerminator || ~MultiLineCommentNoNL MultiLineComment
 
@@ -76,49 +76,5 @@ scanLiteral = skip Literal:l -> l
 
 scanDirective = skip ~~(RawStringLiteral):raw StringLiteral:l -> {value:l.value, directive:raw}
 
-
-Block = "{" (SourceElements | empty -> []):stmts "}" -> ast(self.position, "BlockStmt",{},stmts) 
-
-StatementList = StatementList:stmts Statement:stmt -> stmts + [ stmt ] | Statement:stmt -> [stmt]
-
-Statement = Block || EmptyStatement
-
-EmptyStatement = ";" -> ast(self.position, "EmptyStmt",{},[])
-
-FunctionDeclaration = k("function") name:patt
-                      "(" (FormalParameterList | empty -> []):formals ")"
-                      "{" FunctionBody:body "}" -> ast(self.position, "FunctionDecl",{}, [patt,
-                                  ast(self.position, "ParamDecl",{},formals)] + body)
-
-FunctionExpression = k("function") name:patt
-                     "(" (FormalParameterList | empty -> []):formals ")"
-                     "{" FunctionBody:body "}" ->
-                     ( ast(_fromIdx, "FunctionExpr",{}, [patt,
-                                 ast(self.position, "ParamDecl",{},formals)] + body) )
-                   || k("function") "(" (FormalParameterList | empty -> []):formals ")"
-                     "{" FunctionBody:body "}" -> ast(self.position, "FunctionExpr",{}, [emptyAst(),
-                                 ast(self.position, "ParamDecl",{},formals)] + body) 
-
-FormalParameterList = FormalParameterList:formals "," FormalParameter:formal -> formals + [ formal ]
-                    | FormalParameter:formal -> [formal]
-
-FormalParameter = name
-
-FunctionBody = (DirectivePrologue | empty -> []):prologue
-                 (SourceElements | empty -> []):src -> prologue + src
-
-
-Program = (DirectivePrologue | empty -> []):prologue
-            (SourceElements | empty -> []):src skipToEnd -> ast(self.position, "Program",{},prologue + src ) 
-
-SourceElements = SourceElements:elts SourceElement:e ->  elts + [e]  | SourceElement:e -> [e]
-
-SourceElement = Declaration || Statement
-
-Declaration = FunctionDeclaration
-
-DirectivePrologue = DirectivePrologue:p Directive:d ->  p + d | Directive:d -> [d]
-
-Directive = scanDirective:dir sc -> ast(_fromIdx, 'PrologueDecl',dir,[]) 
 
 
