@@ -51,7 +51,7 @@ skipToEnd = skip end
 
 k :expected = skip Keyword:lexed ?(expected is lexed) -> expected
 
-sc = skipNoLine ';' || skipNoLine (scanLineTerminator || end || ~~'}')
+sc = skipNoLine ';' | skipNoLine (scanLineTerminator | end || ~~'}')
 
 string3 :e = match_string(e) (~(match_string(e)) anything)*:c match_string(e) -> ''.join(c)
 string2 = string3('"') | string3("'")
@@ -63,12 +63,28 @@ regexBody = (regexEscape | untilEndRegex)*
 regexEscape = '\\' (~lineend anything):c -> '\\' + c
 untilEndRegex = (~('\\' | '/') anything)*:c -> ''.join(c)
 
+literal = string | regex
+surrounded :op = skip (~hspace anything)+:lexed skip ?(op == ''.join(lexed)) -> op 
+expression_operator = ( surrounded("!") | surrounded("^") | surrounded("~") | surrounded("++") | surrounded("--") | 
+			surrounded("+") | surrounded("-") | surrounded("*") | surrounded("/") | surrounded("%") | 
+			surrounded("|") | surrounded("||") | surrounded("&") | surrounded("&&") | 
+			surrounded("==") | surrounded("===") | surrounded("!=") | surrounded("!==") |
+			surrounded("<<") | surrounded(">>") | surrounded("<") | surrounded(">") |
+			surrounded("<<=") | surrounded(">>=") | surrounded("<=") | surrounded(">=") |
+			surrounded(">>>") | surrounded(">>>=") | 
+			surrounded("in") | surrounded("instanceof"))
+			
+parenthesis = "(" expression:ex ")" -> ["()",ex]
+index = "[" expression:ex "]" -> ["[]",ex]
+ternary = expression:ex1 "?" expression:ex2 ":" expression:ex3 -> ["?:",ex1,ex2,ex3]
+expression = skip ("." | index | parenthesis | ternary | expression_operator | name | literal | comment | mlcomment)+:parts -> parts
+
 
 program = (sourceElements | empty -> []):src skipToEnd -> src 
 
 sourceElements = sourceElement*:e ->  e
 
-sourceElement = (block | functionDeclaration | varDeclaration | varAssignmentDeclaration |
+sourceElement = (block | functionDeclaration | varStatement |
 			keywordStatement | simpleStatement | emptyStatement | 
 			(comment:c vspace -> c) | mlcomment)
 
@@ -80,11 +96,10 @@ betweenParentesisWithComments = (comment | mlcomment | untilEndParentesis)*:args
 functionDeclaration = token("function") skip name:name skip "(" betweenParentesisWithComments:args ")" skip 
 						token("{") sourceElements:body token("}") -> self.ast("func", name, args, body)
 
-varDeclaration = token("var") skip name:name skip 
-			(';' | end | vspace) -> self.ast("var", name, [])
-
-varAssignmentDeclaration = token("var") skip name:name token("=") skip restStatement:rest  
-			(';' | end | vspace) -> self.ast("var", name, rest)
+varStatement = token("var") skip varDeclarations:decls (';' | end | vspace) -> self.ast("var",decls)
+varDeclarations = varDeclaration:decl1 (token(",") skip varDeclaration:d -> d)*:decl -> [decl1] + decl
+varDeclaration =  (name:name ~(token("=")) -> self.ast(name, [])) | 
+			(name:name token("=") expression:bits -> self.ast(name, bits)) 
 
 block = token("{") sourceElements:body token("}") -> self.ast("block", body)
 

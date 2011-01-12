@@ -36,9 +36,14 @@ def emptyAst():
     
 def ast(startPos, tp, attributes, children):
     return [tp, attributes] + children
+    
+def p(out):
+    print out
+    return out
 
 
 class Grammar(OMeta.makeGrammar(basic_grammar, {
+ "p": p,
  "_fromIdx": 0,
  "ucSpacesRE": re.compile(r"\s")
 
@@ -74,8 +79,8 @@ class Grammar(OMeta.makeGrammar(basic_grammar, {
         return name in self.nonStrictFutureKws
 
     def is_reserved(self,name):
-        "Is the attribute name reserved"
-        return False
+        "Is the variable/function name reserved"
+        return self.is_keyword(name) or self.is_future(name)
 
     def eatWhitespace(self):
         """

@@ -125,10 +125,23 @@ def,ghi){}""")
         assert result == [g.ast("func","abc",[],[g.ast("mlcomment"," in block "),g.ast("empty"),g.ast("empty")])]
         
     def test_var(self):
+        g = Grammar("""a""")
+        result,error = g.apply("varDeclarations")
+        assert result == [g.ast("a",[])]
+        
+        g = Grammar("""a,b,c,
+        d""")
+        result,error = g.apply("varDeclarations")
+        assert result == [g.ast("a",[]),g.ast("b",[]),g.ast("c",[]),g.ast("d",[])]
+        
+        g = Grammar("""a = b""")
+        result,error = g.apply("varDeclarations")
+        assert result == [g.ast("a",["b"])]
+        
         g = Grammar("""var abc = def
         var b = c; var d = e""")
         result,error = g.apply("sourceElements")
-        assert result == [g.ast("var","abc",['def']),g.ast("var","b",['c']),g.ast("var","d",['e'])]
+        assert result == [g.ast("var",[g.ast("abc",['def'])]),g.ast("var",[g.ast("b",['c'])]),g.ast("var",[g.ast("d",['e'])])]
         
         g = Grammar("""var abc
         var b; var d""")
@@ -137,6 +150,24 @@ def,ghi){}""")
 
         g = Grammar("""var abc, def
         var a,b,c; var d,e""")
+        result,error = g.apply("sourceElements")
+        assert result == [
+            g.ast("var",[
+                g.ast("abc",[]),g.ast("def",[])
+            ]),
+            g.ast("var",[
+                g.ast("a",[]),g.ast("b",[]),g.ast("c",[])
+            ]),
+            g.ast("var",[
+                g.ast("d",[]),g.ast("e",[])
+            ])
+            ]
+        
+        g = Grammar("""var a,
+        b = 5; var d/* = undefined */,e
+        var
+        x = 10""")
+        result,error = g.apply("sourceElements")
         
         
     def test_keyword_statements(self):
@@ -194,13 +225,69 @@ def,ghi){}""")
     var decl
     assignment
     function call
-    with
-    switch / if / while / do / for / try / catch / finally 
-    debugger / break / continue / delete / return / throw
     
     expression
     
-    """    
+    """ 
+    
+    def test_expression(self):
+        g = Grammar(""" ++ """)
+        result,error = g.apply("surrounded","++")
+        assert result == "++"
+
+        g = Grammar("""==""")
+        result,error = g.apply("surrounded","==")
+        assert result == "=="
+        
+        g = Grammar("""a""")
+        result,error = g.apply("expression")
+        assert result == ['a']
+        
+        g = Grammar("""a + b""")
+        result,error = g.apply("expression")
+        assert result == ['a','+','b']
+        
+
+        """
+        a[b][c][d]
+        a.b.c
+        a[b].c
+        (a[b])
+        c + 5
+        1 + 2
+        "abc" 'def'
+        0x123
+        012
+        12
+        /abc/
+        
+        
+        variable expressions
+        literal expressions
+        
+        
+        ['expr',{},'a']
+        ['()',{},['a','-','b']]
+        """
+        pass
+    
+    def test_assignment(self):
+        """Regular assignment of a previously declared variable or member of one"""
+        pass
+        
+    def test_with(self):
+        pass
+        
+    def test_control(self):
+        " if / else / for / do / while "
+        pass
+        
+    def test_try(self):
+        " try / catch / finally "
+        pass
+    
+    def test_labelledStatement(self):
+        pass   
         
     def test_scanIdentifier(self):
         g = Grammar("""abc""")
