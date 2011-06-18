@@ -1,3 +1,4 @@
+# -*- coding: utf-8
 from pymeta.runtime import OMetaBase, _MaybeParseError, expected
 import unittest
 
@@ -10,8 +11,9 @@ class RuntimeTests(unittest.TestCase):
         """
         L{OMetaBase.rule_anything} returns each item from the input along with its position.
         """
-
-        data = "foo"
+        #TODO test more unicode chars
+        
+        data = u"foo123!@£©™☺☹℅☐☑☒✓❍❖⁰¹²³⁴₀₁₂₃★☆€¥¢!¡?¿–_—·•%‰‱˚˛"
         o = OMetaBase(data)
 
         for i, c in enumerate(data):
@@ -49,6 +51,13 @@ class RuntimeTests(unittest.TestCase):
             self.fail('_MaybeParseError not raised')
 
 
+    # def test_token2(self):
+    #     
+    #     data = "foobar"
+    #     o = OMetaBase(data)
+    #     v, e = o.rule_token("anything","foo")
+    #     self.assertEqual(v, "foo")
+
     def test_token(self):
         """
         L{OMetaBase.rule_token} matches all the characters in the given string
@@ -80,7 +89,50 @@ class RuntimeTests(unittest.TestCase):
         else:
             self.fail('_MaybeParseError not raised')
 
+        # o = OMetaBase(data)
+        # try:
+        #     o.rule_token('foo')
+        # except _MaybeParseError, e:
+        #     self.assertEqual(e[0], 2)
+        #     self.assertEqual(e[1], expected("token", "fog"))
+        # else:
+        #     self.fail('_MaybeParseError not raised')
 
+
+    #
+    def test_keyword(self):
+        """
+        L{OMetaBase.rule_keyword} matches all the characters in the given string.
+        """
+
+        o = OMetaBase("foo bar")
+        v, e = o.rule_keyword("foo")
+        self.assertEqual(v, { 'keyword':"foo", 'prefix':[] })
+        # TODO
+        # self.assertEqual(e[0], 2)
+        # v, e = o.rule_token("bar")
+        # self.assertEqual(v, "bar")
+        # self.assertEqual(e[0], 6)
+
+
+    def TODO_test_keywordFailed(self):
+        """
+        On failure, L{OMetaBase.rule_keyword} produces an error indicating the
+        position where match failure occurred and the expected character.
+        """
+        data = "foozle"
+        o = OMetaBase(data)
+        try:
+            o.rule_keyword('foo')
+        except _MaybeParseError, e:
+            self.assertEqual(e[0], 4)
+            self.assertEqual(e[1], expected("keyword", "foo"))
+            self.assertEqual(o.input.position, 0)
+            self.assertEqual(o.input.head()[0], 'f')
+        else:
+            self.fail('_MaybeParseError not raised')
+
+    
     def test_many(self):
         """
         L{OMetaBase.many} returns a list of parsed values and the error that
@@ -238,7 +290,7 @@ class RuntimeTests(unittest.TestCase):
         L{OMetaBase.rule_letter} matches letters.
         """
 
-        o = OMetaBase("a1")
+        o = OMetaBase(u"a1")
         v, e = o.rule_letter()
         self.assertEqual((v, e), ("a", [0, None]))
         try:
@@ -247,6 +299,14 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(e, _MaybeParseError(1, expected("letter")))
         else:
             self.fail('_MaybeParseError not raised')
+
+        data = u"fooåßæøπœ∑" #TODO greek letter rule
+        data = u"fooåßæø"
+        o = OMetaBase(data)
+
+        for i, c in enumerate(data):
+            v, e = o.rule_letter()
+            self.assertEqual((c, i), (v, e[0]))
 
 
     def test_letterOrDigit(self):
@@ -264,6 +324,14 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(e, _MaybeParseError(2, expected("letter or digit")))
         else:
             self.fail('_MaybeParseError not raised')
+            
+        # data = u"foo123!@£©™☺☹℅☐☑☒✓❍❖★☆€¥¢!¡?¿–_—·•%‰‱˚˛"
+        data = u"fooåßæø1234¹²³⁴₀₁₂₃"
+        o = OMetaBase(data)
+
+        for i, c in enumerate(data):
+            v, e = o.rule_letterOrDigit()
+            self.assertEqual((c, i), (v, e[0]))
 
     def test_digit(self):
         """
@@ -278,6 +346,13 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(e, _MaybeParseError(1, expected("digit")))
         else:
             self.fail('_MaybeParseError not raised')
+
+        data = u"1234⁰¹²³⁴₀₁₂₃"
+        o = OMetaBase(data)
+
+        for i, c in enumerate(data):
+            v, e = o.rule_digit()
+            self.assertEqual((c, i), (v, e[0]))
 
     def test_listpattern(self):
         """

@@ -51,8 +51,10 @@ escapedChar = '\\' ('n' -> "\n"
                      |'"' -> '"'
                      |'\'' -> "'"
                      |'\\' -> "\\")
+                     
+namedChar = '{' (letter)+:c '}' -> self.builder.get_named_character(''.join(c))
 
-character = token("'") (escapedChar | ~('\'') anything)*:c token("'") -> self.builder.exactly(''.join(c))
+character = token("'") (escapedChar | namedChar | ~('\'') anything)*:c token("'") -> self.builder.exactly(''.join(c))
 
 string = token('"') (escapedChar | ~('"') anything)*:c token('"') -> self.builder.match_string(''.join(c))
 
@@ -97,13 +99,14 @@ semanticPredicate = token("?(") -> self.semanticPredicateExpr()
 
 semanticAction = token("!(") -> self.semanticActionExpr()
 
+comment = emptyline* ('#' | "//") (~vspace anything)* vspace
 rulePart :requiredName = noindentation name:n ?(n == requiredName)
                             !(setattr(self, "name", n))
                             expr4:args
                             (token("=") expr:e
                                -> self.builder.sequence([args, e])
                             |  -> args)
-rule = noindentation ~~(name:n) rulePart(n):r
+rule = comment* noindentation ~~(name:n) rulePart(n):r
           (rulePart(n)+:rs -> self.builder.rule(n, self.builder._or([r] + rs))
           |                     -> self.builder.rule(n, r))
 

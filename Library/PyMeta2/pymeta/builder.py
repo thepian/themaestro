@@ -24,6 +24,10 @@ class TreeBuilder(object):
 
     def match_string(self, expr):
         return ["MatchString", expr]
+        
+    def named_character(self, expr):
+        """Utility used by exactly to look up named chars"""
+        return ["NamedCharacter", expr]
 
     def many(self, expr):
         return ["Many", expr]
@@ -60,6 +64,31 @@ class TreeBuilder(object):
 
     def listpattern(self, exprs):
         return ["List", exprs]
+
+    controlchars = {
+        'NUL' : 0, 'SOH' : 1, 'STX' : 2, 'ETX' : 3, 'EOT' : 4, 'ENQ' : 5, 'ACK' : 6, 'BEL' : 7, 'BS' : 8, 
+        'TAB' : 9, 'HT' : 9, 'LF' : 10, 'VT' : 11, 'FF' : 12, 'CR' : 13, 'SO' : 14, 'SI' : 15,
+        'DLE' : 16, 'DC1' : 17, 'DC2' : 18, 'DC3' : 19, 'DC4' : 20, 'NAK' : 21, 'SYN' : 22, 'ETB' : 23,
+        'CAN' : 24, 'EM' : 25, 'SUB' : 26, 'ESC' : 27, 'FS' : 28, 'GS' :  29, 'RS' : 30, 'US' : 31, 'SP' : 32,
+        'NBSP' : 0xA0, 'BOM' : 0xFEFF, 'LS' : 0x2028, 'PS' : 0x2029 
+    }
+
+    def get_named_character(self,name):
+        """
+        Lookup HTML entity name or named control character
+        """
+        
+        if name in self.controlchars:
+            return unichr(self.controlchars[name])
+            
+        from htmlentitydefs import name2codepoint
+        
+        if name not in name2codepoint:
+            raise Exception("The name '"+name+"' is not a known Named HTML Entity or Control Character")
+            
+        return unichr(name2codepoint[name])
+
+    
 
 class PythonWriter(object):
     """
@@ -168,6 +197,12 @@ class PythonWriter(object):
         Create a call to self.match_string(literal).
         """
         return self._expr('match_string', 'self.match_string(%r)' % (literal,))
+
+    def generate_NamedCharacter(self, literal):
+        """
+        Create a call to self.named_character(literal).
+        """
+        return self._expr('named_character', 'self.named_character(%r)' % (literal,))
 
 
     def generate_Many(self, expr):

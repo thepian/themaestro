@@ -167,6 +167,11 @@ class InputStream(object):
             raise EOFError(self.position)
         return self.data[self.position], [self.position, None]
 
+    def headAllowEOF(self):
+        if self.position >= len(self.data):
+            return "", [self.position, None]
+        return self.data[self.position], [self.position, None]
+
     def nullError(self):
         return [self.position, None]
 
@@ -316,7 +321,8 @@ class OMetaBase(object):
         @param args: A sequence of arguments to it.
         """
         if args:
-            if rule.func_code.co_argcount - 1 != len(args):
+            #TODO fix keyword rule argcount
+            if rule.func_code.co_argcount - 1 != len(args) and ruleName != "keyword":
                 for arg in args[::-1]:
                     self.input = ArgInput(arg, self.input)
                 return rule()
@@ -379,10 +385,25 @@ class OMetaBase(object):
             return val, p
         else:
             self.input = i
-            raise _MaybeParseError(p[0], expected(None, wanted))
+            raise _MaybeParseError(p[0], expected(None, wanted), val)
 
     rule_exactly = exactly
 
+    def rule_empty(self):
+        """
+        Match an empty item from the input.
+        """
+        i = self.input
+        if i.position >= len(i.data):
+            return self.input.headAllowEOF()
+        val, p = self.input.head()
+        self.input = self.input.tail()
+        if val == "":
+            return val, p
+        else:
+            self.input = i
+            raise _MaybeParseError(p[0], expected(None, ""), val)
+        
     def many(self, fn, *initial):
         """
         Call C{fn} until it fails to match the input. Collect the resulting
@@ -518,58 +539,17 @@ class OMetaBase(object):
         Match and return the given string.
         """
         m = self.input
+        last_c = None
         try:
             for c in tok:
+                last_c = c
                 v, e = self.exactly(c)
             return tok, e
         except _MaybeParseError, e:
             self.input = m
-            raise _MaybeParseError(e[0], expected("string", tok))
+            raise _MaybeParseError(e[0], expected("string", tok), last_c)
     rule_match_string = match_string
-
-    def token(self, tok):
-        """
-        Match and return the given string, consuming any preceding whitespace.
-        """
-        m = self.input
-        try:
-            self.eatWhitespace()
-            for c in tok:
-                v, e = self.exactly(c)
-            return tok, e
-        except _MaybeParseError, e:
-            self.input = m
-            
-            raise _MaybeParseError(e[0], expected("token", tok))
-
-    rule_token = token
     
-    def uc(self,cat):
-        """
-        Match a character with a given Unicode category
-        """
-        import unicodedata
-        x, e = self.rule_anything()
-        if unicodedata.category(x) == cat:
-            return x, e
-        else:
-            e[1] = expected("category:"+ cat)
-            raise _MaybeParseError(*e)
-
-    rule_uc = uc
-    
-    def ub(self,bidi):
-        """
-        Match a character with a given Unicode bidirectional class
-        """
-        import unicodedata
-        x, e = self.rule_anything()
-        if unicodedata.bidirectional(x[0]) is bidi:
-            return x, e
-        else:
-            e[1] = expected("bidi:"+ bidi)
-            raise _MaybeParseError(*e)
-        
     def letter(self):
         """
         Match a single letter.
@@ -608,8 +588,131 @@ class OMetaBase(object):
             raise _MaybeParseError(*e)
 
     rule_digit = digit
+    
+    controlchars = {
+        'NUL' : 0, 'SOH' : 1, 'STX' : 2, 'ETX' : 3, 'EOT' : 4, 'ENQ' : 5, 'ACK' : 6, 'BEL' : 7, 'BS' : 8, 
+        'HT' : 9, 'LF' : 10, 'VT' : 11, 'FF' : 12, 'CR' : 13, 'SO' : 14, 'SI' : 15,
+        'DLE' : 16, 'DC1' : 17, 'DC2' : 18, 'DC3' : 19, 'DC4' : 20, 'NAK' : 21, 'SYN' : 22, 'ETB' : 23,
+        'CAN' : 24, 'EM' : 25, 'SUB' : 26, 'ESC' : 27, 'FS' : 28, 'GS' :  29, 'RS' : 30, 'US' : 31, 'SP' : 32,
+        'NBSP': 160 
+    }
 
+    def named_character(self,name):
+        """
+        Match against and HTML entity name or named control character
+        """
+        
+        if name in self.controlchars:
+            x, e = self.rule_anything()
+            if x == unicode(self.controlchars[name]):
+                return x,e
+            else:
+                e[1] = expected("Control Character '"+name+"'")
+                raise _MaybeParseError(*e)
+            
+        from htmlentitydefs import name2codepoint
+        
+        if name not in name2codepoint:
+            raise _MaybeParseError("The name '"+name+"' is not a known Named HTML Entity")
+            
+        x, e = self.rule_anything()
+        if x == unicode(name2codepoint[name]):
+            return x,e
+        else:
+            e[1] = expected("HTML Entity '"+name+"'")
+            raise _MaybeParseError(*e)
 
+    def token(self, tok):
+        """
+        Match and return the given string, consuming any lead whitespace.
+        """
+        m = self.input
+        skipName = 'token_lead'
+        skip = getattr(self, "rule_"+skipName, None)
+        if skip is not None:
+            while True:
+                try:
+                    val, err = self._apply(skip, skipName, [])
+                except _MaybeParseError, e:
+                    break
+        else:
+            self.eatWhitespace()
+            
+        last_c = None
+        try:
+            for c in tok:
+                last_c = c
+                v, e = self.exactly(c)
+            return tok, e
+        except _MaybeParseError, e:
+            self.input = m
+
+            raise _MaybeParseError(e[0], expected("token", tok), last_c)
+
+    rule_token = token
+
+    rule_keyword_letter = letterOrDigit
+
+    def keyword(self, *args):
+        """
+        Match a rule without parameters and check that the series of tokens match the result
+        
+        Args is a sequence to match with the token
+        
+        If rule_token_lead exists it is used to match lead spaces to skip
+        If rule_token_letter exists it is used to match the subsequent input
+        """
+        skipName = 'keyword_prefix'
+        skip = getattr(self, "rule_"+skipName, None)
+        skipped = []
+        if skip is not None:
+            while True:
+                m = self.input
+                try:
+                    val, err = self._apply(skip, skipName, [])
+                    skipped.append(val)
+                except _MaybeParseError, e:
+                    self.input = m
+                    break
+
+        ruleName = 'keyword_letter'
+        r = getattr(self, "rule_"+ruleName, None)
+        if r is None:
+            raise NameError("No rule named '%s'" %(ruleName,))
+            
+        match = u''.join(args)
+        m = self.input
+        for c in match:
+            try:
+                val, err = self._apply(r, ruleName, [])
+            except _MaybeParseError, e:
+                self.input = m
+                raise _MaybeParseError(e[0], expected("match", ruleName), c)
+            if c != val:
+                self.input = m
+                raise _MaybeParseError(err[0], expected("keyword",match), c, val)
+
+        try:
+            # It's fine if EOF
+            m = self.input
+            self.rule_anything()
+            self.input = m
+        except _MaybeParseError:
+            return { 'keyword':match, 'prefix':skipped }, None
+
+        try:
+            self._not(r)
+        except _MaybeParseError, e:
+            offset = e[0] #self.input.position
+            self.input = m
+            raise _MaybeParseError(offset, expected("keyword",match))
+            
+
+        return { 'keyword':match, 'prefix':skipped }, None
+    
+    rule_keyword = keyword
+
+    
     def pythonExpr(self, endChars="\r\n"):
         """
         Extract a Python expression from the input and return it.
@@ -653,3 +756,33 @@ class OMetaBase(object):
         if len(stack) > 0:
             raise _MaybeParseError(self.input.position, expected("Python expression"))
         return (''.join(expr).strip(), endchar), e
+
+class OMetaCommon(object):
+
+    def uc(self,cat):
+        """
+        Match a character with a given Unicode category
+        """
+        import unicodedata
+        x, e = self.rule_anything()
+        if unicodedata.category(x) == cat:
+            return x, e
+        else:
+            e[1] = expected("category:"+ cat)
+            raise _MaybeParseError(*e)
+
+    rule_uc = uc
+    
+    def ub(self,bidi):
+        """
+        Match a character with a given Unicode bidirectional class
+        """
+        import unicodedata
+        x, e = self.rule_anything()
+        if unicodedata.bidirectional(x[0]) is bidi:
+            return x, e
+        else:
+            e[1] = expected("bidi:"+ bidi)
+            raise _MaybeParseError(*e)
+        
+    rule_ub = ub

@@ -33,6 +33,52 @@ class PythonWriterTests(unittest.TestCase):
                             _G_exactly_1
                             """))
 
+        x = self.builder.exactly("{")
+        self.assertEqual(writePython(x),
+                         dd("""
+                            _G_exactly_1, lastError = self.exactly('{')
+                            self.considerError(lastError)
+                            _G_exactly_1
+                            """))
+
+
+    def test_named_character(self):
+        """
+        Test generation of code for the 'named_character' pattern.
+        """
+
+        x = self.builder.exactly(self.builder.get_named_character("SP"))
+        self.assertEqual(writePython(x),
+                         dd("""
+                            _G_exactly_1, lastError = self.exactly(u' ')
+                            self.considerError(lastError)
+                            _G_exactly_1
+                            """))
+
+        x = self.builder.exactly(self.builder.get_named_character("NUL"))
+        self.assertEqual(writePython(x),
+                         dd("""
+                            _G_exactly_1, lastError = self.exactly(u'\\x00')
+                            self.considerError(lastError)
+                            _G_exactly_1
+                            """))
+
+        x = self.builder.exactly(self.builder.get_named_character("thinsp"))
+        self.assertEqual(writePython(x),
+                         dd("""
+                            _G_exactly_1, lastError = self.exactly(u'\\u2009')
+                            self.considerError(lastError)
+                            _G_exactly_1
+                            """))
+
+
+        x = self.builder.named_character("x")
+        self.assertEqual(writePython(x),
+                         dd("""
+                            _G_named_character_1, lastError = self.named_character('x')
+                            self.considerError(lastError)
+                            _G_named_character_1
+                            """))
 
 
     def test_apply(self):

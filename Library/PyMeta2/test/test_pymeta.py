@@ -21,20 +21,30 @@ class HandyWrapper(object):
         rule.
         @param: Rule name.
         """
-        def doIt(s):
+        def doIt(s,matchAll=True):
             """
             @param s: The string to be parsed by the wrapped grammar.
             """
             obj = self.klass(s)
             ret, err = obj.apply(name)
+            if not matchAll:
+                if type(ret) is type({}):
+                    return ret
+                try:
+                    return ''.join(ret)
+                except TypeError:
+                    return ret
             try:
                 extra, _ = obj.input.head()
             except EOFError:
+                if type(ret) is type({}):
+                    return ret
                 try:
                     return ''.join(ret)
                 except TypeError:
                     return ret
             else:
+                print 'Additional stuff present', extra
                 raise err
         return doIt
 
@@ -67,6 +77,44 @@ class OMetaTestCase(unittest.TestCase):
         g = self.compile("digit = '1'")
         self.assertEqual(g.digit("1"), "1")
         self.assertRaises(_MaybeParseError, g.digit, "4")
+        
+        g = self.compile("space = ' '")
+        self.assertEqual(g.space(" "), " ")
+        self.assertRaises(_MaybeParseError, g.space, ".")
+
+    def test_named_literals(self):
+        """
+        Input matches can be made on named literal characters.
+        """
+        g = self.compile("""
+space = '{SP}' | '{nbsp}'
+nul = '{NUL}'      
+tab = '{HT}'  
+whitespace ('{SP}' | '{nbsp}' | '{HT}' | '{VT}')+
+lines = ((('{CR}':r '{LF}':n) -> r+n) | '{CR}' | '{LF}' )+
+spaces_or_comments = (space | "/**/")+
+crcr = '{CR}' '{CR}' -> "\r\r"
+        """)
+        self.assertEqual(g.nul("\0"), "\0")
+        self.assertEqual(g.space(" "), " ")
+        self.assertEqual(g.space(u"\xA0"), u"\xA0")
+        self.assertEqual(g.tab("\t"), "\t")
+        self.assertEqual(g.whitespace(u" \t \xA0\v"), u" \t \xA0\v")
+        self.assertEqual(g.lines(u"\n\r"),u"\n\r")
+        self.assertEqual(g.spaces_or_comments(u"/**/ "), u"/**/ ")
+        self.assertRaises(_MaybeParseError, g.space, ".")
+        
+        ret, err = g.klass(u" \t \xA0").apply("whitespace")
+        assert ret == [u" ",u"\t",u" ",u"\xA0"]
+
+        ret, err = g.klass(u" /**/").apply("spaces_or_comments")
+        assert ret == [u" ",u"/**/"]
+
+        ret, err = g.klass(u"\r\n\n\r").apply("lines")
+        assert ret == [u"\r\n", u"\n",u"\r"]
+        
+        ret, err = g.klass(u"\r\r").apply("crcr")
+        assert ret == u"\r\r"
 
 
     def test_multipleRules(self):
@@ -127,6 +175,15 @@ class OMetaTestCase(unittest.TestCase):
         g = self.compile("twelve = '1' '2'")
         self.assertEqual(g.twelve("12"), "2");
         self.assertRaises(_MaybeParseError, g.twelve, "1")
+
+
+    # def test_combines(self):
+    #     """
+    #     Input matches can be made on a sequence of patterns, combining the match as a result.
+    #     """
+    #     g = self.compile("twelve = '1' & '2'")
+    #     self.assertEqual(g.twelve("12"), "12");
+    #     self.assertRaises(_MaybeParseError, g.twelve, "1")
 
 
     def test_alternatives(self):
@@ -256,7 +313,91 @@ class OMetaTestCase(unittest.TestCase):
         g = self.compile("foo = '1' :x '2' -> x")
         self.assertEqual(g.foo("132"), "3")
 
+        
+    def test_bindAnyting(self):
+        """
+        A pattern consisting of anything and a bind name matches a single element and
+        binds it to that name.
+        """
+        g = self.compile("foo = '1' anything:x '2' -> x")
+        self.assertEqual(g.foo("132"), "3")
 
+
+#     def test_many(self):
+#         g = self.compile("""
+# bar = '1' | '2' | '3'
+# foo = many(self.rule_bar):x -> x
+# """)
+#         self.assertEqual(g.foo("132"), "3")
+# 
+        
+    def test_keyword(self):
+        g = self.compile("""
+keyword_letter = letterOrDigit | '{nbsp}' | '{zwj}'
+keyword_prefix = ' '
+foo132 = keyword("f132")
+foo133 = keyword("f133")
+foo13 = foo132 | foo133
+foozw = keyword('z','{zwj}','w')
+foonb = keyword('n',u'\xA0','b')
+""")
+        self.assertEqual(g.foo132(u"f132"), { 'keyword':u"f132", 'prefix':[] })
+        self.assertEqual(g.foo132(u"f132 ",matchAll=False), { 'keyword':u"f132", 'prefix':[] })
+        self.assertEqual(g.foo132(u"f132(1)",matchAll=False), { 'keyword':u"f132", 'prefix':[] })
+        self.assertEqual(g.foo133(u"f133(1)",matchAll=False), { 'keyword':u"f133", 'prefix':[] })
+        self.assertEqual(g.foo13(u"f133(1)",matchAll=False), { 'keyword':u"f133", 'prefix':[] })
+        self.assertRaises(_MaybeParseError, g.foo132, u"f1324")
+        self.assertEqual(g.keyword_letter(u"\xA0"),u"\xA0")
+        self.assertRaises(_MaybeParseError, g.foo132, u"f132\xA04")
+        self.assertRaises(_MaybeParseError, g.foo132, u"f124")
+        self.assertEqual(g.foo132(u" f132"), { 'keyword':u"f132", 'prefix':[" "] })
+
+        from htmlentitydefs import entitydefs
+        # self.assertEqual(g.foozw(u"z" + (entitydefs['zwj']) + u"w"), u"z" + (entitydefs['zwj']) + u"w")
+        # self.assertEqual(g.foonb("n\xA0b"), "n\xA0b")
+        # self.assertEquals(g.)
+
+    #TODO multi letter character literals only allowed for named chars
+
+    def test_binary(self):
+        g = self.compile("""
+hspace = ' ' | '{HT}'
+comment = "/**/"
+
+name = letterOrDigit+:l -> ''.join(l)
+
+k_postfix = (hspace | comment)*
+keyword_prefix = hspace | comment
+instanceof_apply = apply("keyword","instanceof")
+instanceof_k = keyword("instanceof")
+
+instanceof = name:a keyword("instanceof"):k k_postfix:postfix name:b -> ["instanceof",{ 'prefix':k['prefix'], 'postfix':postfix }, a, b]
+""")
+        # the apply is called as apply( ("keyword","instanceof") ), TODO find out how to do parameterized apply
+        # self.assertEqual(g.instanceof_apply( "instanceof"), {'keyword':"instanceof", 'prefix':[]})
+        # self.assertEqual(g.instanceof_apply( "/**/ instanceof"), {'keyword':"instanceof", 'prefix':[ "/**/", " " ]})
+        self.assertEqual(g.instanceof_k( "instanceof"), {'keyword':"instanceof", 'prefix':[]})
+        self.assertEqual(g.instanceof_k( "/**/ instanceof"), {'keyword':"instanceof", 'prefix':[ "/**/", " " ]})
+
+        self.assertRaises(_MaybeParseError, g.instanceof_k, u"instanceof2")
+        self.assertRaises(_MaybeParseError, g.instanceof_k, u" /**/ \tinstanceof2")
+        self.assertRaises(_MaybeParseError, g.instanceof_k, u"instance")
+        # self.assertEqual(g.instanceof_k( "instanceof2"), {'keyword':"instanceof", 'prefix':[]})
+
+        self.assertEqual(g.instanceof( "a instanceof b"), ["instanceof", {'prefix':[" "], 'postfix':[" "]}, "a", "b" ])
+        
+    def test_symbol(self):
+        g = self.compile("""
+token_lead = ' '
+less = token("<")
+more = token(">")
+""")
+        self.assertEqual(g.less(u"<"), u"<")
+        self.assertEqual(g.less(u"< ",matchAll=False), u"<")
+        self.assertEqual(g.less(u" <(1)",matchAll=False), u"<")
+        self.assertEqual(g.more(u">(1)",matchAll=False), u">")
+
+        
     def test_args(self):
         """
         Productions can take arguments.
@@ -374,6 +515,22 @@ class OMetaTestCase(unittest.TestCase):
              interp = "Foo" 1 2 -> 3
            """)
         self.assertEqual(g.interp(['F', 'o', 'o', 1, 2]), 3)
+        
+    def test_allow_comments(self):
+        """
+        Full line comments before a rule is allowed
+        """
+        g = self.compile("""
+            # comment for interp
+            interp = "Foo" 1 2 -> 3
+            """)
+        self.assertEqual(g.interp(['F', 'o', 'o', 1, 2]), 3)
+
+        g = self.compile("""
+            // comment for interp
+            interp = "Foo" 1 2 -> 3
+            """)
+        self.assertEqual(g.interp(['F', 'o', 'o', 1, 2]), 3)
 
     def test_argEscape(self):
         """
@@ -477,6 +634,26 @@ class MakeGrammarTest(unittest.TestCase):
         TestGrammar2 = TestGrammar1.makeGrammar(grammar2, {})
         self.assertEqual(TestGrammar2("x").apply("expr")[0], "x")
         self.assertEqual(TestGrammar2("3").apply("expr")[0], "3")
+        
+    def test_allow_comments(self):
+        """
+        Full line comments before a rule is allowed
+        Make sure that the boot.py version supports comments
+        """
+        from pymeta.grammar import OMeta
+        g = OMeta.makeGrammar("""
+# comment for interp
+interp = "Foo" 1 2 -> 3
+            """,{})
+        self.assertEqual(g(['F', 'o', 'o', 1, 2]).apply("interp")[0], 3)
+
+        g = OMeta.makeGrammar("""
+// comment for interp
+interp = "Foo" 1 2 -> 3
+            """,{})
+        self.assertEqual(g(['F', 'o', 'o', 1, 2]).apply("interp")[0], 3)
+
+    
 
 class SelfHostingTest(OMetaTestCase):
     """
@@ -495,6 +672,7 @@ class SelfHostingTest(OMetaTestCase):
         if self.classTested is None:
             from pymeta.grammar import OMetaGrammar
             self.classTested = OMetaGrammar
+                        
 
 
 
