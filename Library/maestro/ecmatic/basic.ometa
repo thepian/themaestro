@@ -15,7 +15,7 @@ emptyline = hspace* ('\\' | comment)?:c vspace
 
 line_rest = (~vspace :x)*:x (vspace|end) -> ''.join(x)
 
-name_start = letter | '?' | '!'
+name_start = letter | '$' | '_'
 name_rest = name_start | digit
 iname = name_start:s name_rest*:r -> s + ''.join(r)
 isreserved :x = ?(self.is_reserved(x) or x == "null" or x == "true" or x == "false")
