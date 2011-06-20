@@ -1,5 +1,6 @@
 from __future__ import with_statement
-from javascript15 import Tokenizer, CompilerContext, Script
+
+#TODO replace by OMeta based
 
 def parse(source, filename=None, starting_line_number=1, language="Javascript1.5"):
     """Parse some Javascript
@@ -14,6 +15,8 @@ def parse(source, filename=None, starting_line_number=1, language="Javascript1.5
     Raises:
         ParseError
     """
+    from javascript15 import Tokenizer, CompilerContext, Script
+
     t = Tokenizer(source, filename, starting_line_number)
     x = CompilerContext(False)
     n = Script(t, x)
