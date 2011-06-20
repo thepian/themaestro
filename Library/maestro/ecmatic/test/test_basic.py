@@ -35,7 +35,14 @@ class GrammarTestCase(unittest.TestCase):
  hello *""")
         result,error = g.apply("something_star_no_slash")
         assert result == " hello *"
-
+        
+    def test_linebreaks(self):
+        """ backslash, CR LF LS PS"""
+        pass
+        
+    def test_whitespace(self):
+        pass
+        
     def test_annotation(self):
         g = Grammar("""\
 @abc""")
@@ -145,8 +152,12 @@ def,ghi){}""")
         
         g = Grammar("""var abc
         var b; var d""")
-        # result,error = g.apply("sourceElements")
-        # assert result == [g.ast("var","abc",[]),g.ast("var","b",[]),g.ast("var","d",[])]
+        result,error = g.apply("sourceElements")
+        assert result == [ 
+            g.ast("var",[g.ast("abc",[])]), 
+            g.ast("var",[g.ast("b",[])]), 
+            g.ast("var",[g.ast("d",[])]) 
+            ]
 
         g = Grammar("""var abc, def
         var a,b,c; var d,e""")
@@ -168,6 +179,12 @@ def,ghi){}""")
         var
         x = 10""")
         result,error = g.apply("sourceElements")
+        expect = [
+            g.ast("var",[ g.ast("a",[]), g.ast("b",["5"]) ]),
+            g.ast("var",[ g.ast("d",[],postfix=g.ast("mlcomment"," = undefined ")), g.ast("e",[]) ]),
+            g.ast("var",[ g.ast("x",['10']) ])
+        ]
+        # assert result == expect
         
         
     def test_keyword_statements(self):
