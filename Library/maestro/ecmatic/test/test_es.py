@@ -49,6 +49,7 @@ class GrammarTestCase(unittest.TestCase):
         """
         
     def test_statements(self):
+        self.assertStatements("""a?b:c""", [ ["conditional", ["a"], ["b"], ["c"]] ])
         self.assertStatements("""[(5)]""", [["square",[ ["parenthesis", [ "5" ] ] ]]])
         self.assertStatements("""function(){}""", [["function", [], [], None, [], [], [], [] ]])
         
@@ -65,3 +66,10 @@ class GrammarTestCase(unittest.TestCase):
         
         self.assertStatements("""if(a==b){ print x; }""",
             [ "if", ["parenthesis", ["a","==","b"]], ["curly", [" ", "print", " ", "x", ";"," "]] ])
+            
+    def test_macros(self):
+        self.assertStatements("""@scope "a/b/c"  { function(){} }""", [
+            ["scope", [" "], '"a/b/c"', [" "," "], [
+                " ", [ "function", [], [], None, [], [], [], [] ], " "
+            ]]
+            ])

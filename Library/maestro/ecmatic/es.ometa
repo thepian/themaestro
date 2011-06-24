@@ -96,20 +96,21 @@ ops = "." | "+" | "-" | "~" | "!" | "*" | "/" | "%" | "|" | "^" | "&" | "<" | ">
 
 // {} block vs {} literate
 
-// expression keywords: in void instanceof 
-
 // [] () ; ,
 
 args_list = (name | comment | slcomment | mlcomment | hspace | vspace | ",")*
 
+conditional = expr:one "?" expr:two ":" expr:three -> ["conditional", one, two, three]
+
 //
 // Top level structure
 //
-statements = (func_block 
+statements = (func_block | conditional 
+           | scope_macro
            | square_expr | parenthesis_expr | curly_expr
            | ";" | "," | ":"
            | literal | ass_ops | dbl_ops | ops | "=" 
-           | "in" | "instanceof"
+           | "in" | "instanceof" | "void"
            | iname 
            | comment | slcomment | mlcomment | hspace | vspace)*
 
@@ -117,6 +118,8 @@ func_block = keyword("function"):k opt_vspan:pre_name name?:nm opt_vspan:pre_arg
 square_expr = "[" statements:s "]" -> ["square", s]
 curly_expr = "{" statements:s "}" -> ["curly", s]
 parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
+
+scope_macro = "@scope" opt_vspan:span string:path opt_vspan:post_path "{" statements:s "}" -> ["scope", span, path, post_path, s]
 
 # if = "if" args statement vspace
 #    | "if" args statement ";"
