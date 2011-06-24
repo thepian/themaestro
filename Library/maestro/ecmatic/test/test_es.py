@@ -6,6 +6,16 @@ from ecmatic.es import Grammar
 
 class GrammarTestCase(unittest.TestCase):
     
+    def assertExpression(self, expr, expected):
+        result, error = Grammar(expr).apply("expr")
+        print result
+        assert result == expected
+        
+    def assertStatements(self, expr, expected):
+        result, error = Grammar(expr).apply("statements")
+        print result
+        assert result == expected
+    
     def test_comment(self):
         g = Grammar("""\
 // hello""")
@@ -17,24 +27,41 @@ class GrammarTestCase(unittest.TestCase):
 "abc"\
 """)
         result,error = g.apply("string")
-        assert result == "abc"
+        assert result == '"abc"'
         
     def test_expression(self):
-        result, error = Grammar("a + b - 5").apply("expr")
-        assert result == ['binop', '-', ['binop', '+', 'a', 'b'],['number', 5]]
-
-        result, error = Grammar("a + b * 5").apply("expr")
-        assert result == ['binop', '+', 'a', ['binop', '*', 'b', ['number', 5]]]
-
-        result, error = Grammar("a == b + 5").apply("expr")
-        assert result == ['binop', '==', 'a', ['binop', '+', 'b', ['number', 5]]]
-
-        result, error = Grammar("a == b + 0x5").apply("expr")
-        assert result == ['binop', '==', 'a', ['binop', '+', 'b', ['hexnumber', 5]]]
+        self.assertExpression("a + b - 5", ["a", " ", "+", " ", "b", " ", "-", " ", "5"])
+        self.assertExpression("a == b + 0x5", ["a"," ","=="," ","b"," ","+"," ","0x5"])
+        self.assertExpression("a = b > .5e-10", ["a"," ","="," ","b"," ",">"," ",".5e","-","10"])
+        self.assertExpression("a + b/*...*/ - 5", ["a", " ", "+", " ", "b", "/*...*/", " ", "-", " ", "5"])
         
-        result, error = Grammar("a || b || c").apply("expr")
-        assert result == ['binop', '||', ['binop', '||', 'a', 'b'], 'c']
+        # ['call', ["a",".","f"],["a"," ","+"," ","b"]]
+        # ['call', ["new"," ","a",".","f"],["a"," ","+"," ","b"]]
+        # ['index', ["a",".","f"],["a"," ","+"," ","b"]]
+        # ['paren',["5"]]
 
-        result, error = Grammar("a && b && c").apply("expr")
-        assert result == ['binop', '&&', ['binop', '&&', 'a', 'b'], 'c']
-
+        """
+        inline function void
+        conditional ?:
+        operators: single, combo, assignments
+        lhs expr: just that, call, index, this
+        simple expression: obj array lit space comment ()
+        """
+        
+    def test_statements(self):
+        self.assertStatements("""[(5)]""", [["square",[ ["parenthesis", [ "5" ] ] ]]])
+        self.assertStatements("""function(){}""", [["function", [], [], None, [], [], [], [] ]])
+        
+        self.assertStatements("""function(a){ b }""", [["function", [], [], None, [], ["a"], [], [" ","b"," "] ]])
+        self.assertStatements("""function a(b) {c;d}""", [["function", [], [" "], "a", [], ["b"], [" "], ["c",";","d"] ]])
+        self.assertStatements("""var f = function(){};""", ["var"," ", "f", " ","="," ",["function", [], [], None, [], [], [], [] ], ";"])
+        self.assertStatements("""function(){void(0);}""", [["function", [], [], None, [], [], [], ["void", ["parenthesis",["0"]],";"] ]])
+        
+        self.assertStatements("""{a:b,c:d}""", [[ "curly",["a",":","b", ",", "c",":","d"] ]])
+        self.assertStatements("""{"a":"b","c":"d"}""", [[ "curly",['"a"',":",'"b"', ",", '"c"',":",'"d"'] ]])
+        
+        self.assertStatements("""[1,"b",function(){}]""",
+            [ ["square",[ "1", ",", '"b"', ",", [ "function", [], [], None, [], [], [], [] ] ]] ])
+        
+        self.assertStatements("""if(a==b){ print x; }""",
+            [ "if", ["parenthesis", ["a","==","b"]], ["curly", [" ", "print", " ", "x", ";"," "]] ])

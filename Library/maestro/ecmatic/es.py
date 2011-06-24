@@ -6,9 +6,9 @@ def compile(source):
     return Translator.parse(Grammar.parse(source))
 
 grammar_path = os.path.join(os.path.dirname(__file__), 'es.ometa')
-html_grammar = None
+es_grammar = None
 with open(grammar_path, 'r') as f:
-    html_grammar = f.read()
+    es_grammar = f.read()
     
 def p(s):
     print s
@@ -20,10 +20,28 @@ def uc(name):
         'VT': "", 'FF': "", 'BOM': "", 'Zs': "",
         'PS': "", 'LS': ""
     }[name]
-
-class Grammar(OMeta.makeGrammar(html_grammar, {'p': p, 'uc': uc}, name="EcmaScript")):
     
-    hex_digits = '0123456789abcdef'
+class Token(object):
+    def __init__(self,keyword,prefix):
+        self.keyword = keyword
+        self.prefix = prefix
+
+    def __eq__(self,other):
+        if not hasattr(other,"keyword") or other.keyword != self.keyword: return False
+        if not hasattr(other,"prefix") or other.prefix != self.prefix: return False
+        return True
+
+    def __repr__(self):
+        import pprint
+        return pprint.PrettyPrinter().pformat({
+            "keyword":self.keyword, "prefix":self.prefix
+        })
+
+
+
+class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, name="EcmaScript")):
+    
+    hex_digits = '0123456789abcdefABCDEF'
 
     keywords = set((
         "break","do","instanceof","typeof","case","else","new","var","catch","finally",
@@ -51,8 +69,9 @@ class Grammar(OMeta.makeGrammar(html_grammar, {'p': p, 'uc': uc}, name="EcmaScri
 
     def is_reserved(self,name):
         "Is the attribute name reserved"
-        return False
+        return name in self.keywords
 
+    
 
 """
 Comment = MultiLineComment || SingleLineComment

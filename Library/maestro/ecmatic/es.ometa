@@ -1,128 +1,183 @@
-hspace    = ' ' | '\t'
-vspace    = '\n'
-optspace  = ?(self.parenthesis) (hspace | '\\'? vspace | comment)* | (hspace | '\\' vspace)* comment?
-mandspace = ?(self.parenthesis) (hspace | '\\'? vspace | comment)+ | (hspace | '\\' vspace)+ comment?
+//
+// Comments and Spacing
+//
+hspace    = ' ' | '{HT}' | '{VT}' | '{FF}' | '{nbsp}' | '{BOM}' | '{zwj}' | '{zwnj}'
+vspace    = ('{CR}':c '{LF}':l -> c+l) | '{CR}' | '{LF}' | '{LS}' | '{PS}'
+tail      = hspace+:hs -> [''.join(hs)]
+          | end -> []
 
-comment  = "//" line_rest:c -> ['comment', c]
+line_rest = (~vspace :x)*:x (vspace:x |end) -> ''.join(x)
+
+comment  = "//" (~end ~vspace :c)*:c -> [ 'comment', ''.join(c) ]
 
 mlcomment = "/*" something_star_no_slash*:ssns something_without_star:ws "*/" -> ['mlcomment', ''.join(ssns + [ws])]
 something_star_no_slash = (~'*' anything)*:ct '*':ct2 ~'/' -> ''.join(ct + [ct2])
 something_without_star = (~'*' anything)*:ws -> ''.join(ws)
 
-emptyline = hspace* ('\\' | comment)?:c vspace
-block     = emptyline+ indent stmt:s optspace (vspace | end) line*:l dedent -> [s] + l
-block     = optspace stmt:s optspace ~~(vspace | end) -> [s]
-line      = emptyline*:e indentation stmt:s optspace (vspace | end) -> s
-line_rest = (~vspace :x)*:x -> ''.join(x)
+slcomment = "/*" hsomething_star_no_slash*:ssns hsomething_without_star:ws "*/" -> ['slcomment', ''.join(ssns + [ws])]
+hsomething_star_no_slash = (~'*' ~vspace anything)*:ct '*':ct2 ~'/' -> ''.join(ct + [ct2])
+hsomething_without_star = (~'*' ~vspace anything)*:ws -> ''.join(ws)
 
-stmt = continue | break | return | throw | while | delete | new
-     | if | function | for | try | catch
+opt_hspan = (hspace | comment | mlcomment)*
+opt_vspan = (vspace | hspace | comment | mlcomment)*
 
-global = "global" mandspace innercsv('name'):names -> ['global', names]
-
-continue = "continue"              -> ['continue']
-break    = "break"                 -> ['break']
-delete   = "delete" mandspace get:x   -> ['delete', x]
-
-return = "return" mandspace expr:e -> ['return', e]
-       | "return" optspace ~~(vspace | end) -> ['return']
-throw  = "throw" mandspace expr:e  -> ['throw', e]
-
-augassign = get:l optspace
-            ("+=" | "-=" | "*=" | "/=" | "//=" | "%=" | "^=" | "&=" | "|=" | "~=" | "<<=" | ">>="):op
-            optspace expr:r
-            -> ['augassign', op, l, r]
-assign = get:l optspace '=' optspace assign:r -> ['assign', l, r]
-       | expr
-expr = ifexpr
-     | innerifexpr
-innerifexpr = orop
-orop  = orop:l optspace "||":op andop:r -> ['binop', op, l, r]
-      | andop
-andop = andop:l optspace "&&":op notop:r -> ['binop', op, l, r]
-      | notop
-notop = optspace "!":op mandspace notop:r -> ['unop', op, r]
-      | cmpop
-comparison = ( "in"                 -> 'in'
-             | "not" mandspace "in" -> 'not in'
-             | "is" mandspace "not" -> 'is not'
-             | "is"                 -> 'is'
-             ):x mandspace -> x
-           | "<" | "<=" | ">" | ">=" | "!=" | "=="
-cmpop = cmpop:l optspace comparison:op optspace bitor:r -> ['binop', op, l, r]
-      | bitor
-bitor = bitor:l optspace '|':op bitxor:r -> ['binop', op, l, r]
-      | bitxor
-bitxor = bitxor:l optspace '^':op bitand:r -> ['binop', op, l, r]
-      | bitand
-bitand = bitand:l optspace '&':op shift:r -> ['binop', op, l, r]
-      | shift
-shift = shift:l optspace ("<<" | ">>"):op addop:r -> ['binop', op, l, r]
-      | addop
-addop = addop:l optspace ('+' | '-'):op mulop:r -> ['binop', op, l, r]
-      | mulop
-mulop = mulop:l optspace ('*' | '/' | '//' | '%'):op unop:r -> ['binop', op, l, r]
-      | unop
-unop  = optspace ('-' | '+' | '~'):op unop:e -> ['unop', op, e]
-      | callable
-
-callable = optspace
-         ( new
-         | get
-         )
-
-slice = expr?:start optspace ':' optspace expr?:end -> ['slice', start, end]
-      | expr:e -> e
-
-get = get:obj optspace '.' optspace name:n           -> ['getattr', obj, n]
-    | get:obj optspace '[' !(self.enter_paren()) slice:s !(self.leave_paren()) ']' -> ['getitem', obj, s]
-    | get:obj optspace '(' csv('expr'):params ')'    -> ['call', obj, params]
-    | immediate
-
-immediate = number
-          | string
-          | list
-          | tuple
-          | dict
-          | set
-          | name
-          | '(' !(self.enter_paren()) expr:ix optspace ')' !(self.leave_paren()) -> ix
-
-new = "new" mandspace get:c -> ['new', c]
-	
-name_start = letter | '?' | '!'
+//
+// Literals
+//
+name_start = letter | '$' | '_'
 name_rest = name_start | digit
 iname = name_start:s name_rest*:r -> s + ''.join(r)
 isreserved :x = ?(self.is_reserved(x))
 name = iname:n ~isreserved(n)  -> n
 
-string3 :e = match_string(e) (~(match_string(e)) anything)*:c match_string(e) -> ''.join(c)
+string3 :e = match_string(e) (~(match_string(e)) anything)*:c match_string(e) -> e + ''.join(c) + e
 string2 = string3('"') | string3("'")
 string = (string2:s -> s)+:s -> ''.join(s)
 
-hexdigit     = letterOrDigit:x !(self.hex_digits.find(x.lower())):v ?(v >= 0)  -> v
-hexlit       = hexlit:n hexdigit:d                                             -> (n * 16 + d)
-             | hexdigit
-number       = "0x" hexlit:n                                                   -> ['hexnumber', n]
-             | digit+:ws ('.' digit+:fs                                        -> ['number', float('%s.%s' % (''.join(ws), ''.join(fs)))]
-                         | -> ['number'])                                      -> ['number', int(''.join(ws))]
+hexdigit = letterOrDigit:x !(self.hex_digits.find(x)) -> x
 
-innercsv :rule = optspace (apply(rule):e optspace ',' optspace -> e)*:es (?(rule != 'tupleexpr' or len(es)) optspace apply(rule):l !(es.append(l)))? optspace -> es
+number   = "0x" hexdigit+:d               -> '0x' + ''.join(d)
+         | "0X" hexdigit+:d               -> '0X' + ''.join(d)
+         | digit+:ws '.' digit+:fs 'e'    -> '%s.%se' % (''.join(ws), ''.join(fs))
+         | digit+:ws '.' digit+:fs 'E'    -> '%s.%sE' % (''.join(ws), ''.join(fs))
+         | digit+:ws '.' digit+:fs        -> '%s.%s' % (''.join(ws), ''.join(fs))
+         | '.' digit+:fs 'e'              -> '.%se' % ''.join(fs)
+         | '.' digit+:fs 'E'              -> '.%sE' % ''.join(fs)
+         | '.' digit+:ws				  -> '.%s' % ''.join(ws)
+         | digit+:ws                      -> ''.join(ws)
+
+regex = regex_empty | regex_nonempty
+
+regex_empty = '/' '/' regexFlags:f -> '//'+f  
+regex_nonempty = '/' regexBody:b '/' regexFlags:f -> '/' + b + '/' + f
+
+regexFlags = letter*:l -> ''.join(l)
+regexBody = (regexEscape | untilEndRegex)+:p -> ''.join(p)
+regexEscape = '\\' (~vspace anything):c -> '\\' + c
+untilEndRegex = (~('\\' | '/') anything)+:c -> ''.join(c)
+
+InObjectText = hspace | vspace | comment | mlcomment
+property_literal_single = string3("'"):key InObjectText*:pre ":" InObjectText*:post (PrimaryExpression):val -> self.ast("key_value", key, val, quote="'", pre_colon=pre, post_colon=post)
+property_literal_double = string3('"'):key InObjectText*:pre ":" InObjectText*:post (PrimaryExpression):val -> self.ast("key_value", key, val, quote='"', pre_colon=pre, post_colon=post)
+property_literal_name = iname:key InObjectText*:pre ":" InObjectText*:post (PrimaryExpression):val -> self.ast("key_value", key, val, pre_colon=pre, post_colon=post)
+property_literal = property_literal_name | property_literal_single | property_literal_double
+
+ArrayLiteral = "[" (hspace | vspace | comment | mlcomment | PrimaryExpression | ",")*:entries "]" -> self.ast_list("ArrayExpr",entries)
+
+ObjectLiteral = "{" (InObjectText | PropertyLiteral | ",")*:entries "}" -> self.ast_list("ObjectExpr",entries)
+
+
+literal = "undefined" |  "null" | "true" | "false" | string | number | regex
+
+//
+// Expressions
+//
+innercsv :rule = (apply(rule) | ',')*:es 
 csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
-list  = '[' csv('expr'):v       ']' -> ['list'] + v
-tuple = '(' csv('tupleexpr'):v  ')' -> ['tuple'] + v
-dict  = '{' csv('dictexpr'):v   '}' -> ['dict'] + v
-set   = '{' csv('expr'):v       '}' -> ['set'] + v
 
-tupleexpr = expr
-dictexpr  = string:k optspace ':' optspace expr:v -> ['dictkv', k, v]
 
-ifexpr = innerifexpr:t mandspace "if" mandspace innerifexpr:cond mandspace "else" mandspace expr:f -> ['ifexpr', cond, t, f]
+# inline function void
+# conditional ?:
+# operators: single, combo, assignments
+# lhs expr: just that, call, index, this
+# simple expression: obj array lit space comment ()
 
-if    = "if" mandspace expr:cond optspace ':' block:body elif*:ei else?:e -> ['if', [cond, body]] + [ei] + ([e] if e else [])
-elif  = emptyline* indentation "elif" mandspace expr:cond optspace ':' block:body -> [cond, body]
-else  = emptyline* indentation "else" optspace ':' block:body -> body
+simple_expr = ObjectLiteral | ArrayLiteral | literal | comment | slcomment | mlcomment | hspace
 
-while = "while" mandspace expr:cond optspace ':' block:body -> ['while', cond, body]
+expr = (literal | ass_ops | dbl_ops | ops | "=" 
+     | name 
+     | comment | slcomment| mlcomment | hspace | vspace)*:e -> e
 
-for   = "for" mandspace name:var mandspace "in" mandspace expr:data optspace ':' block:body -> ['for', var, data, body]
+ass_ops = "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "&=" | "|=" | "~=" | "<<=" | ">>="
+dbl_ops = "||" | "&&" | "<<" | ">>" | ">=" | "!=" | "==" | "<=" 
+ops = "." | "+" | "-" | "~" | "!" | "*" | "/" | "%" | "|" | "^" | "&" | "<" | ">"
+
+// ?: vs obj lit
+
+// {} block vs {} literate
+
+// expression keywords: in void instanceof 
+
+// [] () ; ,
+
+args_list = (name | comment | slcomment | mlcomment | hspace | vspace | ",")*
+
+//
+// Top level structure
+//
+statements = (func_block 
+           | square_expr | parenthesis_expr | curly_expr
+           | ";" | "," | ":"
+           | literal | ass_ops | dbl_ops | ops | "=" 
+           | "in" | "instanceof"
+           | iname 
+           | comment | slcomment | mlcomment | hspace | vspace)*
+
+func_block = keyword("function"):k opt_vspan:pre_name name?:nm opt_vspan:pre_args "(" args_list:args ")" opt_vspan:post_args "{" statements:s "}" -> ["function", k["prefix"], pre_name, nm, pre_args, args, post_args, s ]
+square_expr = "[" statements:s "]" -> ["square", s]
+curly_expr = "{" statements:s "}" -> ["curly", s]
+parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
+
+# if = "if" args statement vspace
+#    | "if" args statement ";"
+#    |  "if" args block
+
+# stmt = continue | break | return | raise | while | delete | new
+#      | if | function | for | try | catch
+# 
+# continue = keyword("continue"):k              -> ['continue', k["prefix"]]
+# break    = keyword("break"):k                 -> ['break', k["prefix"]]
+# delete   = keyword("delete"):k  get:x   -> ['delete', k["prefix"], x]
+# 
+# return = "return" mandspace expr:e -> ['return', e]
+#        | "return" optspace ~~(vspace | end) -> ['return']
+# raise  = "raise" mandspace expr:e  -> ['raise', e]
+# 
+# unop  = optspace ('-' | '+' | '~'):op unop:e -> ['unop', op, e]
+#       | callable
+# 
+# callable = optspace
+#          ( new
+#          | get
+#          )
+# 
+# slice = expr?:start optspace ':' optspace expr?:end -> ['slice', start, end]
+#       | expr:e -> e
+# 
+# get = get:obj optspace '.' optspace name:n           -> ['getattr', obj, n]
+#     | get:obj optspace '[' !(self.enter_paren()) slice:s !(self.leave_paren()) ']' -> ['getitem', obj, s]
+#     | get:obj optspace '(' csv('expr'):params ')'    -> ['call', obj, params]
+#     | immediate
+# 
+# immediate = number
+#           | string
+#           | list
+#           | tuple
+#           | dict
+#           | set
+#           | name
+#           | '(' !(self.enter_paren()) expr:ix optspace ')' !(self.leave_paren()) -> ix
+# 
+# new = "new" mandspace get:c -> ['new', c]
+# 	
+# innercsv :rule = optspace (apply(rule):e optspace ',' optspace -> e)*:es (?(rule != 'tupleexpr' or len(es)) optspace apply(rule):l !(es.append(l)))? optspace -> es
+# csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
+# list  = '[' csv('expr'):v       ']' -> ['list'] + v
+# tuple = '(' csv('tupleexpr'):v  ')' -> ['tuple'] + v
+# dict  = '{' csv('dictexpr'):v   '}' -> ['dict'] + v
+# set   = '{' csv('expr'):v       '}' -> ['set'] + v
+# 
+# tupleexpr = expr
+# dictexpr  = string:k optspace ':' optspace expr:v -> ['dictkv', k, v]
+# 
+# ifexpr = innerifexpr:t mandspace "if" mandspace innerifexpr:cond mandspace "else" mandspace expr:f -> ['ifexpr', cond, t, f]
+# 
+# if    = "if" mandspace expr:cond optspace ':' block:body elif*:ei else?:e -> ['if', [cond, body]] + [ei] + ([e] if e else [])
+# elif  = emptyline* indentation "elif" mandspace expr:cond optspace ':' block:body -> [cond, body]
+# else  = emptyline* indentation "else" optspace ':' block:body -> body
+# 
+# while = "while" mandspace expr:cond optspace ':' block:body -> ['while', cond, body]
+# 
+# for   = "for" mandspace name:var mandspace "in" mandspace expr:data optspace ':' block:body -> ['for', var, data, body]
+nil = "nil"
+
