@@ -12,6 +12,7 @@ with open(grammar_path, 'r') as f:
     
 def p(s):
     print s
+    return s
 
 def uc(name):
     return {
