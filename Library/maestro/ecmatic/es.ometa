@@ -21,6 +21,8 @@ hsomething_without_star = (~'*' ~vspace anything)*:ws -> ''.join(ws)
 opt_hspan = (hspace | comment | mlcomment)*
 opt_vspan = (vspace | hspace | comment | mlcomment)*
 
+
+
 //
 // Literals
 //
@@ -86,7 +88,7 @@ simple_expr = ObjectLiteral | ArrayLiteral | literal | comment | slcomment | mlc
 
 expr = (literal | ass_ops | dbl_ops | ops | "=" 
      | name 
-     | comment | slcomment| mlcomment | hspace | vspace)*:e -> e
+     | comment | slcomment| mlcomment | hspace | vspace)+:e -> e
 
 ass_ops = "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "&=" | "|=" | "~=" | "<<=" | ">>="
 dbl_ops = "||" | "&&" | "<<" | ">>" | ">=" | "!=" | "==" | "<=" 
@@ -120,6 +122,46 @@ curly_expr = "{" statements:s "}" -> ["curly", s]
 parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
 
 scope_macro = "@scope" opt_vspan:span string:path opt_vspan:post_path "{" statements:s "}" -> ["scope", span, path, post_path, s]
+define_macro = "@define" opt_vspan:span (iname:n "::" -> n)?:ns name:n "=" expr:ex ";" -> ["define", span, ns, ex]
+
+//
+// Output tree
+//
+statements_out = statement_out*:s -> ''.join(s)
+exprs_out = expr_out*:s -> ''.join(s)
+exprs_list_out = [ expr_out*:s ] -> ''.join(s)
+
+statement_out = func_out
+              | conditional_out
+              | square_out | curly_out | parenthesis_out
+              | ['try'] -> 'TRY'
+              | ['test'] -> 'test'
+              | ['pass'] -> ''
+              | comment_out
+              | hspace | vspace
+              | op_out 
+
+expr_out = func_out
+         | conditional_out
+         | square_out | curly_out | parenthesis_out
+         | comment_out
+         | hspace | vspace
+         | op_out
+
+func_out = ['function' :prefix :pre_name :nm :pre_args :args :post_args :s] 
+         -> "%sfunction%s%s%s()%s{%s}" % (''.join(prefix), ''.join(pre_name),(nm or ""), ''.join(pre_args),''.join(post_args),''.join(s)) 
+
+conditional_out = ['conditional' exprs_list_out:one exprs_list_out:two exprs_list_out:three] -> "%s?%s:%s" % (one,two,three)
+
+square_out = ['square' exprs_list_out:s] -> "[" + s + "]"
+curly_out = ['curly' exprs_list_out:s] -> "{" + s + "}"
+parenthesis_out = ['parenthesis' exprs_list_out:s] -> "(%s)" % s
+
+comment_out = ['comment' :c] -> "//" + c
+            | ['mlcomment' :c] -> "/*" + c "*/"
+            | ['slcomment' :c] -> "/*" + c "*/"
+
+op_out = anything:op -> op
 
 # if = "if" args statement vspace
 #    | "if" args statement ";"

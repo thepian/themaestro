@@ -8,19 +8,34 @@ class GrammarTestCase(unittest.TestCase):
     
     def assertExpression(self, expr, expected):
         result, error = Grammar(expr).apply("expr")
-        print result
         assert result == expected
         
     def assertStatements(self, expr, expected):
         result, error = Grammar(expr).apply("statements")
-        print result
         assert result == expected
     
+    def assertExpressionsOut(self, expr, expected, rule = "exprs_out"):
+        result, error = Grammar(expr).apply(rule)
+        assert result == expected
+
+    def assertStatementsOut(self, expr, expected, rule = "statements_out"):
+        result, error = Grammar(expr).apply(rule)
+        assert result == expected
+
     def test_comment(self):
         g = Grammar("""\
 // hello""")
         result,error = g.apply("comment")
         assert result == ["comment", " hello"]
+        g = Grammar("""\
+/* hello */""")
+        result,error = g.apply("slcomment")
+        assert result == ["slcomment", " hello "]
+
+        g = Grammar("""\
+/* hello */""")
+        result,error = g.apply("mlcomment")
+        assert result == ["mlcomment", " hello "]
         
     def test_constant(self):
         g = Grammar("""\
@@ -28,6 +43,12 @@ class GrammarTestCase(unittest.TestCase):
 """)
         result,error = g.apply("string")
         assert result == '"abc"'
+
+        g = Grammar("""\
+'abc'\
+""")
+        result,error = g.apply("string")
+        assert result == "'abc'"
         
     def test_expression(self):
         self.assertExpression("a + b - 5", ["a", " ", "+", " ", "b", " ", "-", " ", "5"])
@@ -67,6 +88,33 @@ class GrammarTestCase(unittest.TestCase):
         self.assertStatements("""if(a==b){ print x; }""",
             [ "if", ["parenthesis", ["a","==","b"]], ["curly", [" ", "print", " ", "x", ";"," "]] ])
             
+    def test_out(self):
+        self.assertStatementsOut([";"], ";")
+
+        self.assertStatementsOut(["a", " ", "+", " ", "b", " ", "-", " ", "5"], "a + b - 5")
+        self.assertStatementsOut(["a"," ","=="," ","b"," ","+"," ","0x5"], "a == b + 0x5")
+        self.assertStatementsOut(["a"," ","="," ","b"," ",">"," ",".5e","-","10"], "a = b > .5e-10")
+        self.assertStatementsOut(["a", " ", "+", " ", "b", "/*...*/", " ", "-", " ", "5"], "a + b/*...*/ - 5")
+        
+        self.assertExpressionsOut(["12","+"," ","23","==","abc"], "12+ 23==abc")
+
+        # self.assertExpressionsOut(["conditional", ["a"], ["b"], ['c']], """a?b:c""", rule="conditional_out")
+        self.assertStatementsOut([ ["conditional", ["a"], ["b"], ["c"]] ], """a?b:c""")
+        # self.assertExpressionsOut( ["parenthesis", [ " ","10", "+"," ","312","*","abc"]] , """(10 + 312*abc)""", rule="parenthesis_out")
+        # self.assertExpressionsOut([ ["parenthesis", " "] ], """( )""")
+        self.assertExpressionsOut([ ["parenthesis", [ " ","10", "+"," ","312","*","abc"]] ], """( 10+ 312*abc)""")
+        self.assertStatementsOut([["square",[ ["parenthesis", [ "5" ] ] ]]], """[(5)]""")
+
+#         self.assertStatementsOut(["comment", " hello"], """\
+# // hello""",rule="comment_out")
+        self.assertStatementsOut([["comment", " hello"]], """\
+// hello""")
+        # self.assertStatementsOut([";"], ";")
+        self.assertStatementsOut([["pass"]], "")
+        
+        self.assertStatementsOut([ ["function", [], [], None, [], [], [], [] ] ],"function(){}")
+        self.assertStatementsOut([ ["function", [], [], None, [], [], [], [] ] ],"function(){}")
+        
     def test_macros(self):
         self.assertStatements("""@scope "a/b/c"  { function(){} }""", [
             ["scope", [" "], '"a/b/c"', [" "," "], [
