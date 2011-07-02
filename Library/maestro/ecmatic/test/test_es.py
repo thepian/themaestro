@@ -75,6 +75,7 @@ class GrammarTestCase(unittest.TestCase):
         self.assertStatements("""function(){}""", [["function", [], [], None, [], [], [], [] ]])
         
         self.assertStatements("""function(a){ b }""", [["function", [], [], None, [], ["a"], [], [" ","b"," "] ]])
+        self.assertStatements("""function(a,b,c){ }""", [["function", [], [], None, [], ["a",",","b",",","c"], [], [" "] ]])
         self.assertStatements("""function a(b) {c;d}""", [["function", [], [" "], "a", [], ["b"], [" "], ["c",";","d"] ]])
         self.assertStatements("""var f = function(){};""", ["var"," ", "f", " ","="," ",["function", [], [], None, [], [], [], [] ], ";"])
         self.assertStatements("""function(){void(0);}""", [["function", [], [], None, [], [], [], ["void", ["parenthesis",["0"]],";"] ]])
@@ -87,6 +88,13 @@ class GrammarTestCase(unittest.TestCase):
         
         self.assertStatements("""if(a==b){ print x; }""",
             [ "if", ["parenthesis", ["a","==","b"]], ["curly", [" ", "print", " ", "x", ";"," "]] ])
+            
+        self.assertStatements("""
+( (a+b)*5==11 )
+""", [ "\n", ["parenthesis",[" ",["parenthesis",["a","+","b"]],"*","5", "==", "11"," "]],"\n"])
+            
+        self.assertStatements("""var a=5,b=6;""",[ "var"," ","a","=","5", "," , "b", "=", "6", ";" ])
+        self.assertStatements("""var a={"a":"b","c":"d"},b=6;""", [ "var"," ","a","=",[ "curly",['"a"',":",'"b"', ",", '"c"',":",'"d"'] ], ",", "b","=","6",";"])
             
     def test_out(self):
         self.assertStatementsOut([";"], ";")
@@ -101,7 +109,7 @@ class GrammarTestCase(unittest.TestCase):
         # self.assertExpressionsOut(["conditional", ["a"], ["b"], ['c']], """a?b:c""", rule="conditional_out")
         self.assertStatementsOut([ ["conditional", ["a"], ["b"], ["c"]] ], """a?b:c""")
         # self.assertExpressionsOut( ["parenthesis", [ " ","10", "+"," ","312","*","abc"]] , """(10 + 312*abc)""", rule="parenthesis_out")
-        # self.assertExpressionsOut([ ["parenthesis", " "] ], """( )""")
+        self.assertExpressionsOut([ ["parenthesis", " "] ], """( )""")
         self.assertExpressionsOut([ ["parenthesis", [ " ","10", "+"," ","312","*","abc"]] ], """( 10+ 312*abc)""")
         self.assertStatementsOut([["square",[ ["parenthesis", [ "5" ] ] ]]], """[(5)]""")
 
@@ -113,7 +121,7 @@ class GrammarTestCase(unittest.TestCase):
         self.assertStatementsOut([["pass"]], "")
         
         self.assertStatementsOut([ ["function", [], [], None, [], [], [], [] ] ],"function(){}")
-        self.assertStatementsOut([ ["function", [], [], None, [], [], [], [] ] ],"function(){}")
+        self.assertStatementsOut([ ["function", [], ["/**/"], "A", [], [], [], [";"] ] ],"function/**/A(){;}")
         
     def test_macros(self):
         self.assertStatements("""@scope "a/b/c"  { function(){} }""", [

@@ -117,6 +117,7 @@ statements = (func_block | conditional
            | comment | slcomment | mlcomment | hspace | vspace)*
 
 func_block = keyword("function"):k opt_vspan:pre_name name?:nm opt_vspan:pre_args "(" args_list:args ")" opt_vspan:post_args "{" statements:s "}" -> ["function", k["prefix"], pre_name, nm, pre_args, args, post_args, s ]
+# var_decl = keyword("var"):k opt_vspan:gap -> ["var",k["prefix"], gap]
 square_expr = "[" statements:s "]" -> ["square", s]
 curly_expr = "{" statements:s "}" -> ["curly", s]
 parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
