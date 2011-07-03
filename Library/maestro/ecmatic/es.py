@@ -71,8 +71,62 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
     def is_reserved(self,name):
         "Is the attribute name reserved"
         return name in self.keywords
+        
+scopes = {}
 
+class Scope(object):
+    def __init__(self,source):
+        self.source = source
+        self.parsed, self.error = Grammar(source).apply("statements")
+        # print self.source, "==>",self.parsed
     
+    def wrap(self,node):
+        return expand_macros(self.parsed,node)
+        
+def add_scope(name,source):
+    scopes[name.replace("'",'"')] = Scope(source)
+    
+def expand_macros(tree,insert=None):
+    
+    def wrap_scope(node):
+        scope = node[2] in scopes and scopes[node[2].replace("'",'"')] or Scope('/*no scope '+node[2]+'*/@insert();')
+        return scope.wrap(node[4])
+        
+    def wrap_expand(node):
+        return node
+    def wrap_import(node):
+        return node
+    def wrap_define(node):
+        return node
+        
+    def expand(root):
+        r = []
+        for node in root:
+            if type(node) == list:
+                if len(node) == 0:
+                    r.append([])
+                elif node[0] == "insert":
+                    node = expand(insert)
+                    r.extend(expand(node))
+                elif node[0] == "scope":
+                    node = wrap_scope(node)
+                    r.extend(expand(node))
+                elif node[0] == "expand":
+                    node = wrap_expand(node)
+                    r.append(expand(node))
+                elif node[0] == "import":
+                    node = wrap_import(node)
+                    r.append(expand(node))
+                elif node[0] == "define":
+                    node = wrap_define(node)
+                    r.append(expand(node))
+                else:
+                    r.append(expand(node))
+            else:
+                r.append(node)
+        return r
+        
+    return expand(tree)    
 
 """
 Comment = MultiLineComment || SingleLineComment

@@ -2,7 +2,7 @@ from __future__ import with_statement
 
 import unittest
 
-from ecmatic.es import Grammar    
+from ecmatic.es import Grammar, expand_macros, add_scope, scopes    
 
 class GrammarTestCase(unittest.TestCase):
     
@@ -12,6 +12,8 @@ class GrammarTestCase(unittest.TestCase):
         
     def assertStatements(self, expr, expected):
         result, error = Grammar(expr).apply("statements")
+        # print '>>', result
+        # print '==', expected
         assert result == expected
     
     def assertExpressionsOut(self, expr, expected, rule = "exprs_out"):
@@ -37,6 +39,13 @@ class GrammarTestCase(unittest.TestCase):
         result,error = g.apply("mlcomment")
         assert result == ["mlcomment", " hello "]
         
+        g = Grammar("""\
+/* hello "a/b/c"*/""")
+        result,error = g.apply("mlcomment")
+        assert result == ["mlcomment", ' hello "a/b/c"']
+        
+        #TODO slcomment in statements and expressions
+
     def test_constant(self):
         g = Grammar("""\
 "abc"\
@@ -54,8 +63,9 @@ class GrammarTestCase(unittest.TestCase):
         self.assertExpression("a + b - 5", ["a", " ", "+", " ", "b", " ", "-", " ", "5"])
         self.assertExpression("a == b + 0x5", ["a"," ","=="," ","b"," ","+"," ","0x5"])
         self.assertExpression("a = b > .5e-10", ["a"," ","="," ","b"," ",">"," ",".5e","-","10"])
-        self.assertExpression("a + b/*...*/ - 5", ["a", " ", "+", " ", "b", "/*...*/", " ", "-", " ", "5"])
+        self.assertExpression("a + b/*...*/ - 5", ["a", " ", "+", " ", "b", ["slcomment","..."], " ", "-", " ", "5"])
         
+        self.assertExpression('''/*abc*/abc''',[ ["slcomment","abc"], "abc"])
         # ['call', ["a",".","f"],["a"," ","+"," ","b"]]
         # ['call', ["new"," ","a",".","f"],["a"," ","+"," ","b"]]
         # ['index', ["a",".","f"],["a"," ","+"," ","b"]]
@@ -95,7 +105,28 @@ class GrammarTestCase(unittest.TestCase):
             
         self.assertStatements("""var a=5,b=6;""",[ "var"," ","a","=","5", "," , "b", "=", "6", ";" ])
         self.assertStatements("""var a={"a":"b","c":"d"},b=6;""", [ "var"," ","a","=",[ "curly",['"a"',":",'"b"', ",", '"c"',":",'"d"'] ], ",", "b","=","6",";"])
-            
+
+        self.assertStatements('''
+(function(window,document,mark,assertion,fail){
+})(window,document,mark,assertion,fail);
+''', [
+    "\n",
+    ['parenthesis',[ ['function', [], [], None, [], ["window",",","document",",","mark",",","assertion",",","fail"], [], [
+        "\n",
+    ]] ]],
+    ['parenthesis',["window",",","document",",","mark",",","assertion",",","fail"]],
+    ";","\n"
+])
+        self.assertStatements('''
+function(){
+@insert();
+}''',[
+    "\n",
+    ['function', [], [], None, [], [], [], [
+        "\n", ["insert"], "\n"
+    ]]
+])
+
     def test_out(self):
         self.assertStatementsOut([";"], ";")
 
@@ -129,3 +160,60 @@ class GrammarTestCase(unittest.TestCase):
                 " ", [ "function", [], [], None, [], [], [], [] ], " "
             ]]
             ])
+            
+        self.assertStatements('''
+@insert();
+addExtension(new Extension());
+''',["\n", ["insert"], "\n",
+"addExtension", ['parenthesis',["new"," ","Extension",['parenthesis',[]] ]], ";",
+"\n"
+])
+        self.assertStatements('''
+''',["\n"
+])
+
+        
+        self.assertStatements('''
+(function(window,document,mark,assertion,fail,pagecore,addExtension){
+
+    @insert();
+
+    addExtension(new Extension());
+
+})(window,document,mark,assertion,fail,pagecore,addExtension);
+''', [
+    "\n",
+    ['parenthesis',[ ['function', [], [], None, [], ["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"], [], [
+        "\n","\n"," "," "," "," ",
+        ["insert"],
+        "\n","\n"," "," "," "," ",
+        "addExtension",
+        ['parenthesis',["new"," ","Extension",['parenthesis',[]] ]],
+        ";","\n","\n"
+    ]] ]],
+    ['parenthesis',["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"]],
+    ";","\n"
+])
+            
+        add_scope("'extension'",'''
+(function(window,document,mark,assertion,fail,pagecore,addExtension){
+
+    @insert();
+
+    addExtension(new Extension());
+
+})(window,document,mark,assertion,fail,pagecore,addExtension);
+
+''')
+        assert '"extension"' in scopes
+            
+        scoped = expand_macros([
+            ["scope", [" "], '"a/b/c"', [" "," "], [
+                " ", [ "function", [], [], None, [], [], [], [] ], " "
+            ]]
+        ]) 
+        # print 'scoped', scoped
+        assert scoped == [
+            ["slcomment",'no scope "a/b/c"'],
+            " ", [ "function", [], [], None, [], [], [], [] ], " "
+        ]
