@@ -94,8 +94,10 @@ def expand_macros(tree,insert=None):
         
     def wrap_expand(node):
         return node
+        
     def wrap_import(node):
-        return node
+        return ["statement","var", " ",node[2],"=","resolver",["parenthesis",[]],["parenthesis",['"',node[1],'"']],";"]
+        
     def wrap_define(node):
         return node
         

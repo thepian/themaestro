@@ -31,6 +31,7 @@ name_rest = name_start | digit
 iname = name_start:s name_rest*:r -> s + ''.join(r)
 isreserved :x = ?(self.is_reserved(x))
 name = iname:n ~isreserved(n)  -> n
+dotname = iname:n ("." iname:n2 -> n2)*:n2 -> '.'.join([n] + n2)
 
 string3 :e = match_string(e) (~(match_string(e)) anything)*:c match_string(e) -> e + ''.join(c) + e
 string2 = string3('"') | string3("'")
@@ -86,7 +87,10 @@ csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
 
 simple_expr = ObjectLiteral | ArrayLiteral | literal | comment | slcomment | mlcomment | hspace
 
-expr = (literal | slcomment | mlcomment | ass_ops | dbl_ops | ops | "=" 
+#TODO empty regex vs line comment
+#TODO assign expr vs non
+
+expr = (func_block | conditional | literal | slcomment | mlcomment | ass_ops | dbl_ops | ops | "=" 
      | name 
      | comment | hspace | vspace)+:e -> e
 
@@ -108,7 +112,7 @@ conditional = expr:one "?" expr:two ":" expr:three -> ["conditional", one, two, 
 // Top level structure
 //
 statements = (func_block | conditional 
-           | scope_macro | insert_macro
+           | scope_macro | insert_macro | import_macro | define_macro
            | square_expr | parenthesis_expr | curly_expr
            | ";" | "," | ":"
 		   | comment | slcomment | mlcomment 
@@ -126,7 +130,22 @@ parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
 insert_macro = "@insert" "()"? ";" -> ["insert"]
 
 scope_macro = "@scope" opt_vspan:span string:path opt_vspan:post_path "{" statements:s "}" -> ["scope", span, path, post_path, s]
-define_macro = "@define" opt_vspan:span (iname:n "::" -> n)?:ns name:n "=" expr:ex ";" -> ["define", span, ns, ex]
+
+import_macro = "@import" opt_vspan:span dotname:n ".* as *" ";" -> ["starimport",n]
+import_macro = "@import" opt_vspan:span dotname:n " as " name:as ";" -> ["import",n,as]
+define_macro = "@define" opt_vspan:span dotname:n opt_vspan ";" -> ["define", None, n, None]
+define_macro = "@define" opt_vspan:span (iname:n "::" -> n)?:ns dotname:n opt_vspan "=" expr:ex ";" -> ["define", ns, n, ex]
+
+//
+// PageSpec syntax
+//
+
+describe_macro = "@describe" opt_vspan:span string:caption opt_vspan:post_caption "{" describe_parts:parts "}" -> ["describe", span, caption, post_caption, parts]
+
+describe_parts = (func_block | it_block | opt_vspan )*
+
+it_block = "it" opt_vspan:span "{" statements:s "}"
+
 
 //
 // Output tree
@@ -138,6 +157,7 @@ exprs_list_out = [ expr_out*:s ] -> ''.join(s)
 statement_out = func_out
               | conditional_out
               | square_out | curly_out | parenthesis_out
+              | ['statement' statements_out:rest] -> ''.join(rest)
               | ['try'] -> 'TRY'
               | ['test'] -> 'test'
               | ['pass'] -> ''
@@ -198,32 +218,8 @@ op_out = anything:op -> op
 #     | get:obj optspace '(' csv('expr'):params ')'    -> ['call', obj, params]
 #     | immediate
 # 
-# immediate = number
-#           | string
-#           | list
-#           | tuple
-#           | dict
-#           | set
-#           | name
-#           | '(' !(self.enter_paren()) expr:ix optspace ')' !(self.leave_paren()) -> ix
-# 
 # new = "new" mandspace get:c -> ['new', c]
 # 	
-# innercsv :rule = optspace (apply(rule):e optspace ',' optspace -> e)*:es (?(rule != 'tupleexpr' or len(es)) optspace apply(rule):l !(es.append(l)))? optspace -> es
-# csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
-# list  = '[' csv('expr'):v       ']' -> ['list'] + v
-# tuple = '(' csv('tupleexpr'):v  ')' -> ['tuple'] + v
-# dict  = '{' csv('dictexpr'):v   '}' -> ['dict'] + v
-# set   = '{' csv('expr'):v       '}' -> ['set'] + v
-# 
-# tupleexpr = expr
-# dictexpr  = string:k optspace ':' optspace expr:v -> ['dictkv', k, v]
-# 
-# ifexpr = innerifexpr:t mandspace "if" mandspace innerifexpr:cond mandspace "else" mandspace expr:f -> ['ifexpr', cond, t, f]
-# 
-# if    = "if" mandspace expr:cond optspace ':' block:body elif*:ei else?:e -> ['if', [cond, body]] + [ei] + ([e] if e else [])
-# elif  = emptyline* indentation "elif" mandspace expr:cond optspace ':' block:body -> [cond, body]
-# else  = emptyline* indentation "else" optspace ':' block:body -> body
 # 
 # while = "while" mandspace expr:cond optspace ':' block:body -> ['while', cond, body]
 # 

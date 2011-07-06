@@ -154,7 +154,39 @@ function(){
         self.assertStatementsOut([ ["function", [], [], None, [], [], [], [] ] ],"function(){}")
         self.assertStatementsOut([ ["function", [], ["/**/"], "A", [], [], [], [";"] ] ],"function/**/A(){;}")
         
-    def test_macros(self):
+        self.assertStatementsOut([ ["statement",";"] ],";")
+        
+    def test_define_macros(self):
+        self.assertStatements('''@define a;''',[
+            ["define", None, "a", None]
+        ])
+        self.assertStatements('''@define a = b;''',[
+            ["define", None, "a", [" ","b"]]
+        ])
+        self.assertStatements('''@define a = function(){;;};''',[
+            ["define", None, "a", [" ",
+                ["function", [], [], None, [], [], [], [";",";"] ] 
+            ]]
+        ])
+        
+    def test_import_macros(self):
+        self.assertStatements('''@import a.b.c as c;''',[
+            ["import","a.b.c","c"]
+        ])
+        self.assertStatements('''@import a.b.* as *;''',[
+            ["starimport","a.b"]
+        ])
+        
+         
+         
+        g = Grammar("""\
+@import a.b.c as c;""")
+        result,error = g.apply("statements")
+        resolved = expand_macros(result)
+        assert resolved == [["statement","var", " ","c","=","resolver",["parenthesis",[]],["parenthesis",['"',"a.b.c",'"']],";"]]
+        self.assertStatementsOut(resolved,'var c=resolver()("a.b.c");')
+         
+    def test_scope_macros(self):
         self.assertStatements("""@scope "a/b/c"  { function(){} }""", [
             ["scope", [" "], '"a/b/c"', [" "," "], [
                 " ", [ "function", [], [], None, [], [], [], [] ], " "
@@ -194,19 +226,7 @@ addExtension(new Extension());
     ['parenthesis',["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"]],
     ";","\n"
 ])
-            
-        add_scope("'extension'",'''
-(function(window,document,mark,assertion,fail,pagecore,addExtension){
 
-    @insert();
-
-    addExtension(new Extension());
-
-})(window,document,mark,assertion,fail,pagecore,addExtension);
-
-''')
-        assert '"extension"' in scopes
-            
         scoped = expand_macros([
             ["scope", [" "], '"a/b/c"', [" "," "], [
                 " ", [ "function", [], [], None, [], [], [], [] ], " "
@@ -216,4 +236,31 @@ addExtension(new Extension());
         assert scoped == [
             ["slcomment",'no scope "a/b/c"'],
             " ", [ "function", [], [], None, [], [], [], [] ], " "
+        ]
+                    
+        add_scope("'extension'",'''
+(function(window,document,mark,assertion,fail,pagecore,addExtension){
+@insert();
+addExtension(new Extension());
+})(window,document,mark,assertion,fail,pagecore,addExtension);
+''')
+        assert '"extension"' in scopes
+            
+        scoped = expand_macros([
+            ["scope", [" "], '"extension"', [" "," "], [
+                " ", [ "function", [], [], None, [], [], [], [] ], " "
+            ]]
+        ]) 
+        # print 'scoped', scoped
+        assert scoped == [
+            "\n",
+            ['parenthesis',[ ['function', [], [], None, [], ["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"], [], [
+                "\n",
+                " ", [ "function", [], [], None, [], [], [], [] ], " ",
+                "\n",
+                "addExtension", ['parenthesis',["new"," ","Extension",['parenthesis',[]] ]],
+                ";","\n"
+            ]] ]],
+            ['parenthesis',["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"]],
+            ";","\n"
         ]
