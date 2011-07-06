@@ -95,6 +95,7 @@ expr = (func_block | conditional | literal | slcomment | mlcomment | ass_ops | d
      | comment | hspace | vspace)+:e -> e
 
 ass_ops = "+=" | "-=" | "*=" | "/=" | "%=" | "^=" | "&=" | "|=" | "~=" | "<<=" | ">>="
+compare_ops = ">=" | "!=" | "==" | "<=" | "<" | ">"
 dbl_ops = "||" | "&&" | "<<" | ">>" | ">=" | "!=" | "==" | "<=" 
 ops = "." | "+" | "-" | "~" | "!" | "*" | "/" | "%" | "|" | "^" | "&" | "<" | ">"
 
@@ -112,7 +113,7 @@ conditional = expr:one "?" expr:two ":" expr:three -> ["conditional", one, two, 
 // Top level structure
 //
 statements = (func_block | conditional 
-           | scope_macro | insert_macro | import_macro | define_macro
+           | scope_macro | insert_macro | import_macro | define_macro | describe_macro
            | square_expr | parenthesis_expr | curly_expr
            | ";" | "," | ":"
 		   | comment | slcomment | mlcomment 
@@ -140,12 +141,30 @@ define_macro = "@define" opt_vspan:span (iname:n "::" -> n)?:ns dotname:n opt_vs
 // PageSpec syntax
 //
 
+describe_macro = "@describe" opt_vspan:span string:caption opt_vspan:post_caption "{" "}" -> ["describe", span, caption, post_caption, []]
 describe_macro = "@describe" opt_vspan:span string:caption opt_vspan:post_caption "{" describe_parts:parts "}" -> ["describe", span, caption, post_caption, parts]
 
-describe_parts = (func_block | it_block | opt_vspan )*
+describe_parts = (it_block | before_block | after_block | func_block | comment | slcomment | mlcomment | hspace | vspace )*
+before_block = "before all" opt_vspan:span "{" statements:s "}" -> ["beforeall",span,s]
+             |"before each" opt_vspan:span "{" statements:s "}" -> ["beforeeach",span,s]
+			  
+after_block = "after all" opt_vspan:span "{" statements:s "}" -> ["afterall",span,s]
+            | "after each" opt_vspan:span "{" statements:s "}" -> ["aftereach",span,s]
+it_block = "it" opt_vspan:span string:caption opt_vspan:post_caption "{" it_statements:s "}" -> ["it",span,caption, post_caption,s]
 
-it_block = "it" opt_vspan:span "{" statements:s "}"
+it_statements = (func_block | conditional 
+              | scope_macro | insert_macro | import_macro | define_macro
+              | square_expr | parenthesis_expr | curly_expr
+              | ";" | "," | ":"
+              | comment | slcomment | mlcomment 
+              | should_expr
+              | literal | ass_ops | dbl_ops | ops | "=" 
+              | "in" | "instanceof" | "void"
+              | iname 
+              | hspace | vspace)*
 
+should_expr = "should" opt_vspan:span (iname | compare_ops):op -> ["should",span,op]
+# after_ms(100) within_ms(100)
 
 //
 // Output tree

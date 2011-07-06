@@ -264,3 +264,56 @@ addExtension(new Extension());
             ['parenthesis',["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"]],
             ";","\n"
         ]
+        
+    def test_describe_macros(self):
+        self.assertStatements('''
+@describe "pagecore browser identification" {}
+''',["\n",
+        ["describe",[" "],'"pagecore browser identification"',[" "],[]], 
+        "\n"])
+
+        self.assertStatements('''
+@describe "pagecore browser identification" {
+it "should identify" {
+}
+}
+''',["\n",
+        ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
+            ["it",[" "],'"should identify"',[" "],[
+                "\n"
+            ]],
+        "\n"]],
+        "\n"])
+
+        self.assertStatements('''
+@describe "pagecore browser identification" {
+it "should identify" {
+a should == 5;
+}
+}
+''',["\n",
+        ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
+            ["it",[" "],'"should identify"',[" "],["\n",
+                "a", ["should",[" "],"=="], "5", ";"
+                "\n"
+            ]],
+        "\n"]]
+        ])
+    
+    def no_test_describe_macros(self):
+        self.assertStatements('''
+@describe "pagecore browser identification" {
+it "should identify" {
+a should == 5;
+}
+}
+''',["\n",
+        ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
+            ["it",[" "],'"should identify"',[" "],["\n",
+                "a", " ", ["should",[" "],"=="], "5", ";"
+                "\n"
+            ]],
+        "\n"]]
+        ])
+    
+    
