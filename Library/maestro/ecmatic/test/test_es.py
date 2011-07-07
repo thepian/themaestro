@@ -158,6 +158,8 @@ function(){
         self.assertStatementsOut([ ["function", [], ["/**/"], "A", [], [], [], [";"] ] ],"function/**/A(){;}")
         
         self.assertStatementsOut([ ["statement",";"] ],";")
+
+        self.assertStatementsOut([ ["function", [], [" "], "A", [], [], [], [ ["statement", "var"," ","a",";"], ";" ] ] ],"function A(){var a;;}")
         
     def test_define_macros(self):
         self.assertStatements('''@define a;''',[
