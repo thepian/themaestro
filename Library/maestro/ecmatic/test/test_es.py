@@ -269,10 +269,26 @@ addExtension(new Extension());
         ]
         
     def test_describe_macros(self):
+        """
+        @describe
+        """
+        
         self.assertStatements('''
 @describe "pagecore browser identification" {}
 ''',["\n",
-        ["describe",[" "],'"pagecore browser identification"',[" "],[]], 
+        ["describe",None,'"pagecore browser identification"', []], 
+        "\n"])
+
+        self.assertStatements('''
+@describe Object, "pagecore browser identification" {}
+''',["\n",
+        ["describe","Object",'"pagecore browser identification"', []], 
+        "\n"])
+
+        self.assertStatements('''
+@describe String {}
+''',["\n",
+        ["describe","String",None, []], 
         "\n"])
 
         self.assertStatements('''
@@ -281,13 +297,22 @@ it "should identify" {
 }
 }
 ''',["\n",
-        ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
-            ["it",[" "],'"should identify"',[" "],[
+        ["describe", None,'"pagecore browser identification"',["\n",
+            ["it", '"should identify"', [
                 "\n"
             ]],
         "\n"]],
         "\n"])
 
+        # Expanding describe and it
+        described = expand_macros(["describe", None,'"pagecore browser identification"',["\n", 
+            ["it", '"should identify"', [ "\n" ]],
+        "\n"]])
+        assert described == ["describe", None,'"pagecore browser identification"',["\n", 
+            ["it", '"should identify"', [ "\n" ]],
+        "\n"]]
+
+        # should expression rule
         self.assertExpression('''a should == 5
 ''', ["should",["a"], [" "], [" "], "=="], rule="should_expr")
 
@@ -298,13 +323,34 @@ a should == 5;
 }
 }
 ''',["\n",
-        ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
-            ["it",[" "],'"should identify"',[" "],["\n",
+        ["describe", None,'"pagecore browser identification"', ["\n", 
+            ["it", '"should identify"', ["\n", 
                 ["should", ["a"], [" "], [" "],"=="], " ", "5", ";",
-                "\n"
+                "\n" 
             ]],
         "\n"]],
         "\n"])
+        
+        # Expanding should expression statement
+        described = expand_macros(["describe", None,'"pagecore browser identification"', ["\n", 
+            ["it", '"should identify"', ["\n", 
+                ["should", ["a"], [" "], [" "],"=="], " ", "5", ";",
+                "\n" 
+            ]],
+        "\n"]])
+        assert described == ["describe", None,'"pagecore browser identification"', ["\n", 
+            ["it", '"should identify"',["\n", 
+                ["should", ["a"], [" "], [" "],"=="], " ", "5", ";",
+                "\n" 
+            ]],
+        "\n"]]
+
+    def test_describe_out(self):
+        self.assertStatementsOut([ ["describe",None, '"pagecore browser identification"', []] ], Grammar.describe_out_text % ("null",'"pagecore browser identification"', ""))
+        self.assertStatementsOut([ ["describe", "Object", None, []] ], Grammar.describe_out_text % ("Object",'null', ""))
+        self.assertStatementsOut([ ["it",'"should identify"', []] ], Grammar.it_out_text % ('"should identify"', ""))
+        self.assertStatementsOut([ ["it",'"should identify"', [";", "var"," ","a","=","5", ";",";"]] ], Grammar.it_out_text % ('"should identify"', ";var a=5;;"))
+        self.assertStatementsOut([ ["it",'"should identify"', [";", "var"," ","f","=", [ "function", [], [], None, [], [], [], [] ], ";",";"]] ], Grammar.it_out_text % ('"should identify"', ";var f=function(){};;"))
     
     def no_test_describe_macros(self):
         self.assertStatements('''
@@ -314,8 +360,8 @@ a should == 5;
 }
 }
 ''',["\n",
-        ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
-            ["it",[" "],'"should identify"',[" "],["\n",
+        ["describe", None,'"pagecore browser identification"', ["\n",
+            ["it", '"should identify"', ["\n",
                 ["should", ["a"], [" "], [" "],"=="], " ", "5", ";",
                 "\n"
             ]],

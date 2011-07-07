@@ -150,7 +150,9 @@ define_macro = "@define" opt_vspan:span (iname:n "::" -> n)?:ns dotname:n opt_vs
 // PageSpec syntax
 //
 
-describe_macro = "@describe" opt_vspan:span string:caption opt_vspan:post_caption "{" describe_parts:parts "}" -> ["describe", span, caption, post_caption, parts]
+describe_macro = "@describe" opt_vspan name:constr opt_vspan "," opt_vspan string:caption opt_vspan "{" describe_parts:parts "}" -> ["describe", constr, caption, parts]
+               | "@describe" opt_vspan string:caption opt_vspan "{" describe_parts:parts "}" -> ["describe", None, caption, parts]
+               | "@describe" opt_vspan name:constr opt_vspan "{" describe_parts:parts "}" -> ["describe", constr, None, parts]
 
 describe_parts = (it_block | before_block | after_block | func_block | comment | slcomment | mlcomment | hspace | vspace )*
 before_block = "before all" opt_vspan:span "{" statements:s "}" -> ["beforeall",span,s]
@@ -158,7 +160,7 @@ before_block = "before all" opt_vspan:span "{" statements:s "}" -> ["beforeall",
 			  
 after_block = "after all" opt_vspan:span "{" statements:s "}" -> ["afterall",span,s]
             | "after each" opt_vspan:span "{" statements:s "}" -> ["aftereach",span,s]
-it_block = "it" opt_vspan:span string:caption opt_vspan:post_caption "{" it_statements:s "}" -> ["it",span,caption, post_caption,s]
+it_block = "it" opt_vspan string:caption opt_vspan "{" it_statements:s "}" -> ["it",caption, s]
 
 it_statements = (func_block | conditional 
               | scope_macro | insert_macro | import_macro | define_macro
@@ -178,10 +180,12 @@ should_expr = expr_lhs:lhs opt_vspan:s1 "should" opt_vspan:s2 (iname | compare_o
 // Output tree
 //
 statements_out = statement_out*:s -> ''.join(s)
+statements_list_out = [ statement_out*:s ] -> ''.join(s)
 exprs_out = expr_out*:s -> ''.join(s)
 exprs_list_out = [ expr_out*:s ] -> ''.join(s)
 
 statement_out = func_out
+              | describe_out | it_out
               | conditional_out
               | square_out | curly_out | parenthesis_out
               | ['statement' statements_out:rest] -> ''.join(rest)
@@ -199,8 +203,8 @@ expr_out = func_out
          | hspace | vspace
          | op_out
 
-func_out = ['function' :prefix :pre_name :nm :pre_args :args :post_args :s] 
-         -> "%sfunction%s%s%s()%s{%s}" % (''.join(prefix), ''.join(pre_name),(nm or ""), ''.join(pre_args),''.join(post_args),''.join(s)) 
+func_out = ['function' :prefix :pre_name :nm :pre_args :args :post_args statements_list_out:s] 
+         -> "%sfunction%s%s%s()%s{%s}" % (''.join(prefix), ''.join(pre_name),(nm or ""), ''.join(pre_args),''.join(post_args),s) 
 
 conditional_out = ['conditional' exprs_list_out:one exprs_list_out:two exprs_list_out:three] -> "%s?%s:%s" % (one,two,three)
 
@@ -213,6 +217,9 @@ comment_out = ['comment' :c] -> "//" + c
             | ['slcomment' :c] -> "/*" + c "*/"
 
 op_out = anything:op -> op
+
+describe_out = ['describe' :constr :caption statements_list_out:stmts] -> self.describe_out_text % (constr or "null",caption or "null", stmts)
+it_out = ['it' :caption statements_list_out:stmts] -> self.it_out_text % (caption,stmts)
 
 # if = "if" args statement vspace
 #    | "if" args statement ";"
