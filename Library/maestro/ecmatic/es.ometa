@@ -96,6 +96,11 @@ simple_expr = ObjectLiteral | ArrayLiteral | literal | comment | slcomment | mlc
 expr_lhs = name:n refinement:n2 -> [n] + n2
          | name:n -> [n]
 
+expr_rhs = (literal | slcomment | mlcomment 
+         | square_expr | parenthesis_expr | curly_expr
+         | ops
+         | name | comment | hspace | vspace)+:e -> e
+
 #TODO empty regex vs line comment
 #TODO assign expr vs non
 
@@ -173,7 +178,7 @@ it_statements = (func_block | conditional
               | iname 
               | hspace | vspace)*
 
-should_expr = expr_lhs:lhs opt_vspan:s1 "should" opt_vspan:s2 (iname | compare_ops):op -> ["should",lhs,s1,s2,op]
+should_expr = expr_lhs:lhs opt_vspan "should" opt_vspan (iname | compare_ops):op opt_vspan expr_rhs:rhs ";" -> ["should",lhs,op,rhs]
 # after_ms(100) within_ms(100)
 
 //
@@ -185,7 +190,7 @@ exprs_out = expr_out*:s -> ''.join(s)
 exprs_list_out = [ expr_out*:s ] -> ''.join(s)
 
 statement_out = func_out
-              | describe_out | it_out
+              | describe_out | it_out | should_out
               | conditional_out
               | square_out | curly_out | parenthesis_out
               | ['statement' statements_out:rest] -> ''.join(rest)
@@ -220,6 +225,8 @@ op_out = anything:op -> op
 
 describe_out = ['describe' :constr :caption statements_list_out:stmts] -> self.describe_out_text % (constr or "null",caption or "null", stmts)
 it_out = ['it' :caption statements_list_out:stmts] -> self.it_out_text % (caption,stmts)
+
+should_out = ['should' exprs_list_out:lhs :op exprs_list_out:rhs] -> self.should_out_text % (lhs, self.quote_text(lhs),op, rhs)
 
 # if = "if" args statement vspace
 #    | "if" args statement ";"

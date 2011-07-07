@@ -86,6 +86,13 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
         %s
     })();
 '''
+    should_out_text = '''
+        pagespec.expect(%s,%s,pagespec.should["%s"],function(){return %s;});
+'''
+
+    def quote_text(self,text):
+        return "'%s'" % text.replace("'",r"\'")
+
 scopes = {}
 
 class Scope(object):
