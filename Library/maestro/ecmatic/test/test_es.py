@@ -6,8 +6,8 @@ from ecmatic.es import Grammar, expand_macros, add_scope, scopes
 
 class GrammarTestCase(unittest.TestCase):
     
-    def assertExpression(self, expr, expected):
-        result, error = Grammar(expr).apply("expr")
+    def assertExpression(self, expr, expected, rule="expr"):
+        result, error = Grammar(expr).apply(rule)
         assert result == expected
         
     def assertStatements(self, expr, expected):
@@ -70,6 +70,9 @@ class GrammarTestCase(unittest.TestCase):
         # ['call', ["new"," ","a",".","f"],["a"," ","+"," ","b"]]
         # ['index', ["a",".","f"],["a"," ","+"," ","b"]]
         # ['paren',["5"]]
+        
+        self.assertExpression("a.b.c",["a",".","b",".","c"],rule="expr_lhs")
+        self.assertExpression("a ",["a"],rule="expr_lhs")
 
         """
         inline function void
@@ -285,6 +288,9 @@ it "should identify" {
         "\n"]],
         "\n"])
 
+        self.assertExpression('''a should == 5
+''', ["should",["a"], [" "], [" "], "=="], rule="should_expr")
+
         self.assertStatements('''
 @describe "pagecore browser identification" {
 it "should identify" {
@@ -294,11 +300,11 @@ a should == 5;
 ''',["\n",
         ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
             ["it",[" "],'"should identify"',[" "],["\n",
-                "a", ["should",[" "],"=="], "5", ";"
+                ["should", ["a"], [" "], [" "],"=="], " ", "5", ";",
                 "\n"
             ]],
-        "\n"]]
-        ])
+        "\n"]],
+        "\n"])
     
     def no_test_describe_macros(self):
         self.assertStatements('''
@@ -310,10 +316,10 @@ a should == 5;
 ''',["\n",
         ["describe",[" "],'"pagecore browser identification"',[" "],["\n",
             ["it",[" "],'"should identify"',[" "],["\n",
-                "a", " ", ["should",[" "],"=="], "5", ";"
+                ["should", ["a"], [" "], [" "],"=="], " ", "5", ";",
                 "\n"
             ]],
-        "\n"]]
-        ])
+        "\n"]],
+        "\n"])
     
     

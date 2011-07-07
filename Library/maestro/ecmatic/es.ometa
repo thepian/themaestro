@@ -85,7 +85,16 @@ csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
 # lhs expr: just that, call, index, this
 # simple expression: obj array lit space comment ()
 
+refinement_part = opt_hspan:s1 "." opt_vspan:s2 iname:n -> s1 + ["."] + s2 + [n]
+                | opt_hspan:s1 square_expr:e -> s1 + [e]
+refinement = refinement:r1 refinement_part:r2 !(r1.extend(r2)) -> r1 
+           | refinement_part:r -> r
+
 simple_expr = ObjectLiteral | ArrayLiteral | literal | comment | slcomment | mlcomment | hspace
+
+
+expr_lhs = name:n refinement:n2 -> [n] + n2
+         | name:n -> [n]
 
 #TODO empty regex vs line comment
 #TODO assign expr vs non
@@ -141,7 +150,6 @@ define_macro = "@define" opt_vspan:span (iname:n "::" -> n)?:ns dotname:n opt_vs
 // PageSpec syntax
 //
 
-describe_macro = "@describe" opt_vspan:span string:caption opt_vspan:post_caption "{" "}" -> ["describe", span, caption, post_caption, []]
 describe_macro = "@describe" opt_vspan:span string:caption opt_vspan:post_caption "{" describe_parts:parts "}" -> ["describe", span, caption, post_caption, parts]
 
 describe_parts = (it_block | before_block | after_block | func_block | comment | slcomment | mlcomment | hspace | vspace )*
@@ -163,7 +171,7 @@ it_statements = (func_block | conditional
               | iname 
               | hspace | vspace)*
 
-should_expr = "should" opt_vspan:span (iname | compare_ops):op -> ["should",span,op]
+should_expr = expr_lhs:lhs opt_vspan:s1 "should" opt_vspan:s2 (iname | compare_ops):op -> ["should",lhs,s1,s2,op]
 # after_ms(100) within_ms(100)
 
 //
