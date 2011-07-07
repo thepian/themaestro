@@ -87,7 +87,10 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
     })();
 '''
     should_out_text = '''
-        pagespec.expect(%s,%s,pagespec.should["%s"],function(){return %s;});
+        pagespec.expect(function(){return %s;},%s,pagespec.should["%s"],function(){return %s;});
+'''
+    should_after_out_text = '''
+        pagespec.expect(function(){return %s;},%s,pagespec.should["%s"],function(){return %s;}).after_ms(%s);
 '''
 
     def quote_text(self,text):

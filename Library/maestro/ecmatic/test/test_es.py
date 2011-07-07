@@ -82,6 +82,12 @@ class GrammarTestCase(unittest.TestCase):
         simple expression: obj array lit space comment ()
         """
         
+    def test_regex_vs_divide(self):
+        """
+        Test that there is proper differentiation between the two
+        """
+        pass
+        
     def test_statements(self):
         self.assertStatements("""a?b:c""", [ ["conditional", ["a"], ["b"], ["c"]] ])
         self.assertStatements("""[(5)]""", [["square",[ ["parenthesis", [ "5" ] ] ]]])
@@ -315,6 +321,16 @@ it "should identify" {
         "\n"]]
 
         # should expression rule
+        self.assertExpression('''a should == 5;
+''', ["should",["a"], "==", ["5"]], rule="should_expr")
+#         self.assertExpression('''(a) should == 5;
+# ''', ["should",[ ["parenthesis",["a"]] ], "==", ["5"]], rule="should_expr")
+        self.assertExpression('''a[1] should == 5;
+''', ["should",["a",["square",["1"]]], "==", ["5"]], rule="should_expr")
+        self.assertExpression('''a.b should == 5;
+''', ["should",["a",".","b"], "==", ["5"]], rule="should_expr")
+        self.assertExpression('''a should == 5;
+''', ["should",["a"], "==", ["5"]], rule="should_expr")
         self.assertExpression('''a should == 5;
 ''', ["should",["a"], "==", ["5"]], rule="should_expr")
 
