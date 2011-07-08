@@ -90,11 +90,20 @@ refinement_part = opt_hspan:s1 "." opt_vspan:s2 iname:n -> s1 + ["."] + s2 + [n]
 refinement = refinement:r1 refinement_part:r2 !(r1.extend(r2)) -> r1 
            | refinement_part:r -> r
 
+refinement_callable_part = opt_hspan:s1 "." opt_vspan:s2 iname:n -> s1 + ["."] + s2 + [n]
+                | opt_hspan:s1 square_expr:e -> s1 + [e]
+                | opt_hspan:s1 parenthesis_expr:e -> s1 + [e]
+refinement_callable = refinement_callable:r1 refinement_callable_part:r2 !(r1.extend(r2)) -> r1 
+           | refinement_callable_part:r -> r
+
 simple_expr = ObjectLiteral | ArrayLiteral | literal | comment | slcomment | mlcomment | hspace
 
 
 expr_lhs = name:n refinement:n2 -> [n] + n2
          | name:n -> [n]
+
+expr_lhs_callable = name:n refinement_callable:n2 -> [n] + n2
+                  | name:n -> [n]
 
 expr_rhs = (literal | slcomment | mlcomment 
          | square_expr | parenthesis_expr | curly_expr
@@ -178,8 +187,13 @@ it_statements = (func_block | conditional
               | iname 
               | hspace | vspace)*
 
-should_expr = expr_lhs:lhs opt_vspan "should" opt_vspan (iname | compare_ops):op opt_vspan expr_rhs:rhs ";" -> ["should",lhs,op,rhs]
+should_expr = expr_lhs_callable:lhs should_rhs+:rhs ";" -> ["should",lhs] + rhs
+
 # after_ms(100) within_ms(100)
+
+should_rhs = opt_hspan "should" opt_vspan (iname | compare_ops):op opt_vspan expr_rhs:rhs -> [op] + rhs
+           | opt_hspan "after_ms" opt_vspan "(" expr_rhs:rhs ")" -> ["after_ms"] + rhs
+           | opt_hspan "within_ms" opt_vspan "(" expr_rhs:rhs ")" -> ["within_ms"] + rhs
 
 //
 // Output tree
@@ -226,7 +240,12 @@ op_out = anything:op -> op
 describe_out = ['describe' :constr :caption statements_list_out:stmts] -> self.describe_out_text % (constr or "null",caption or "null", stmts)
 it_out = ['it' :caption statements_list_out:stmts] -> self.it_out_text % (caption,stmts)
 
-should_out = ['should' exprs_list_out:lhs :op exprs_list_out:rhs] -> self.should_out_text % (lhs, self.quote_text(lhs),op, rhs)
+
+should_out = ['should' exprs_list_out:lhs should_rhs_out:rhs] -> self.should_out_text % (lhs, self.quote_text(lhs), rhs)
+
+should_rhs_out = should_op_ex_out+:e -> "[ %s ]" % ','.join(e)
+
+should_op_ex_out = [:op exprs_list_out:ex] -> self.should_rhs_out_text % (op,p(ex))
 
 # if = "if" args statement vspace
 #    | "if" args statement ";"

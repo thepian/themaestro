@@ -276,10 +276,31 @@ addExtension(new Extension());
             ";","\n"
         ]
         
+    def test_should_expression(self):
+        # should expression rule
+        self.assertExpression('''a should == 5;
+''', ["should",["a"],  ["==","5"] ], rule="should_expr")
+#         self.assertExpression('''(a) should == 5;
+# ''', ["should",[ ["parenthesis",["a"]] ], "==", ["5"]], rule="should_expr")
+        self.assertExpression('''a[1] should == 5;
+''', ["should",["a",["square",["1"]]], ["==", "5"]], rule="should_expr")
+        self.assertExpression('''a.b should == 5;
+''', ["should",["a",".","b"], ["==", "5"]], rule="should_expr")
+        self.assertExpression('''a should > 1 should <= 5;
+''', ["should",["a"], [">", "1", " "], ["<=", "5"]], rule="should_expr")
+        self.assertExpression('''a("b") should == 5;
+''', ["should",["a",["parenthesis",['"b"']]], ["==", "5"]], rule="should_expr")
+        self.assertExpression('''a should == 5 after_ms(100);
+''', ["should",["a"],  ["==","5"," "], ["after_ms", "100"] ], rule="should_expr")
+        self.assertExpression('''a should == 5 within_ms(100);
+''', ["should",["a"],  ["==","5", " "], ["within_ms", "100"] ], rule="should_expr")
+
+        
     def test_describe_macros(self):
         """
         @describe
         """
+        #TODO lhs_opt_call possibility
         
         self.assertStatements('''
 @describe "pagecore browser identification" {}
@@ -320,20 +341,6 @@ it "should identify" {
             ["it", '"should identify"', [ "\n" ]],
         "\n"]]
 
-        # should expression rule
-        self.assertExpression('''a should == 5;
-''', ["should",["a"], "==", ["5"]], rule="should_expr")
-#         self.assertExpression('''(a) should == 5;
-# ''', ["should",[ ["parenthesis",["a"]] ], "==", ["5"]], rule="should_expr")
-        self.assertExpression('''a[1] should == 5;
-''', ["should",["a",["square",["1"]]], "==", ["5"]], rule="should_expr")
-        self.assertExpression('''a.b should == 5;
-''', ["should",["a",".","b"], "==", ["5"]], rule="should_expr")
-        self.assertExpression('''a should == 5;
-''', ["should",["a"], "==", ["5"]], rule="should_expr")
-        self.assertExpression('''a should == 5;
-''', ["should",["a"], "==", ["5"]], rule="should_expr")
-
         self.assertStatements('''
 @describe "pagecore browser identification" {
 it "should identify" {
@@ -343,7 +350,7 @@ a should == 5;
 ''',["\n",
         ["describe", None,'"pagecore browser identification"', ["\n", 
             ["it", '"should identify"', ["\n", 
-                ["should", ["a"], "==", ["5"]], 
+                ["should", ["a"], ["==", "5"]], 
                 "\n" 
             ]],
         "\n"]],
@@ -352,13 +359,13 @@ a should == 5;
         # Expanding should expression statement
         described = expand_macros(["describe", None,'"pagecore browser identification"', ["\n", 
             ["it", '"should identify"', ["\n", 
-                ["should", ["a"], "==", ["5"]], 
+                ["should", ["a"], ["==", "5"]], 
                 "\n" 
             ]],
         "\n"]])
         assert described == ["describe", None,'"pagecore browser identification"', ["\n", 
             ["it", '"should identify"',["\n", 
-                ["should", ["a"], "==", ["5"]], 
+                ["should", ["a"], ["==", "5"]], 
                 "\n" 
             ]],
         "\n"]]
@@ -369,7 +376,8 @@ a should == 5;
         self.assertStatementsOut([ ["it",'"should identify"', []] ], Grammar.it_out_text % ('"should identify"', ""))
         self.assertStatementsOut([ ["it",'"should identify"', [";", "var"," ","a","=","5", ";",";"]] ], Grammar.it_out_text % ('"should identify"', ";var a=5;;"))
         self.assertStatementsOut([ ["it",'"should identify"', [";", "var"," ","f","=", [ "function", [], [], None, [], [], [], [] ], ";",";"]] ], Grammar.it_out_text % ('"should identify"', ";var f=function(){};;"))
-        self.assertStatementsOut([ ["should", ["a"], "==", ["5"]] ], Grammar.should_out_text % ("a","'a'","==","5"))
+        self.assertStatementsOut([ ["should", ["a"], ["==", "5"]] ], Grammar.should_out_text % ("a","'a'", "[ '==',function(){ return 5; } ]"))
+        self.assertStatementsOut([ ["should", ["a"], ["<", "5"], [">", "1"]] ], Grammar.should_out_text % ("a","'a'", "[ '<',function(){ return 5; },'>',function(){ return 1; } ]"))
     
     def no_test_describe_macros(self):
         self.assertStatements('''
@@ -381,7 +389,7 @@ a should == 5;
 ''',["\n",
         ["describe", None,'"pagecore browser identification"', ["\n",
             ["it", '"should identify"', ["\n",
-                ["should", ["a"], "==", ["5"]], 
+                ["should", ["a"], ["==", "5"]], 
                 "\n"
             ]],
         "\n"]],

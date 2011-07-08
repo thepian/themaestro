@@ -56,6 +56,8 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
         "implements", "let", "private", "public", "interface", "package",
          "protected", "static", "yield"
     ))
+    # PageSpec expectations keywords
+    extraKeywords = set(("should","after_ms","within_ms","after","within"))
       
     def __init__(self, *args, **kwargs):
         super(Grammar, self).__init__(*args, **kwargs)
@@ -70,6 +72,8 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
 
     def is_reserved(self,name):
         "Is the attribute name reserved"
+        if name in self.extraKeywords:
+            return True
         return name in self.keywords
         
     describe_out_text = '''
@@ -87,11 +91,15 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
     })();
 '''
     should_out_text = '''
-        pagespec.expect(function(){return %s;},%s,pagespec.should["%s"],function(){return %s;});
+        pagespec.expect(function(){return %s;}, %s, %s);
 '''
+    should_rhs_out_text = ''''%s',function(){ return %s; }'''
+    
     should_after_out_text = '''
         pagespec.expect(function(){return %s;},%s,pagespec.should["%s"],function(){return %s;}).after_ms(%s);
 '''
+
+    # def should_lhs_to_text(self,lhs):
 
     def quote_text(self,text):
         return "'%s'" % text.replace("'",r"\'")
