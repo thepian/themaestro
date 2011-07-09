@@ -8,8 +8,6 @@ class Command(object):
 
     def __call__(self, *args, **options):
         import py 
-        print sys.path, args
-        # args = ['Library/maestro/mediaserver/sources/jsparser']
         if not args:
             args = [
                 'Library/maestro/thepian/conf',
