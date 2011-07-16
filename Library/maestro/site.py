@@ -339,6 +339,7 @@ def main():
     sys.path.append(join(dirname(dirname(sys.executable)),"src","tornado"))
     sys.path.append(join(dirname(dirname(sys.executable)),"src","thepian-lib"))
     sys.path.append(join(dirname(dirname(sys.executable)),"src","redis-py"))
+    sys.path.append(join(dirname(dirname(sys.executable)),"src","brukva"))
     sys.path.append(join(dirname(dirname(sys.executable)),"Library","PyMeta2"))
 
     # paths_in_sys = addsitepackages(paths_in_sys)

@@ -16,3 +16,6 @@
 [submodule "src/redis-py"]
 	path = src/redis-py
 	url = http://github.com/andymccurdy/redis-py.git
+[submodule "src/brukva"]
+	path = src/brukva
+	url = git@github.com:thepian/brukva.git
