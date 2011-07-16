@@ -3,35 +3,16 @@ import os, fs, os.path, logging
 from os.path import join,isdir
 
 from thepian.conf import structure, settings
-from sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources
+from mediaserver.sources import CssSourceNode,JsSourceNode, newer_assets, combine_asset_sources
 
 import tornado.web
 import tornado.template
 
-from verify import VerifySource
+from mediaserver.verify import VerifySource
 
-class MediaHomeHandler(tornado.web.RequestHandler):
-    
-    def get(self):
-        self.render("mediahome.html")
-        
-    def post(self):
-        if "stop-server" in self.request.arguments.keys():
-            self.application.ioloop.stop()
-        self.write('done.')
+from home import MediaHomeHandler, DirectoryHandler, StaticFallbackHandler
+from preprocessor import JsPreProcessHandler
 
-class DirectoryHandler(tornado.web.RequestHandler):
-    
-    def get(self):
-        # print self.application.site['path']
-        info = {
-            "list": os.listdir(self.application.site['path'] + self.request.path), 
-            "path": self.request.path,
-            "SITE_TITLE": "PageSpec",
-            "MEDIA_URL": settings.MEDIA_URL
-        }
-        self.render("directory.html",**info)
-                
 class CssHandler(tornado.web.RequestHandler):
 
     def getSource(self, file_name):
@@ -95,13 +76,11 @@ class CssHandler(tornado.web.RequestHandler):
             print '...',e
             import traceback; traceback.print_exc()
             
-class StaticFallbackHandler(tornado.web.RequestHandler):
-    def get(self):
-        self.set_header('X-Accel-Redirect',"/static_fallback"+self.request.path)
-        # self.set_header("Content-Type","text/javascript")
-
 # @cache_control(False)
 class JsHandler(tornado.web.RequestHandler):
+    """
+    Builds .js files from js/and-a-name.js directories
+    """
 
     def __init__(self, application, request, transforms=None):
         super(JsHandler,self).__init__(application, request, transforms)
