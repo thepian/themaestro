@@ -136,6 +136,7 @@ class Structure(ProjectTree):
 
         def make_site(name):
             return dict(
+                # TODO cofigurable package list
                 path=join(self.PROJECT_DIR,n),package='mediaserver',
                 target_path=join(self.TARGET_DIR,n),
                 name=name[:-4],dirname=name)
