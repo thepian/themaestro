@@ -29,6 +29,7 @@ class Command(object):
         sys.path.insert(0,structure.PROJECT_DIR)
         
         import logging
+        print 'logging to testing.log', structure.DEFAULT_HOSTNAME
         LOG_FILENAME = join(structure.PROJECT_DIR,'testing.log')
         logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
         
@@ -40,6 +41,7 @@ class Command(object):
         ioloop = tornado.ioloop.IOLoop.instance()
         for n in structure.SITES:
             site = structure.SITES[n]
+            print n+":", site["port"], site["package"]
             if site["package"] in ("tornado", "mediaserver"):
                 http_server = tornado.httpserver.HTTPServer(Application(site,ioloop=ioloop))
                 http_server.listen(site["port"])
