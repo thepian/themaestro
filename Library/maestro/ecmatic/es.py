@@ -2,6 +2,11 @@ from __future__ import with_statement
 from pymeta.grammar import OMeta
 import os
 
+def translate(source):
+    r = Grammar(source).apply("statements")[0]
+    r = expand_macros(r)
+    return Grammar(r).apply("statements_out")[0]
+    
 def compile(source):
     return Translator.parse(Grammar.parse(source))
 
