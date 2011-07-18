@@ -10,8 +10,8 @@ import tornado.template
 
 from mediaserver.verify import VerifySource
 
-from home import MediaHomeHandler, DirectoryHandler, StaticFallbackHandler
-from preprocessor import JsPreProcessHandler
+from home import MediaHomeHandler, DirectoryHandler, StaticFallbackHandler, SelfTestHandler
+from preprocessor import JsPreProcessHandler, JsExecuteAllHandler
 
 class CssHandler(tornado.web.RequestHandler):
 

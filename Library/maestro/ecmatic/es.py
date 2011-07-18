@@ -81,14 +81,13 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
             return True
         return name in self.keywords
         
-    describe_out_text = '''
-(function(){
+    describe_out_text = '''\
+function(){
     var pagespec = resolver()("pagespec");
     pagespec.current_constr = %s;
     pagespec.current_caption = %s;
 %s
-})();
-'''
+}'''
     it_out_text = '''
     pagespec.example_name = %s;
     (function(){

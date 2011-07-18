@@ -25,13 +25,18 @@ r.set('account/hash.js', 'aaaaaaa')
 def load_seed():
     from thepian.conf import structure
     from os.path import join
-    from fs import listdir
+    from fs import listdir, filters
     import hashlib
     
     base = join(structure.PROJECT_DIR,"seed")
     for a in listdir(base):
         account = join(base,a)
-        for s in listdir(account):
+
+        if r.exists('%s/all.list' % a):
+            print r.type('%s/all.list' % a)
+            r.ltrim('%s/all.list' % a, 0, 0)
+
+        for s in listdir(account, filters=(filters.fnmatch("*.pagespec.js"),)):
             with open(join(account,s),"r") as f:
                 c = f.read()
                 h = hashlib.sha256(c).hexdigest()
@@ -39,7 +44,15 @@ def load_seed():
                 id = "%s/%s.js" % (a,h)
                 print "adding", id, ":", t
                 r.set(id,t)
-            
+                
+                # added the hash to the all list
+                r.rpush('%s/all.list' % a, h)
+
+           
+    print r.type('%s/all.list' % a)
+    print "Done loading seed." 
+    
+r.flushdb()
 load_seed()
 
 class JsPreProcessHandler(tornado.web.RequestHandler):
@@ -47,21 +60,33 @@ class JsPreProcessHandler(tornado.web.RequestHandler):
     # @tornado.web.asynchronous
     # @brukva.adisp.process
     def get(self, account, hash):
-        try:
-            key = '%s/%s.js' % (account,hash)
-            # tx = yield c.async.get(key)
-            tx = r.get(key)
-            if not tx:
-                print 'no entry for ', key
-                self.send_error(error_code=404)
-                self.finish()
-                # raise tornado.web.HTTPError(404)
-            else:
+        key = '%s/%s.js' % (account,hash)
+        if not key in r:
+            print 'no entry for ', key
+            raise tornado.web.HTTPError(404)
+        else:
+            try:
                 self.set_header('Content-Type', 'text/javascript')
-                self.write(tx)
+                self.write(r[key])
                 self.finish()
-            return 
-        except Exception, e:
-            print e
-            import traceback; traceback.print_exc()
+            except Exception, e:
+                print "preprocessor problem", e
+                import traceback; traceback.print_exc()
         
+class JsExecuteAllHandler(tornado.web.RequestHandler):
+    
+    def get(self, account, exec_name):
+        key = '%s/all.list' % account
+        if not key in r:
+            raise tornado.web.HTTPError(404)
+            # self.finish()
+        else:
+            try:
+                ids = r.lrange(key,0,1000)
+                all_list = [{"id" : i,"run": r['%s/%s.js' % (account,i)]} for i in ids]
+                self.set_header('Content-Type', 'text/javascript')
+                self.render("execute-all.js", account=account, exec_name = exec_name, all_list = all_list)
+            
+            except Exception, e:
+                print "execute handler problem", e
+                import traceback; traceback.print_exc()

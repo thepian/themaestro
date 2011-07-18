@@ -37,3 +37,8 @@ class StaticFallbackHandler(tornado.web.RequestHandler):
         self.set_header('X-Accel-Redirect',"/static_fallback"+self.request.path)
         # self.set_header("Content-Type","text/javascript")
 
+
+class SelfTestHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("selftest.html")
+        
