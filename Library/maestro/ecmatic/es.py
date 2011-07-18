@@ -82,8 +82,7 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
         return name in self.keywords
         
     describe_out_text = '''\
-function(){
-    var pagespec = resolver()("pagespec");
+function(pagespec){
     pagespec.current_constr = %s;
     pagespec.current_caption = %s;
 %s
