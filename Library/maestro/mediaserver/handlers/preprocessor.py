@@ -45,7 +45,7 @@ def load_seed():
                     h = hashlib.sha256(c).hexdigest()
                     t = translate(c)
                     id = "%s/%s/%s.js" % (a,p,h)
-                    print "adding", id, ":", t
+                    # print "adding", id, ":", t
                     REDIS.set(id,t)
                 
                     # added the hash to the all list
