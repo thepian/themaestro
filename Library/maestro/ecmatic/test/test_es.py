@@ -290,6 +290,8 @@ addExtension(new Extension());
 ''', ["should",["a",["square",["1"]]], ["==", "5"]], rule="should_expr")
         self.assertExpression('''a.b should == 5;
 ''', ["should",["a",".","b"], ["==", "5"]], rule="should_expr")
+        self.assertExpression('''a.b should < 5;
+''', ["should",["a",".","b"], ["<", "5"]], rule="should_expr")
         self.assertExpression('''a should > 1 should <= 5;
 ''', ["should",["a"], [">", "1", " "], ["<=", "5"]], rule="should_expr")
         self.assertExpression('''a("b") should == 5;
@@ -299,6 +301,13 @@ addExtension(new Extension());
         self.assertExpression('''a should == 5 within_ms(100);
 ''', ["should",["a"],  ["==","5", " "], ["within_ms", "100"] ], rule="should_expr")
 
+        self.assertExpression('''a should be_empty();
+''', ["should",["a"],  ["be_empty", ["parenthesis", []]] ], rule="should_expr")
+
+        self.assertExpression('''a should == 5;
+''', [ ["should",["a"],  ["==","5"] ], "\n" ], rule="it_statements")
+        self.assertExpression('''a should > 1 should < 5;
+''', [ ["should",["a"],  [">","1"," "],  ["<","5"] ], "\n" ], rule="it_statements")
         
     def test_describe_macros(self):
         """

@@ -88,24 +88,24 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
         return name in self.keywords
         
     describe_out_text = '''\
-function(pagespec){
-    pagespec.current_constr = %s;
-    pagespec.current_caption = %s;
+function(__pagespec__){
+    __pagespec__.current_constr = %s;
+    __pagespec__.current_caption = %s;
 %s
 }'''
     it_out_text = '''
-    pagespec.example_name = %s;
+    __pagespec__.example_name = %s;
     (function(){
         %s
     })();
 '''
     should_out_text = '''
-        pagespec.expect(function(){return %s;}, %s, %s);
+        __pagespec__.expect(function(){return %s;}, %s, %s);
 '''
     should_rhs_out_text = ''''%s',function(){ return %s; }'''
     
     should_after_out_text = '''
-        pagespec.expect(function(){return %s;},%s,pagespec.should["%s"],function(){return %s;}).after_ms(%s);
+        __pagespec__.expect(function(){return %s;},%s,__pagespec__.should["%s"],function(){return %s;}).after_ms(%s);
 '''
 
     # def should_lhs_to_text(self,lhs):
