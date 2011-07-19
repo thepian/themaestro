@@ -114,6 +114,7 @@ expr_rhs = (literal | slcomment | mlcomment
 #TODO assign expr vs non
 
 expr = (func_block | conditional | literal | slcomment | mlcomment | ass_ops | dbl_ops | ops | "=" 
+     | square_expr | parenthesis_expr | curly_expr
      | name 
      | comment | hspace | vspace)+:e -> e
 
@@ -130,7 +131,7 @@ ops = "." | "+" | "-" | "~" | "!" | "*" | "/" | "%" | "|" | "^" | "&" | "<" | ">
 
 args_list = (name | comment | slcomment | mlcomment | hspace | vspace | ",")*
 
-conditional = expr:one "?" expr:two ":" expr:three -> ["conditional", one, two, three]
+conditional = "?" expr:one ":" expr:two -> ["conditional", one, two]
 
 //
 // Top level structure
@@ -223,9 +224,9 @@ expr_out = func_out
          | op_out
 
 func_out = ['function' :prefix :pre_name :nm :pre_args :args :post_args statements_list_out:s] 
-         -> "%sfunction%s%s%s()%s{%s}" % (''.join(prefix), ''.join(pre_name),(nm or ""), ''.join(pre_args),''.join(post_args),s) 
+         -> "%sfunction%s%s%s(%s)%s{%s}" % (''.join(prefix), ''.join(pre_name),(nm or ""), ''.join(pre_args), ''.join(args), ''.join(post_args),s) 
 
-conditional_out = ['conditional' exprs_list_out:one exprs_list_out:two exprs_list_out:three] -> "%s?%s:%s" % (one,two,three)
+conditional_out = ['conditional' exprs_list_out:one exprs_list_out:two] -> "?%s:%s" % (one,two)
 
 square_out = ['square' exprs_list_out:s] -> "[" + s + "]"
 curly_out = ['curly' exprs_list_out:s] -> "{" + s + "}"

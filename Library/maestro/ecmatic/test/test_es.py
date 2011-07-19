@@ -74,6 +74,10 @@ class GrammarTestCase(unittest.TestCase):
         self.assertExpression("a.b.c",["a",".","b",".","c"],rule="expr_lhs")
         self.assertExpression("a ",["a"],rule="expr_lhs")
 
+        self.assertExpression("""?b:c""",  ["conditional", ["b"], ["c"]] , rule="conditional")
+        self.assertExpression("""a?b:c""", [ "a", ["conditional", ["b"], ["c"]] ])
+        self.assertExpression("""x=a?b:c""", [ "x","=","a", ["conditional", ["b"], ["c"]] ])
+        self.assertExpression("""a?a():null""", [ "a", ["conditional", ["a",["parenthesis",[]]], ["null"]] ])
         """
         inline function void
         conditional ?:
@@ -89,7 +93,7 @@ class GrammarTestCase(unittest.TestCase):
         pass
         
     def test_statements(self):
-        self.assertStatements("""a?b:c""", [ ["conditional", ["a"], ["b"], ["c"]] ])
+        self.assertStatements("""a?b:c""", [ "a", ["conditional", ["b"], ["c"]] ])
         self.assertStatements("""[(5)]""", [["square",[ ["parenthesis", [ "5" ] ] ]]])
         self.assertStatements("""function(){}""", [["function", [], [], None, [], [], [], [] ]])
         
@@ -135,6 +139,8 @@ function(){
         "\n", ["insert"], "\n"
     ]]
 ])
+        self.assertStatements("""var x =a?b:c;""", [ "var"," ","x"," ","=", "a", ["conditional", ["b"], ["c"]], ";" ])
+        self.assertStatements("""var x =a?a():null;""", [ "var"," ","x"," ","=", "a", ["conditional", ["a",["parenthesis",[]]], ["null"]], ";" ])
 
     def test_out(self):
         self.assertStatementsOut([";"], ";")
@@ -146,8 +152,8 @@ function(){
         
         self.assertExpressionsOut(["12","+"," ","23","==","abc"], "12+ 23==abc")
 
-        # self.assertExpressionsOut(["conditional", ["a"], ["b"], ['c']], """a?b:c""", rule="conditional_out")
-        self.assertStatementsOut([ ["conditional", ["a"], ["b"], ["c"]] ], """a?b:c""")
+        # self.assertExpressionsOut(["conditional", ["b"], ['c']], """?b:c""", rule="conditional_out")
+        self.assertStatementsOut([ "a", ["conditional", ["b"], ["c"]] ], """a?b:c""")
         # self.assertExpressionsOut( ["parenthesis", [ " ","10", "+"," ","312","*","abc"]] , """(10 + 312*abc)""", rule="parenthesis_out")
         self.assertExpressionsOut([ ["parenthesis", " "] ], """( )""")
         self.assertExpressionsOut([ ["parenthesis", [ " ","10", "+"," ","312","*","abc"]] ], """( 10+ 312*abc)""")
@@ -170,6 +176,7 @@ function(){
         self.assertStatementsOut([ ["statement",";"] ],";")
 
         self.assertStatementsOut([ ["function", [], [" "], "A", [], [], [], [ ["statement", "var"," ","a",";"], ";" ] ] ],"function A(){var a;;}")
+        self.assertStatementsOut([ ["function", [], [" "], "A", [], ["one",",","two"], [], [ ["statement", "var"," ","a",";"], ";" ] ] ],"function A(one,two){var a;;}")
         
     def test_define_macros(self):
         self.assertStatements('''@define a;''',[
