@@ -6,7 +6,7 @@ import tornado.websocket
 import tornado.ioloop
 import redis
 
-from ecmatic.es import translate, add_scope  
+from ecmatic.es import translate, load_and_translate, add_scope, load_and_add_scope  
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
@@ -24,38 +24,46 @@ REDIS.set('account/hash.js', 'aaaaaaa')
 
 def load_seed():
     from thepian.conf import structure
-    from os.path import join
+    from os.path import join, exists
     from fs import listdir, filters
     import hashlib
     
     base = join(structure.PROJECT_DIR,"seed")
-    for a in listdir(base):
-        account = join(base,a)
+    if exists(base):
+        for a in listdir(base):
+            account = join(base,a)
 
-        for p in listdir(account):
-            project = join(account,p)
+            for p in listdir(account):
+                project = join(account,p)
             
-            if REDIS.exists('%s/%s/all.list' % (a,p)):
-                print REDIS.type('%s/%s/all.list' % (a,p))
-                REDIS.ltrim('%s/%s/all.list' % (a,p), 0, 0)
+                if REDIS.exists('%s/%s/all.list' % (a,p)):
+                    # print REDIS.type('%s/%s/all.list' % (a,p))
+                    REDIS.ltrim('%s/%s/all.list' % (a,p), 0, 0)
 
-            for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
-                with open(join(project,s),"r") as f:
-                    c = f.read()
-                    h = hashlib.sha256(c).hexdigest()
-                    t = translate(c)
+                for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
+                    src,translated = load_and_translate(join(project,s))
+                    h = hashlib.sha256(src).hexdigest()
                     id = "%s/%s/%s.js" % (a,p,h)
                     # print "adding", id, ":", t
-                    REDIS.set(id,t)
-                
+                    REDIS.set(id,translated)
+            
                     # added the hash to the all list
                     REDIS.rpush('%s/%s/all.list' % (a,p), h)
-
            
     print "Done loading seed." 
     
+def load_scopes():
+    from thepian.conf import structure
+    from os.path import join
+    from fs import listdir, filters
+
+    base = join(structure.JS_DIR)
+    for s in listdir(base,filters=(filters.fnmatch("*.scope.js"),)):
+        load_and_add_scope('"%s"' % s[:-9],join(base,s))
+    
 REDIS.flushdb()
 load_seed()
+load_scopes()
 
 class JsPreProcessHandler(tornado.web.RequestHandler):
     
@@ -88,9 +96,7 @@ class JsExecuteAllHandler(tornado.web.RequestHandler):
             # self.finish()
         else:
             try:
-                core_api = ""
-                with open(self.core_api,"r") as f:
-                    core_api = translate(f.read())
+                src, core_api = load_and_translate(self.core_api)
                 ids = REDIS.lrange(key,0,1000)
                 all_list = [{"id" : i,"run": REDIS['%s/%s/%s.js' % (account,project,i)]} for i in ids]
                 self.set_header('Content-Type', 'text/javascript')

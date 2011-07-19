@@ -232,8 +232,8 @@ curly_out = ['curly' exprs_list_out:s] -> "{" + s + "}"
 parenthesis_out = ['parenthesis' exprs_list_out:s] -> "(%s)" % s
 
 comment_out = ['comment' :c] -> "//" + c
-            | ['mlcomment' :c] -> "/*" + c "*/"
-            | ['slcomment' :c] -> "/*" + c "*/"
+            | ['mlcomment' :c] -> "/*" + c + "*/"
+            | ['slcomment' :c] -> "/*" + c + "*/"
 
 op_out = anything:op -> op
 

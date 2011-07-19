@@ -157,6 +157,10 @@ function(){
 # // hello""",rule="comment_out")
         self.assertStatementsOut([["comment", " hello"]], """\
 // hello""")
+        self.assertStatementsOut([["slcomment", " hello"]], """\
+/* hello*/""")
+        self.assertStatementsOut([["mlcomment", " hello"]], """\
+/* hello*/""")
         # self.assertStatementsOut([";"], ";")
         self.assertStatementsOut([["pass"]], "")
         

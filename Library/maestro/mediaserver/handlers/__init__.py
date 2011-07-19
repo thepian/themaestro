@@ -13,6 +13,9 @@ from mediaserver.verify import VerifySource
 from home import MediaHomeHandler, DirectoryHandler, StaticFallbackHandler, SelfTestHandler
 from preprocessor import JsPreProcessHandler, JsExecuteAllHandler
 
+from ecmatic.es import translate, load_and_translate, add_scope  
+
+
 class CssHandler(tornado.web.RequestHandler):
 
     def getSource(self, file_name):
@@ -237,3 +240,10 @@ class VerifyAssetsHandler(tornado.web.StaticFileHandler):
         path = "%s/verify/assets/%s" % (base,asset)
         tornado.web.StaticFileHandler.get(self,path)
         
+class PageSpecVerifyJsHandler(tornado.web.RequestHandler):
+    
+    def get(self,account,project):
+        src,translated = load_and_translate(join(structure.JS_DIR,"pagespec-verify.js"))
+        self.set_header('Content-Type', 'text/javascript')
+        self.write(translated)
+        self.finish()

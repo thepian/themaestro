@@ -7,6 +7,12 @@ def translate(source):
     r = expand_macros(r)
     return Grammar(r).apply("statements_out")[0]
     
+def load_and_translate(path):
+    import codecs
+    with codecs.open(path,"r",encoding="utf-8") as f:
+        text = f.read()
+        return text, translate(text)
+    
 def compile(source):
     return Translator.parse(Grammar.parse(source))
 
@@ -121,10 +127,16 @@ class Scope(object):
 def add_scope(name,source):
     scopes[name.replace("'",'"')] = Scope(source)
     
+def load_and_add_scope(name,path):
+    import codecs
+    with codecs.open(path,"r",encoding="utf-8") as f:
+        source = f.read()
+        scopes[name.replace("'",'"')] = Scope(source)
+    
 def expand_macros(tree,insert=None):
     
     def wrap_scope(node):
-        scope = node[2] in scopes and scopes[node[2].replace("'",'"')] or Scope('/*no scope '+node[2]+'*/@insert();')
+        scope = node[2] in scopes and scopes[node[2].replace("'",'"')] or Scope('/*no scope '+node[2].replace("'",'"')+'*/@insert();')
         return scope.wrap(node[4])
         
     def wrap_expand(node):
