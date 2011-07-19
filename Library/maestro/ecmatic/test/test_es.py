@@ -389,8 +389,8 @@ a should == 5;
         self.assertStatementsOut([ ["it",'"should identify"', []] ], Grammar.it_out_text % ('"should identify"', ""))
         self.assertStatementsOut([ ["it",'"should identify"', [";", "var"," ","a","=","5", ";",";"]] ], Grammar.it_out_text % ('"should identify"', ";var a=5;;"))
         self.assertStatementsOut([ ["it",'"should identify"', [";", "var"," ","f","=", [ "function", [], [], None, [], [], [], [] ], ";",";"]] ], Grammar.it_out_text % ('"should identify"', ";var f=function(){};;"))
-        self.assertStatementsOut([ ["should", ["a"], ["==", "5"]] ], Grammar.should_out_text % ("a","'a'", "[ '==',function(){ return 5; } ]"))
-        self.assertStatementsOut([ ["should", ["a"], ["<", "5"], [">", "1"]] ], Grammar.should_out_text % ("a","'a'", "[ '<',function(){ return 5; },'>',function(){ return 1; } ]"))
+        self.assertStatementsOut([ ["should", ["a"], ["==", "5"]] ], Grammar.should_out_text % ("a","'a'", "[ '==', function(){ return 5; }, '5' ]"))
+        self.assertStatementsOut([ ["should", ["a"], ["<", "5"], [">", "1"]] ], Grammar.should_out_text % ("a","'a'", "[ '<', function(){ return 5; }, '5','>', function(){ return 1; }, '1' ]"))
     
     def no_test_describe_macros(self):
         self.assertStatements('''

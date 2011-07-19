@@ -102,11 +102,8 @@ function(__pagespec__){
     should_out_text = '''
         __pagespec__.expect(function(){return %s;}, %s, %s);
 '''
-    should_rhs_out_text = ''''%s',function(){ return %s; }'''
+    should_rhs_out_text = ''''%s', function(){ return %s; }, %s'''
     
-    should_after_out_text = '''
-        __pagespec__.expect(function(){return %s;},%s,__pagespec__.should["%s"],function(){return %s;}).after_ms(%s);
-'''
 
     # def should_lhs_to_text(self,lhs):
 

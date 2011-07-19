@@ -245,7 +245,7 @@ should_out = ['should' exprs_list_out:lhs should_rhs_out:rhs] -> self.should_out
 
 should_rhs_out = should_op_ex_out+:e -> "[ %s ]" % ','.join(e)
 
-should_op_ex_out = [:op exprs_list_out:ex] -> self.should_rhs_out_text % (op,ex)
+should_op_ex_out = [:op exprs_list_out:ex] -> self.should_rhs_out_text % (op, ex, self.quote_text(ex))
 
 # if = "if" args statement vspace
 #    | "if" args statement ";"
