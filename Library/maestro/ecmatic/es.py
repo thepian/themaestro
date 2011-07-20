@@ -13,6 +13,13 @@ def load_and_translate(path):
         text = f.read()
         return text, translate(text)
     
+def load_and_parse(path):
+    import codecs
+    with codecs.open(path,"r",encoding="utf-8") as f:
+        source = f.read()
+        r = Grammar(source).apply("statements")[0]
+        return source, r
+
 def compile(source):
     return Translator.parse(Grammar.parse(source))
 
@@ -152,7 +159,18 @@ def expand_macros(tree,insert=None):
                 if len(node) == 0:
                     r.append([])
                 elif node[0] == "insert":
-                    node = expand(insert)
+                    if len(node) == 1:
+                        node = expand(insert)
+                    else:
+                        from thepian.conf import structure
+                        if node[1] == "path":
+                            try:
+                                path = structure.JS_DIR + "/" + node[2].replace("'","").replace('"',"")
+                                node = load_and_parse(path)[1]
+                            except IOError,e:
+                                node = ["/* No such file %s */" % node[2]]
+                        if node[1] == "var":
+                            node = ["/* No such var %s */" % node[2]]
                     r.extend(expand(node))
                 elif node[0] == "scope":
                     node = wrap_scope(node)

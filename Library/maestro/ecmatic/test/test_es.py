@@ -79,6 +79,8 @@ class GrammarTestCase(unittest.TestCase):
         self.assertExpression("""x=a?b:c""", [ "x","=","a", ["conditional", ["b"], ["c"]] ])
         self.assertExpression("""a?a():null""", [ "a", ["conditional", ["a",["parenthesis",[]]], ["null"]] ])
         """
+        TODO labels, comma ops
+        
         inline function void
         conditional ?:
         operators: single, combo, assignments
@@ -190,6 +192,10 @@ function(){
                 ["function", [], [], None, [], [], [], [";",";"] ] 
             ]]
         ])
+        
+    def test_insert_macros(self):
+        # @insert var "abc";
+        pass
         
     def test_import_macros(self):
         self.assertStatements('''@import a.b.c as c;''',[
