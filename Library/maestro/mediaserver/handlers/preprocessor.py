@@ -85,9 +85,10 @@ class JsPreProcessHandler(tornado.web.RequestHandler):
         
 class JsExecuteAllHandler(tornado.web.RequestHandler):
     
-    def __init__(self, application, request, transforms=None, core_api=None):
+    def __init__(self, application, request, transforms=None, core_api=None, run_script=None):
         super(JsExecuteAllHandler,self).__init__(application, request, transforms)
         self.core_api = core_api
+        self.run_script = run_script
 
     def get(self, account, project, exec_name):
         key = '%s/%s/all.list' % (account,project)
@@ -96,11 +97,17 @@ class JsExecuteAllHandler(tornado.web.RequestHandler):
             # self.finish()
         else:
             try:
-                src, core_api = load_and_translate(self.core_api)
                 ids = REDIS.lrange(key,0,1000)
-                all_list = [{"id" : i,"run": REDIS['%s/%s/%s.js' % (account,project,i)]} for i in ids]
+                all_list = [(i,REDIS['%s/%s/%s.js' % (account,project,i)]) for i in ids]
+                bits = ['''{"id":"%s","run":%s}''' % e for e in all_list]
+                specs = ",".join(bits)
+                
+                src, run_script = load_and_translate(self.run_script, exec_name = exec_name, account=account, project=project, specs = specs)
+                
+                print "Writing 'run_script' "
                 self.set_header('Content-Type', 'text/javascript')
-                self.render("execute-all.js", account=account, exec_name = exec_name, all_list = all_list, core_api = core_api)
+                self.write(run_script)
+                self.finish()
             
             except Exception, e:
                 print "execute handler problem", e

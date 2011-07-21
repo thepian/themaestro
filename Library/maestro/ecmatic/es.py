@@ -2,16 +2,16 @@ from __future__ import with_statement
 from pymeta.grammar import OMeta
 import os
 
-def translate(source):
+def translate(source,**insert_vars):
     r = Grammar(source).apply("statements")[0]
-    r = expand_macros(r)
+    r = expand_macros(r,insert_vars=insert_vars)
     return Grammar(r).apply("statements_out")[0]
     
-def load_and_translate(path):
+def load_and_translate(path,**insert_vars):
     import codecs
     with codecs.open(path,"r",encoding="utf-8") as f:
         text = f.read()
-        return text, translate(text)
+        return text, translate(text,**insert_vars)
     
 def load_and_parse(path):
     import codecs
@@ -98,13 +98,13 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
 function(__pagespec__){
     __pagespec__.current_constr = %s;
     __pagespec__.current_caption = %s;
+    __pagespec__.examples = {};
 %s
 }'''
     it_out_text = '''
-    __pagespec__.example_name = %s;
-    (function(){
-        %s
-    })();
+    __pagespec__.examples[%s] = function(){
+%s
+    };
 '''
     should_out_text = '''
         __pagespec__.expect(function(){return %s;}, %s, %s);
@@ -125,8 +125,8 @@ class Scope(object):
         self.parsed, self.error = Grammar(source).apply("statements")
         # print self.source, "==>",self.parsed
     
-    def wrap(self,node):
-        return expand_macros(self.parsed,node)
+    def wrap(self,node, insert_vars):
+        return expand_macros(self.parsed,insert=node,insert_vars=insert_vars)
         
 def add_scope(name,source):
     scopes[name.replace("'",'"')] = Scope(source)
@@ -137,11 +137,11 @@ def load_and_add_scope(name,path):
         source = f.read()
         scopes[name.replace("'",'"')] = Scope(source)
     
-def expand_macros(tree,insert=None):
-    
+def expand_macros(tree,insert=None,insert_vars={}):
+    # print insert_vars
     def wrap_scope(node):
         scope = node[2] in scopes and scopes[node[2].replace("'",'"')] or Scope('/*no scope '+node[2].replace("'",'"')+'*/@insert();')
-        return scope.wrap(node[4])
+        return scope.wrap(node[4], insert_vars)
         
     def wrap_expand(node):
         return node
@@ -170,7 +170,10 @@ def expand_macros(tree,insert=None):
                             except IOError,e:
                                 node = ["/* No such file %s */" % node[2]]
                         if node[1] == "var":
-                            node = ["/* No such var %s */" % node[2]]
+                            if node[2] in insert_vars:
+                                node = [insert_vars[node[2]]]
+                            else:
+                                node = ["/* No such var %s */" % node[2]]
                     r.extend(expand(node))
                 elif node[0] == "scope":
                     node = wrap_scope(node)

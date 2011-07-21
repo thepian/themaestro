@@ -155,6 +155,8 @@ parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
 insert_macro = "@insert" "()"? ";" -> ["insert"]
              | "@insert path" opt_vspan:span string:path ";" -> ["insert","path",path]
              | "@insert var" opt_vspan:span string:var ";" -> ["insert","var",var]
+             | "@insert var" opt_vspan:span iname:var ";" -> ["insert","var",var]
+             | "@insert:" iname:var -> ["insert","var",var]
 
 scope_macro = "@scope" opt_vspan:span string:path opt_vspan:post_path "{" statements:s "}" -> ["scope", span, path, post_path, s]
 

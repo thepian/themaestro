@@ -2,7 +2,7 @@ from __future__ import with_statement
 
 import unittest
 
-from ecmatic.es import Grammar, expand_macros, add_scope, scopes    
+from ecmatic.es import Grammar, expand_macros, add_scope, scopes, load_and_add_scope, load_and_translate    
 
 class GrammarTestCase(unittest.TestCase):
     
@@ -195,7 +195,12 @@ function(){
         
     def test_insert_macros(self):
         # @insert var "abc";
-        pass
+        self.assertStatements('''@insert var exec_name;''',[
+            ["insert", "var", "exec_name"]
+        ])
+        self.assertStatements('''@insert var "exec_name";''',[
+            ["insert", "var", '"exec_name"']
+        ])
         
     def test_import_macros(self):
         self.assertStatements('''@import a.b.c as c;''',[
@@ -292,6 +297,52 @@ addExtension(new Extension());
             ['parenthesis',["window",",","document",",","mark",",","assertion",",","fail",",","pagecore",",","addExtension"]],
             ";","\n"
         ]
+
+
+        add_scope("'named'",'''
+var @insert:test = (function(){
+@insert();
+})();
+''')
+        assert '"named"' in scopes
+
+        scoped = expand_macros([
+            ["scope", [" "], '"named"', [" "," "], [
+                "/*before*/", [ "function", [], ["nested"], None, [], [], [], [] ], "/*after*/"
+            ]]
+        ], insert_vars=dict(test="test_var")) 
+        
+        print scoped
+        
+        assert scoped == [
+            "\n", "var", " ", "test_var", " ", "=", " ",
+            ['parenthesis',[ ['function', [], [], None, [], [], [], [
+                "\n",
+                "/*before*/", [ "function", [], ["nested"], None, [], [], [], [] ], "/*after*/",
+                "\n"
+            ]] ]],
+            ['parenthesis',[]],
+            ";","\n"
+        ]
+        
+    def test_load_and_translate(self):
+        from os.path import dirname, join
+        named_path = join(dirname(__file__),"assets","named.scope.js")
+        api_path = join(dirname(__file__),"assets","api.js")
+        
+        print named_path
+        load_and_add_scope('"%s"' % "named.scope.js"[:-9], named_path)
+        src, translated = load_and_translate(api_path, exec_name = "_exec_name_", specs = "_specs_")
+        
+        print translated
+        
+        assert translated == u'''\
+var _exec_name_ = (function(specs){
+
+alert();
+
+})(_specs_);
+''' 
         
     def test_should_expression(self):
         # should expression rule

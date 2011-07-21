@@ -1,0 +1,3 @@
+@scope "named" {
+alert();
+}
