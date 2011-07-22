@@ -209,7 +209,7 @@ exprs_out = expr_out*:s -> ''.join(s)
 exprs_list_out = [ expr_out*:s ] -> ''.join(s)
 
 statement_out = func_out
-              | describe_out | it_out | should_out
+              | describe_out | should_out
               | conditional_out
               | square_out | curly_out | parenthesis_out
               | ['statement' statements_out:rest] -> ''.join(rest)
@@ -242,8 +242,21 @@ comment_out = ['comment' :c] -> "//" + c
 
 op_out = anything:op -> op
 
-describe_out = ['describe' :constr :caption statements_list_out:stmts] -> self.describe_out_text % (constr or "null",caption or "null", stmts)
-it_out = ['it' :caption statements_list_out:stmts] -> self.it_out_text % (caption,stmts)
+describe_out = ['describe' :constr :caption describe_statements_list_out:stmts] -> self.describe_out_text % dict(constr=constr or "null",caption=caption or "null", stmts=stmts)
+it_out = ['it' :caption statements_list_out:stmts] -> self.it_out_text % dict(caption=caption,stmts=stmts)
+
+#TODO handle other top level statements
+describe_statements_list_out = [ describe_statement_out*:s ] -> ''.join(s)
+
+describe_statement_out = func_out | it_out
+              | conditional_out
+              | square_out | curly_out | parenthesis_out
+              | ['statement' statements_out:rest] -> ''.join(rest)
+              | comment_out
+              | hspace | vspace
+              | op_out 
+
+
 
 
 should_out = ['should' exprs_list_out:lhs should_rhs_out:rhs] -> self.should_out_text % (lhs, self.quote_text(lhs), rhs)

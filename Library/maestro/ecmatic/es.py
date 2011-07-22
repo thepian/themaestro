@@ -95,19 +95,19 @@ class Grammar(OMeta.makeGrammar(es_grammar, {'p': p, 'uc': uc, 'Token':Token }, 
         return name in self.keywords
         
     describe_out_text = '''\
-function(__pagespec__){
-    __pagespec__.current_constr = %s;
-    __pagespec__.current_caption = %s;
-    __pagespec__.examples = {};
-%s
+function(__expect__){
+    return [
+%(stmts)s
+%(constr)s, %(caption)s
+];
 }'''
     it_out_text = '''
-    __pagespec__.examples[%s] = function(){
-%s
-    };
+%(caption)s, function(){
+%(stmts)s
+    },
 '''
     should_out_text = '''
-        __pagespec__.expect(function(){return %s;}, %s, %s);
+        __expect__(function(){return %s;}, %s, %s);
 '''
     should_rhs_out_text = ''''%s', function(){ return %s; }, %s'''
     

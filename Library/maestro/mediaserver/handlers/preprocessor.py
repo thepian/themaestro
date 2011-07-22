@@ -99,10 +99,13 @@ class JsExecuteAllHandler(tornado.web.RequestHandler):
             try:
                 ids = REDIS.lrange(key,0,1000)
                 all_list = [(i,REDIS['%s/%s/%s.js' % (account,project,i)]) for i in ids]
-                bits = ['''{"id":"%s","run":%s}''' % e for e in all_list]
+                bits = ['''{"id":"%s","describe":%s}''' % e for e in all_list]
                 specs = ",".join(bits)
                 
-                src, run_script = load_and_translate(self.run_script, exec_name = exec_name, account=account, project=project, specs = specs)
+                src, run_script = load_and_translate(self.run_script, 
+                    exec_name = exec_name, account=account, project=project, 
+                    script_name = '"%s.js"' % exec_name, 
+                    specs = specs)
                 
                 print "Writing 'run_script' "
                 self.set_header('Content-Type', 'text/javascript')
