@@ -13,6 +13,12 @@ def load_and_translate(path,**insert_vars):
         text = f.read()
         return text, translate(text,**insert_vars)
     
+def load_raw(path):
+    import codecs
+    with codecs.open(path,"r",encoding="utf-8") as f:
+        source = f.read()
+        return source
+
 def load_and_parse(path):
     import codecs
     with codecs.open(path,"r",encoding="utf-8") as f:
@@ -163,13 +169,20 @@ def expand_macros(tree,insert=None,insert_vars={}):
                         node = expand(insert)
                     else:
                         from thepian.conf import structure
-                        if node[1] == "path":
+                        if node[1] == "path raw":
+                            try:
+                                path = structure.JS_DIR + "/" + node[2].replace("'","").replace('"',"")
+                                source = load_raw(path)
+                                node = [source]
+                            except IOError,e:
+                                node = ["/* No such file %s */" % node[2]]
+                        elif node[1] == "path":
                             try:
                                 path = structure.JS_DIR + "/" + node[2].replace("'","").replace('"',"")
                                 node = load_and_parse(path)[1]
                             except IOError,e:
                                 node = ["/* No such file %s */" % node[2]]
-                        if node[1] == "var":
+                        elif node[1] == "var":
                             if node[2] in insert_vars:
                                 node = [insert_vars[node[2]]]
                             else:

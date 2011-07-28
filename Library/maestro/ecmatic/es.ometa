@@ -153,6 +153,7 @@ curly_expr = "{" statements:s "}" -> ["curly", s]
 parenthesis_expr = "(" statements:s ")" -> ["parenthesis", s]
 
 insert_macro = "@insert" "()"? ";" -> ["insert"]
+             | "@insert path raw" opt_vspan:span string:path ";" -> ["insert","path raw",path]
              | "@insert path" opt_vspan:span string:path ";" -> ["insert","path",path]
              | "@insert var" opt_vspan:span string:var ";" -> ["insert","var",var]
              | "@insert var" opt_vspan:span iname:var ";" -> ["insert","var",var]
