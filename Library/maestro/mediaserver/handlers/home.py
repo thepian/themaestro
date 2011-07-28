@@ -93,5 +93,5 @@ class NodesHandler(tornado.web.RequestHandler):
             import traceback; traceback.print_exc()
 
 class SelfTestHandler(tornado.web.RequestHandler):
-    def get(self,account,project):
+    def get(self,account,project,exec_name):
         self.render("pagespec/selftest.html")
