@@ -78,7 +78,7 @@ literal = "undefined" |  "null" | "true" | "false" | string | number | regex
 innercsv :rule = (apply(rule) | ',')*:es 
 csv :rule = !(self.enter_paren()) innercsv(rule):es !(self.leave_paren()) -> es
 
-
+# TODO backlash + linebreak to be skipped
 # inline function void
 # conditional ?:
 # operators: single, combo, assignments
