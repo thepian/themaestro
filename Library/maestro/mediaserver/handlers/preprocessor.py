@@ -85,8 +85,8 @@ class JsPreProcessHandler(tornado.web.RequestHandler):
         
 class JsExecuteAllHandler(tornado.web.RequestHandler):
     
-    def __init__(self, application, request, transforms=None, core_api=None, run_script=None):
-        super(JsExecuteAllHandler,self).__init__(application, request, transforms)
+    def __init__(self, application, request, core_api=None, run_script=None):
+        super(JsExecuteAllHandler,self).__init__(application, request)
         self.core_api = core_api
         self.run_script = run_script
 
@@ -101,8 +101,11 @@ class JsExecuteAllHandler(tornado.web.RequestHandler):
                 all_list = [(i,REDIS['%s/%s/%s.js' % (account,project,i)]) for i in ids]
                 bits = ['''{"id":"%s","describe":%s}''' % e for e in all_list]
                 specs = ",".join(bits)
-                
+                xsrf_input_markup = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script
+
                 src, run_script = load_and_translate(self.run_script, 
+                    xsrf_input_markup = xsrf_input_markup, 
+                    xsrf_token = self.xsrf_token,
                     exec_name = exec_name, account=account, project=project, 
                     script_name = '"%s.js"' % exec_name, 
                     specs = specs)

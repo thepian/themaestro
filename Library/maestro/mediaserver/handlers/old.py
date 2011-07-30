@@ -79,8 +79,8 @@ class JsHandler(tornado.web.RequestHandler):
     Builds .js files from js/and-a-name.js directories
     """
 
-    def __init__(self, application, request, transforms=None):
-        super(JsHandler,self).__init__(application, request, transforms)
+    def __init__(self, application, request):
+        super(JsHandler,self).__init__(application, request)
         self.verify_doms = {}
         self.js_loader = tornado.template.Loader(structure.JS_DIR)
         
