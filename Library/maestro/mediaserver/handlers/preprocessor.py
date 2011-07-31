@@ -17,11 +17,6 @@ REDIS = redis.Redis(REDIS_HOST, REDIS_PORT, db=9)
 # c.connect()
 # c.select(9)
 
-REDIS.set('account/hash.js', 'aaaaaaa')
-# c.set('foo2', 'bar2')
-
-# print c.get('%s/%s.js' % ("account","hash"))
-
 def load_seed():
     from thepian.conf import structure
     from os.path import join, exists
