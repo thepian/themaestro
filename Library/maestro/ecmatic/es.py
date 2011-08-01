@@ -13,6 +13,14 @@ def load_and_translate(path,**insert_vars):
         text = f.read()
         return text, translate(text,**insert_vars)
     
+def load_expand_and_translate(path,**insert_vars):
+    import codecs
+    with codecs.open(path,"r",encoding="utf-8") as f:
+        text = f.read()
+        r = Grammar(text).apply("statements")[0]
+        r = expand_macros(r,insert_vars=insert_vars)
+        return text, r, Grammar(r).apply("statements_out")[0]
+    
 def load_raw(path):
     import codecs
     with codecs.open(path,"r",encoding="utf-8") as f:
@@ -108,12 +116,12 @@ function(__expect__){
 ];
 }'''
     it_out_text = '''
-%(caption)s, function(){
+%(caption)s, function(){ if (__expect__.dn) debugger;
 %(stmts)s
     },
 '''
     should_out_text = '''
-        __expect__(function(){return %s;}, %s, %s);
+        if (__expect__.dne) debugger; __expect__(function(){return %s;}, %s, %s);
 '''
     should_rhs_out_text = ''''%s', function(){ return %s; }, %s'''
     
@@ -143,6 +151,21 @@ def load_and_add_scope(name,path):
         source = f.read()
         scopes[name.replace("'",'"')] = Scope(source)
     
+def extract_examples(tree):
+    def scan(root):
+        for node in root:
+            if type(node) == list:
+                if len(node) == 0:
+                    pass
+                elif node[0] == "it":
+                    examples.append(node)
+                else:
+                    scan(node)
+
+    examples = []
+    scan(tree)
+    return examples
+
 def expand_macros(tree,insert=None,insert_vars={}):
     # print insert_vars
     def wrap_scope(node):

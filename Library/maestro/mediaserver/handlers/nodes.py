@@ -9,6 +9,7 @@ import tornado.web
 import tornado.template
 
 from mediaserver.results import *
+from mediaserver.persisted import *
 
 class NodesHandler(tornado.web.RequestHandler):
     def get(self,account,project,node):
@@ -88,7 +89,8 @@ class SpecificRunHandler(tornado.web.RequestHandler):
         # directory, file_name, test_path
         try:
             results = posted_results(self.request.arguments)
-            print 'posted results: ', account,project,run, results
+            # print 'posted results: ', account,project,run, results
+            persist_results(results, account=account, project=project, run=run)
             info = {
                 "account": account,
                 "project": project,
