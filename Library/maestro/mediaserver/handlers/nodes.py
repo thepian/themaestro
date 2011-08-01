@@ -98,12 +98,10 @@ class SpecificRunHandler(tornado.web.RequestHandler):
 
                 "SITE_TITLE": "pagespec.com",
                 "MEDIA_URL": "",
-                "messages": None,
-                "reload_url": "../verify/",
-                "title": "Results for %s %s : %s" % (account,project,run),
-                "parts": results
+                "title": "Progress for %s %s : %s" % (account,project,run),
+                "no_results": len(results)
             }
-            self.render("pagespec/results.html",**info)
+            self.render("pagespec/progress-response.html",**info)
         except Exception,e:
             print e
             import traceback; traceback.print_exc()
