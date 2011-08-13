@@ -6,14 +6,14 @@ import tornado.websocket
 import tornado.ioloop
 
 from ecmatic.es import translate, load_and_translate, add_scope, load_and_add_scope  
-from mediaserver.persisted import REDIS
+from mediaserver.persisted import *
 
 class JsPreProcessHandler(tornado.web.RequestHandler):
     
     # @tornado.web.asynchronous
     # @brukva.adisp.process
     def get(self, account, project, hash):
-        key = '%s/%s/%s.js' % (account,project,hash)
+        key = TRANSLATED_SPEC_KEY % (account,project,hash)
         if not key in REDIS:
             print 'no entry for ', key
             raise tornado.web.HTTPError(404)
@@ -34,14 +34,22 @@ class JsExecuteAllHandler(tornado.web.RequestHandler):
         self.run_script = run_script
 
     def get(self, account, project, exec_name):
-        key = '%s/%s/all.list' % (account,project)
+        key = ALL_SPECS_KEY % (account,project)
         if not key in REDIS:
             raise tornado.web.HTTPError(404)
             # self.finish()
         else:
             try:
-                ids = REDIS.lrange(key,0,1000)
-                all_list = [(i,REDIS['%s/%s/%s.js' % (account,project,i)]) for i in ids]
+                # node cookie
+                node_id = self.get_cookie("%s__%s__node" % (account,project),default=None)
+                if node_id == None:
+                    import random, string
+                    node_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(20))
+                    print "new node id", node_id
+                    self.set_cookie("%s__%s__node" % (account,project), node_id, expires_days=365)
+
+                ids = REDIS.smembers(key)
+                all_list = [(i,REDIS[TRANSLATED_SPEC_KEY % (account,project,i)]) for i in ids]
                 bits = ['''{"id":"%s","describe":%s}''' % e for e in all_list]
                 specs = ",".join(bits)
                 xsrf_input_markup = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script

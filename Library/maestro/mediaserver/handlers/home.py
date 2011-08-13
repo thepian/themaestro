@@ -9,6 +9,7 @@ import tornado.web
 import tornado.template
 
 from mediaserver.verify import VerifySource
+from mediaserver.persisted import *
 
 class MediaHomeHandler(tornado.web.RequestHandler):
     
@@ -41,3 +42,18 @@ class StaticFallbackHandler(tornado.web.RequestHandler):
 class SelfTestHandler(tornado.web.RequestHandler):
     def get(self,account,project,exec_name):
         self.render("pagespec/selftest.html")
+
+class KnownSpecsHandler(tornado.web.RequestHandler):
+    def get(self,account,project,exec_name):
+        specs = describe_specs(account,project)
+        self.render("pagespec/known-spec.html",
+            specs=specs)
+
+class IntroductionHandler(tornado.web.RequestHandler):
+    def get(self,project,suite_or_pipeline_id):
+        account = "essentialjs"
+        self.render("pagespec/introduction.html", 
+            project=project,
+            account=account,
+            suite_id=suite_or_pipeline_id,
+            pipeline_id=suite_or_pipeline_id)

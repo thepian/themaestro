@@ -8,14 +8,25 @@ from ecmatic.es import translate, load_and_translate, load_expand_and_translate,
 
 import redis
 
+UNIT_SEP = "\x1F"
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 
+# Key structure in Redis
+ALL_SPECS_KEY = '%s/%s/all.set'.replace("/",UNIT_SEP) # collection of spec hashes, TODO change to set
+TRANSLATED_SPEC_KEY = '%s/%s/%s.js'.replace("/",UNIT_SEP)
+SPECS_PREFIX = '%s/%s/specs'.replace("/",UNIT_SEP)
+EXAMPLE_NAMES_KEY = '%s/%s/specs/%s/examples'.replace("/",UNIT_SEP)
+ONGOING_RUNS_KEY = '%s/%s/specs/%s/ongoing'.replace("/",UNIT_SEP)
+ONGOING_RUN_KEY = '%s/%s/specs/%s/ongoing/%s'.replace("/",UNIT_SEP)
+ONGOING_EXAMPLES_KEY = '%s/%s/specs/%s/ongoing/%s/examples/%s'.replace("/",UNIT_SEP)
+
+# Redis connection
 REDIS = redis.Redis(REDIS_HOST, REDIS_PORT, db=9)
 
-# c = brukva.Client(REDIS_HOST, REDIS_PORT)
-# c.connect()
-# c.select(9)
+# REDIS = brukva.Client(REDIS_HOST, REDIS_PORT)
+# REDIS.connect()
+# REDIS.select(9)
 
 def load_seed():
     from thepian.conf import structure
@@ -28,18 +39,14 @@ def load_seed():
             for p in listdir(account):
                 project = join(account,p)
             
-                if REDIS.exists('%s/%s/all.list' % (a,p)):
-                    # print REDIS.type('%s/%s/all.list' % (a,p))
-                    REDIS.ltrim('%s/%s/all.list' % (a,p), 0, 0)
-
                 for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
                     src,expanded,translated = load_expand_and_translate(join(project,s))
                     h = hashlib.sha256(src).hexdigest()
-                    id = "%s/%s/%s.js" % (a,p,h)
+                    id = TRANSLATED_SPEC_KEY % (a,p,h)
                     # print "adding", id, ":", t
                     REDIS.set(id,translated)
 
-                    examples_id = "%s/%s/%s/examples" % (a,p,h)
+                    examples_id = EXAMPLE_NAMES_KEY % (a,p,h)
                     examples = [e[1].replace('"','') for e in extract_examples(expanded)]
                     # print h, "seed examples", examples
                     # sadd is supposed to be callable by REDIS.sadd(examples_id,*examples)
@@ -47,7 +54,7 @@ def load_seed():
                         REDIS.sadd(examples_id, e)
             
                     # added the hash to the all list
-                    REDIS.rpush('%s/%s/all.list' % (a,p), h)
+                    REDIS.sadd(ALL_SPECS_KEY % (a,p), h)
            
     print "Done loading seed." 
     
@@ -64,8 +71,6 @@ load_scopes()
 
 def persist_results(results, account=None, project=None, run=None):
 
-    specs_prefix = "/%s/%s/specs" % (account,project)
-
     examples = {}
 
     for r in results:
@@ -81,22 +86,22 @@ def persist_results(results, account=None, project=None, run=None):
             log_ongoing_spec(account,project,r["spec"])
 
         elif r["example"] != "":
-            ongoing_prefix = specs_prefix + ("/%s/ongoing" % r["spec"])
-            REDIS.sadd(ongoing_prefix,run)
-            example_id = ongoing_prefix + ("/%s/examples/%s" % (run,r["example"]))
+            ongoing_key = ONGOING_RUNS_KEY % (account,project,r["spec"])
+            REDIS.sadd(ongoing_key,run)
+            example_id = ONGOING_EXAMPLES_KEY % (account,project,r["spec"],run,r["example"])
             if example_id not in examples:
                 examples[example_id] = []
             examples[example_id].append( r )
 
 def log_ongoing_spec(account, project, spec):
     print "ongoing spec: ", account, project, spec
-    ongoing_id = "/%s/%s/specs/%s/ongoing" % (account,project,spec)
+    ongoing_id = ONGOING_RUNS_KEY % (account,project,spec)
     runs = REDIS.smembers(ongoing_id)
     for run in runs:
         print "run %s:" % run
-        examples_id = "%s/%s/%s/examples" % (account,project,spec)
+        examples_id = EXAMPLE_NAMES_KEY % (account,project,spec)
         for e in REDIS.smembers(examples_id):
-            example_run_id = ongoing_id + ("/%s/examples/%s" % (run,e))
+            example_run_id = ONGOING_EXAMPLES_KEY % (account,project,spec,run,e)
             if example_run_id in REDIS:
                 result = REDIS[example_run_id]
                 print example_run_id, json.loads(result)
@@ -105,4 +110,10 @@ def log_ongoing_spec(account, project, spec):
     print "."
 
     # example = json.loads(e_text)
+
+def describe_specs(account,project):
+    specs = []
+
+    return specs
+
 

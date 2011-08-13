@@ -1,4 +1,4 @@
-from home import MediaHomeHandler, DirectoryHandler, StaticFallbackHandler, SelfTestHandler
+from home import *
 from preprocessor import JsPreProcessHandler, JsExecuteAllHandler
 from verify import *
 from nodes import *
