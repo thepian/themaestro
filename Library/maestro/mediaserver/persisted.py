@@ -47,13 +47,13 @@ def load_seed():
                     for spec in expanded:
                         spec_hash = h + "-" + str(idx)
 
-                        #TODO translated = translate(spec)
+                        translated = translate([ spec ])
 
                         id = TRANSLATED_SPEC_KEY % (a,p,spec_hash)
                         # print "adding", id, ":", t, "name", spec[2]
                         REDIS.set(id,translated)
                         info_id = SPEC_INFO_KEY % (a,p,spec_hash)
-                        info = {"id":spec_hash,"name":spec[2]}
+                        info = {"id":spec_hash,"name":spec[2],"filename":s}
                         REDIS.set(info_id , json.dumps(info))
 
                         examples_id = EXAMPLE_NAMES_KEY % (a,p,spec_hash)
