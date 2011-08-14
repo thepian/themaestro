@@ -3,8 +3,11 @@ from pymeta.grammar import OMeta
 import os
 
 def translate(source,**insert_vars):
-    r = Grammar(source).apply("statements")[0]
-    r = expand_macros(r,insert_vars=insert_vars)
+    if isinstance(source,list):
+        r = source
+    else:
+        r = Grammar(source).apply("statements")[0]
+        r = expand_macros(r,insert_vars=insert_vars)
     return Grammar(r).apply("statements_out")[0]
     
 def load_and_translate(path,**insert_vars):
