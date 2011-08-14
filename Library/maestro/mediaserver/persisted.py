@@ -16,6 +16,7 @@ REDIS_PORT = 6379
 ALL_SPECS_KEY = '%s/%s/all.set'.replace("/",UNIT_SEP) # collection of spec hashes, TODO change to set
 TRANSLATED_SPEC_KEY = '%s/%s/%s.js'.replace("/",UNIT_SEP)
 SPECS_PREFIX = '%s/%s/specs'.replace("/",UNIT_SEP)
+SPEC_INFO_KEY = '%s/%s/specs/%s/info'.replace("/",UNIT_SEP)
 EXAMPLE_NAMES_KEY = '%s/%s/specs/%s/examples'.replace("/",UNIT_SEP)
 ONGOING_RUNS_KEY = '%s/%s/specs/%s/ongoing'.replace("/",UNIT_SEP)
 ONGOING_RUN_KEY = '%s/%s/specs/%s/ongoing/%s'.replace("/",UNIT_SEP)
@@ -42,19 +43,31 @@ def load_seed():
                 for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
                     src,expanded,translated = load_expand_and_translate(join(project,s))
                     h = hashlib.sha256(src).hexdigest()
-                    id = TRANSLATED_SPEC_KEY % (a,p,h)
-                    # print "adding", id, ":", t
-                    REDIS.set(id,translated)
+                    idx = 0
+                    for spec in expanded:
+                        spec_hash = h + "-" + str(idx)
 
-                    examples_id = EXAMPLE_NAMES_KEY % (a,p,h)
-                    examples = [e[1].replace('"','') for e in extract_examples(expanded)]
-                    # print h, "seed examples", examples
-                    # sadd is supposed to be callable by REDIS.sadd(examples_id,*examples)
-                    for e in examples:
-                        REDIS.sadd(examples_id, e)
-            
-                    # added the hash to the all list
-                    REDIS.sadd(ALL_SPECS_KEY % (a,p), h)
+                        #TODO translated = translate(spec)
+
+                        id = TRANSLATED_SPEC_KEY % (a,p,spec_hash)
+                        # print "adding", id, ":", t, "name", spec[2]
+                        REDIS.set(id,translated)
+                        info_id = SPEC_INFO_KEY % (a,p,spec_hash)
+                        info = {"id":spec_hash,"name":spec[2]}
+                        REDIS.set(info_id , json.dumps(info))
+
+                        examples_id = EXAMPLE_NAMES_KEY % (a,p,spec_hash)
+                        examples = [e[1].replace('"','') for e in extract_examples(expanded)]
+                        # print h, "seed examples", examples
+                        # sadd is supposed to be callable by REDIS.sadd(examples_id,*examples)
+                        for e in examples:
+                            REDIS.sadd(examples_id, e)
+                
+                        # added the hash to the all list
+                        REDIS.sadd(ALL_SPECS_KEY % (a,p), spec_hash)
+
+                        ++idx
+
            
     print "Done loading seed." 
     
@@ -113,6 +126,17 @@ def log_ongoing_spec(account, project, spec):
 
 def describe_specs(account,project):
     specs = []
+    ids = REDIS.smembers(ALL_SPECS_KEY % (account,project))
+    for spec_id in ids:
+        translated_source = REDIS[TRANSLATED_SPEC_KEY % (account,project,spec_id)]
+        examples_id = EXAMPLE_NAMES_KEY % (account,project,spec_id)
+        examples = []
+        for e in REDIS.smembers(examples_id):
+            example_text = e
+            examples.append(example_text)
+        info_id = SPEC_INFO_KEY % (account,project,spec_id)
+        info = json.loads(REDIS.get(info_id))
+        specs.append({ "examples":examples, "info": info })
 
     return specs
 
