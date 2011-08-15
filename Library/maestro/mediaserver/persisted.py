@@ -118,6 +118,7 @@ def persist_results(results, account=None, project=None, run=None):
 
         elif r["example"] != "":
             ongoing_key = ONGOING_RUNS_KEY % (account,project,spec_id)
+            # print "adding ongoing", r["outcome"], "---", ongoing_key
             REDIS.sadd(ongoing_key,run)
             example_names_id = ONGOING_EXAMPLE_NAMES_KEY % (account,project,spec_id,run)
             REDIS.sadd(example_names_id,r["example"])
@@ -159,9 +160,11 @@ def move_to_completed(account, project, spec, run):
     # make json of the examples and save that
     example_names_id = ONGOING_EXAMPLE_NAMES_KEY % (account,project,spec,run)
     if example_names_id in REDIS:
-        for example_name in REDIS[example_names_id]:
+        # print "moving to completed --- ", REDIS.type(example_names_id), example_names_id.replace(UNIT_SEP,"/")
+        for example_name in REDIS.smembers(example_names_id):
             example_id = ONGOING_EXAMPLES_KEY % (account,project,spec,run,example_name)
             example_results = json.loads(REDIS[example_id])
+            #TODO extract stamps, append results/ongoing and completed
             examples[example_name] = example_results
 
     completed_runs_key = COMPLETED_RUNS_KEY % (account,project,spec)
@@ -171,7 +174,7 @@ def move_to_completed(account, project, spec, run):
 
     # remove the keys for ongoing
     if example_names_id in REDIS:
-        for example_name in REDIS[example_names_id]:
+        for example_name in REDIS.smembers(example_names_id):
             example_id = ONGOING_EXAMPLES_KEY % (account,project,spec,run,example_name)
             del REDIS[example_id]
 
