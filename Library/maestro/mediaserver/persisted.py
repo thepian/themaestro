@@ -98,36 +98,44 @@ def persist_results(results, account=None, project=None, run=None):
     when a result of context ended all ongoing results are moved to completed.
     """
 
-    # unfinished results for examples indexed by redis key
+    # unfinished results for examples indexed by spec id and then by redis key
     examples = {}
 
     def flush_unfinished(examples):
         for key in examples.keys():
-            e = examples[key]
-            REDIS.set(key , json.dumps(e))
-        examples = {}
+            example = examples[key]
+            REDIS.set(key , json.dumps(example))
 
     for r in results:
+        spec_id = r["spec"]
         if r["outcome"] == "ended" and r["example"] == "":
             # Spec completed, move out of ongoing
-            flush_unfinished(examples)
-            log_ongoing_spec(account,project,r["spec"])
-            move_to_completed(account,project,r["spec"],run)
+            if r["spec"] in examples:
+                flush_unfinished(examples[ spec_id ])
+                examples[ spec_id ] = {}
+            log_ongoing_spec(account,project,spec_id)
+            move_to_completed(account,project,spec_id,run)
 
         elif r["example"] != "":
-            ongoing_key = ONGOING_RUNS_KEY % (account,project,r["spec"])
+            ongoing_key = ONGOING_RUNS_KEY % (account,project,spec_id)
             REDIS.sadd(ongoing_key,run)
-            example_names_id = ONGOING_EXAMPLE_NAMES_KEY % (account,project,r["spec"],run)
+            example_names_id = ONGOING_EXAMPLE_NAMES_KEY % (account,project,spec_id,run)
             REDIS.sadd(example_names_id,r["example"])
-            print "ongoing example:", example_names_id
-            example_id = ONGOING_EXAMPLES_KEY % (account,project,r["spec"],run,r["example"])
-            if example_id not in examples:
-                examples[example_id] = []
-            examples[example_id].append( r )
+            # print "ongoing example:", example_names_id
+            example_id = ONGOING_EXAMPLES_KEY % (account,project,spec_id,run,r["example"])
+            if spec_id not in examples:
+                examples[spec_id] = {}
+            examples4spec = examples[spec_id]
+            if example_id not in examples4spec:
+                examples4spec[example_id] = []
+            examples4spec[example_id].append( r )
 
-    flush_unfinished(examples)
+    for k in examples:
+        flush_unfinished(examples[k])
+        examples[k] = {}
 
 def log_ongoing_spec(account, project, spec):
+    print "------------"
     print "ongoing spec: ", account, project, spec
     ongoing_id = ONGOING_RUNS_KEY % (account,project,spec)
     runs = REDIS.smembers(ongoing_id)
@@ -169,6 +177,7 @@ def move_to_completed(account, project, spec, run):
 
     ongoing_key = ONGOING_RUNS_KEY % (account,project,spec)
     REDIS.srem(ongoing_key,run)
+    print "Moved to completed: ", spec, "*", run
 
 
 def describe_specs(account,project):
