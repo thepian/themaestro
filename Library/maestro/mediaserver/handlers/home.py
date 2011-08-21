@@ -49,11 +49,3 @@ class KnownSpecsHandler(tornado.web.RequestHandler):
         self.render("pagespec/known-spec.html",
             specs=specs)
 
-class IntroductionHandler(tornado.web.RequestHandler):
-    def get(self,project,suite_or_pipeline_id):
-        account = "essentialjs"
-        self.render("pagespec/introduction.html", 
-            project=project,
-            account=account,
-            suite_id=suite_or_pipeline_id,
-            pipeline_id=suite_or_pipeline_id)

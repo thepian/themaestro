@@ -88,6 +88,8 @@ class SpecificRunHandler(tornado.web.RequestHandler):
     def post(self,account,project,run):
         # directory, file_name, test_path
         try:
+            node_id = self.get_cookie("%s__%s__node" % (account,project),default=None)
+            # print "Processing results for run %s on node %s" % (run,node_id)
             results = posted_results(self.request.arguments)
             # print 'posted results: ', account,project,run, results
             persist_results(results, account=account, project=project, run=run)

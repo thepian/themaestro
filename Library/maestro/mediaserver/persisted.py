@@ -25,6 +25,9 @@ ONGOING_EXAMPLES_KEY = '%s/%s/specs/%s/ongoing/%s/examples/%s'.replace("/",UNIT_
 COMPLETED_RUNS_KEY = '%s/%s/specs/%s/completed'.replace("/",UNIT_SEP)
 COMPLETED_RUN_KEY = '%s/%s/specs/%s/completed/%s'.replace("/",UNIT_SEP)
 
+SUITE_KEY = 'suite/%s/%s'.replace("/",UNIT_SEP) # json dict describing parameters
+SUITE_HASH_COMBINE = '%s/%s/%s/%s/knj897opifgy56'
+
 # Redis connection
 REDIS = redis.Redis(REDIS_HOST, REDIS_PORT, db=9)
 
@@ -42,6 +45,18 @@ def load_seed():
 
             for p in listdir(account):
                 project = join(account,p)
+                
+                suite_info = {
+                	"account": a,
+                	"project": p,
+                	"suite": "all",
+                	"exec_name": "selftest",
+                }
+                suite_src = SUITE_HASH_COMBINE % (a,p,'all','selftest')
+                suite_hash = hashlib.sha256(suite_src).hexdigest()
+                suite_id = SUITE_KEY % (p,suite_hash)
+                REDIS.set(suite_id , json.dumps(suite_info))
+                print 'Project %s URL /%s/%s/introduction.html' % (p,p,suite_hash) 
             
                 for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
                     src,expanded,translated = load_expand_and_translate(join(project,s))
@@ -207,4 +222,11 @@ def describe_specs(account,project):
 
     return specs
 
+def describe_suite(project,suite_hash):
+	suite_id = SUITE_KEY % (project,suite_hash)
+	if suite_id not in REDIS:
+		return None
 
+	return json.loads(REDIS[suite_id])
+	
+	
