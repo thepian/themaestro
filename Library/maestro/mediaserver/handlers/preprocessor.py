@@ -8,6 +8,8 @@ import tornado.ioloop
 from ecmatic.es import translate, load_and_translate, add_scope, load_and_add_scope  
 from mediaserver.persisted import *
 
+from base import *        
+
 class JsPreProcessHandler(tornado.web.RequestHandler):
     
     # @tornado.web.asynchronous
@@ -26,13 +28,8 @@ class JsPreProcessHandler(tornado.web.RequestHandler):
                 print "preprocessor problem", e
                 import traceback; traceback.print_exc()
         
-class JsExecuteAllHandler(tornado.web.RequestHandler):
+class JsExecuteAllHandler(SpecRequestHandler):
     
-    def __init__(self, application, request, core_api=None, run_script=None):
-        super(JsExecuteAllHandler,self).__init__(application, request)
-        self.core_api = core_api
-        self.run_script = run_script
-
     def get(self, account, project, exec_name):
         key = ALL_SPECS_KEY % (account,project)
         if not key in REDIS:
@@ -40,13 +37,7 @@ class JsExecuteAllHandler(tornado.web.RequestHandler):
             # self.finish()
         else:
             try:
-                # node cookie
-                node_id = self.get_cookie("%s__%s__node" % (account,project),default=None)
-                if node_id == None:
-                    import random, string
-                    node_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(20))
-                    print "new node id", node_id
-                    self.set_cookie("%s__%s__node" % (account,project), node_id, expires_days=365)
+                node_id = self.getNodeId(account, project)  # node cookie
 
                 ids = REDIS.smembers(key)
                 all_list = [(i,REDIS[TRANSLATED_SPEC_KEY % (account,project,i)]) for i in ids]

@@ -3,6 +3,7 @@ from os.path import join, exists
 from fs import listdir, filters
 import hashlib
 import simplejson as json
+import time
 
 from ecmatic.es import translate, load_and_translate, load_expand_and_translate, load_and_add_scope, extract_examples  
 
@@ -25,7 +26,11 @@ ONGOING_EXAMPLES_KEY = '%s/%s/specs/%s/ongoing/%s/examples/%s'.replace("/",UNIT_
 COMPLETED_RUNS_KEY = '%s/%s/specs/%s/completed'.replace("/",UNIT_SEP)
 COMPLETED_RUN_KEY = '%s/%s/specs/%s/completed/%s'.replace("/",UNIT_SEP)
 
-SUITE_KEY = 'suite/%s/%s'.replace("/",UNIT_SEP) # json dict describing parameters
+UPLOAD_PATH_KEY = 'shortcut/%s/%s/upload'.replace("/",UNIT_SEP) # json dict describing parameters
+UPLOAD_SCRIPT_KEY = 'shortcut/%s/%s/upload.js'.replace("/",UNIT_SEP)
+UPLOAD_SCRIPT_HASH_COMBINE = '%s/%s/7mkl37623iwuerqw'
+
+SUITE_KEY = 'shortcut/%s/%s/suite'.replace("/",UNIT_SEP) # json dict describing parameters
 SUITE_HASH_COMBINE = '%s/%s/%s/%s/knj897opifgy56'
 
 # Redis connection
@@ -34,6 +39,9 @@ REDIS = redis.Redis(REDIS_HOST, REDIS_PORT, db=9)
 # REDIS = brukva.Client(REDIS_HOST, REDIS_PORT)
 # REDIS.connect()
 # REDIS.select(9)
+
+ONE_YEAR_IN_SECONDS = 365 * 24 * 3600
+IN_A_YEAR_STAMP = time.time() + ONE_YEAR_IN_SECONDS
 
 def load_seed():
     from thepian.conf import structure
@@ -46,11 +54,21 @@ def load_seed():
             for p in listdir(account):
                 project = join(account,p)
                 
+                upload_info = {
+                    "account": a,
+                    "project": p,
+                    "expires": ONE_YEAR_IN_SECONDS,
+                }
+                upload_hash = hashlib.sha256( UPLOAD_SCRIPT_HASH_COMBINE % (a,p) ).hexdigest()
+                REDIS[UPLOAD_PATH_KEY % (p,upload_hash)] = json.dumps(upload_info)
+                REDIS[UPLOAD_SCRIPT_KEY % (p,upload_hash)] = load_expand_and_translate(join(structure.JS_DIR,'upload-specs.js'),**upload_info)[2]
+                print 'Upload URL /%s/%s/upload-specs.js' % (p,upload_hash)
+                
                 suite_info = {
-                	"account": a,
-                	"project": p,
-                	"suite": "all",
-                	"exec_name": "selftest",
+                    "account": a,
+                    "project": p,
+                    "suite": "all",
+                    "exec_name": "selftest",
                 }
                 suite_src = SUITE_HASH_COMBINE % (a,p,'all','selftest')
                 suite_hash = hashlib.sha256(suite_src).hexdigest()
@@ -93,12 +111,14 @@ def load_scopes():
     from thepian.conf import structure
 
     base = join(structure.JS_DIR)
-    for s in listdir(base,filters=(filters.fnmatch("*.scope.js"),)):
+    scopes = [s for s in listdir(base,filters=(filters.fnmatch("*.scope.js"),))]
+    for s in scopes:
         load_and_add_scope('"%s"' % s[:-9],join(base,s))
+    print "Done loading scopes (", " ".join(scopes),")"
     
 # REDIS.flushdb()
-load_seed()
 load_scopes()
+load_seed()
 
 def persist_results(results, account=None, project=None, run=None):
     """
@@ -229,4 +249,12 @@ def describe_suite(project,suite_hash):
 
 	return json.loads(REDIS[suite_id])
 	
+def describe_upload(project,upload_hash):
+	upload_path = UPLOAD_PATH_KEY % (project,upload_hash)
+	upload_script = UPLOAD_SCRIPT_KEY % (project,upload_hash)
+	if upload_path not in REDIS:
+		return None, None
+		
+	return json.loads(REDIS[upload_path]), REDIS[upload_script]
+
 	
