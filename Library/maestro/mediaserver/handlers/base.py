@@ -8,14 +8,14 @@ class SpecRequestHandler(tornado.web.RequestHandler):
         self.run_script = run_script
         self.upload_script_name = upload_script_name
 
-	def getNodeId(self,account,project):
-		# node cookie
-		node_id = self.get_cookie("%s__%s__node" % (account,project),default=None)
-		if node_id == None:
-			import random, string
-			node_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(20))
-			print "new node id", node_id
-			self.set_cookie("%s__%s__node" % (account,project), node_id, expires_days=365)
-			
-		return node_id
+def getNodeId(request,account,project):
+	# node cookie
+	node_id = request.get_cookie("%s__%s__node" % (account,project),default=None)
+	if node_id == None:
+		import random, string
+		node_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(20))
+		print "new node id", node_id
+		request.set_cookie("%s__%s__node" % (account,project), node_id, expires_days=365)
+		
+	return node_id
 	

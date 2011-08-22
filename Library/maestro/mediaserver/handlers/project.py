@@ -37,7 +37,7 @@ class SpecIndexHandler(SpecRequestHandler):
         if not info:
             raise tornado.web.HTTPError(404)
 
-        # node_id = self.getNodeId(info["account"], project)  # node cookie
+        node_id = getNodeId(self,info["account"], project)  # node cookie
 
         spec_upload_url = "%s://%s/%s/%s/%s" % (self.request.protocol,self.request.host,project,upload_id,self.upload_script_name)
         
@@ -63,8 +63,8 @@ class SpecZipHandler(SpecRequestHandler):
         if not info:
             raise tornado.web.HTTPError(404)
         
-        node_id = self.getNodeId(info["account"], project)  # node cookie
-        spec_upload_url = "http://localhost:8590/sdfjsdlkjlsfjsd/upload.js"
+        node_id = getNodeId(self,info["account"], project)  # node cookie
+        spec_upload_url = "%s://%s/%s/%s/%s" % (self.request.protocol,self.request.host,project,upload_id,self.upload_script_name)
 
         index = self.render_string("pagespec/spec/index.html", 
             spec_upload_url = spec_upload_url, 
@@ -86,31 +86,41 @@ class SpecZipHandler(SpecRequestHandler):
         self.flush()
            
 class SpecUploadHandler(tornado.web.RequestHandler):
-    def get(self,project,upload_id):
-    	info,script = describe_upload(project,upload_id)
 
-        account = "essentialjs"
-        self.render("pagespec/introduction.html", 
-            project=project,
-            account=account,
-            suite_id=suite_or_pipeline_id,
-            pipeline_id=suite_or_pipeline_id)
+    def post(self,project,upload_id,path):
+        info,script = describe_upload(project,upload_id)
+        if not info:
+            raise tornado.web.HTTPError(404)
+        
+        content_type = self.request.headers['Content-Type']
+        if content_type == 'application/x-www-form-urlencoded':
+        	script_text = self.get_argument("script")
+        	script_language = self.get_argument("language")
+        	print self.request.query, "language", script_language
+        	print script_text
+        else:
+        	# TODO handle text/plain and text/pagespec for build scripts
+        	print "No handling of spec script update", content_type
+        
+        self.write("Update received.")
+        self.flush()
+
 
 class SpecUploadScriptHandler(SpecRequestHandler):
     
     def get(self,project,upload_id):
-    	info,script = describe_upload(project,upload_id)
-    	if not info:
+        info,script = describe_upload(project,upload_id)
+        if not info:
             raise tornado.web.HTTPError(404)
         else:
             try:
-            	info["xsrf_input_markup"] = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script
-            	info["xsrf_token"] = self.xsrf_token
-            	info["script_name"] = "'%s'" % self.upload_script_name
-            	
-            	script = load_expand_and_translate(join(structure.JS_DIR,'upload-specs.js'),**info)[2]
+                info["xsrf_input_markup"] = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script
+                info["xsrf_token"] = self.xsrf_token
+                info["script_name"] = "'%s'" % self.upload_script_name
+                
+                script = load_expand_and_translate(join(structure.JS_DIR,'upload-specs.js'),**info)[2]
 
-                # node_id = self.getNodeId(info["account"], project)  # node cookie
+                node_id = getNodeId(self,info["account"], project)  # node cookie
 
                 #self.run_script, 
                 

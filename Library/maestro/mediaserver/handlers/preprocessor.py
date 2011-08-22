@@ -37,7 +37,7 @@ class JsExecuteAllHandler(SpecRequestHandler):
             # self.finish()
         else:
             try:
-                node_id = self.getNodeId(account, project)  # node cookie
+                node_id = getNodeId(self,account, project)  # node cookie
 
                 ids = REDIS.smembers(key)
                 all_list = [(i,REDIS[TRANSLATED_SPEC_KEY % (account,project,i)]) for i in ids]
