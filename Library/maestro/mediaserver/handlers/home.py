@@ -8,6 +8,7 @@ from mediaserver.sources import CssSourceNode,JsSourceNode, newer_assets, combin
 import tornado.web
 import tornado.template
 
+from base import ObjectLike
 from mediaserver.verify import VerifySource
 from mediaserver.persisted import *
 
@@ -48,4 +49,14 @@ class KnownSpecsHandler(tornado.web.RequestHandler):
         specs = describe_specs(account,project)
         self.render("pagespec/known-spec.html",
             specs=specs)
+
+class AccountOverviewHandler(tornado.web.RequestHandler):
+    def get(self,account):
+    	projects = describe_projects(account)
+    	info = {
+    		"account": account,
+    		"projects":[ObjectLike(p) for p in projects],
+    	}
+        self.render("pagespec/account-overview.html",**info)
+
 

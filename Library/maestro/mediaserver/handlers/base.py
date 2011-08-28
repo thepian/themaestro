@@ -1,5 +1,21 @@
 import tornado.web
 
+class ObjectLike(object):
+
+    def __init__(self,d):
+        self.data = d
+
+    def __getitem__(self,key):
+        if key not in self.data:
+            return None
+        return self.data[key]
+
+    def __getattr__(self,key):
+        if key not in self.data:
+            return None
+        return self.data[key]
+        
+
 class SpecRequestHandler(tornado.web.RequestHandler):
 
     def __init__(self, application, request, core_api=None, run_script=None, upload_script_name=None):

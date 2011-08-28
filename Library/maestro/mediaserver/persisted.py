@@ -14,7 +14,13 @@ REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 
 # Key structure in Redis
+PROJECTS_KEY = '%s/project.set'.replace("/",UNIT_SEP)
 ALL_SPECS_KEY = '%s/%s/all.set'.replace("/",UNIT_SEP) # collection of spec hashes, TODO change to set
+DISABLED_SPECS_KEY = '%s/%s/disabled.set'.replace("/",UNIT_SEP)
+MUSTFAIL_SPECS_KEY = '%s/%s/mustfail.set'.replace("/",UNIT_SEP)
+SHORTCUT_UPLOADS_KEY = 'shortcut/%s/%s/uploads'.replace("/",UNIT_SEP)
+SHORTCUT_SUITES_KEY = 'shortcut/%s/%s/suites'.replace("/",UNIT_SEP)
+
 TRANSLATED_SPEC_KEY = '%s/%s/%s.js'.replace("/",UNIT_SEP)
 SPECS_PREFIX = '%s/%s/specs'.replace("/",UNIT_SEP)
 SPEC_INFO_KEY = '%s/%s/specs/%s/info'.replace("/",UNIT_SEP)
@@ -50,10 +56,12 @@ def load_seed():
     if exists(base):
         for a in listdir(base):
             account = join(base,a)
-
+            
             for p in listdir(account):
                 project = join(account,p)
                 
+                REDIS.sadd(PROJECTS_KEY % a, p)
+
                 upload_info = {
                     "account": a,
                     "project": p,
@@ -62,6 +70,7 @@ def load_seed():
                 upload_hash = hashlib.sha256( UPLOAD_SCRIPT_HASH_COMBINE % (a,p) ).hexdigest()
                 REDIS[UPLOAD_PATH_KEY % (p,upload_hash)] = json.dumps(upload_info)
                 REDIS[UPLOAD_SCRIPT_KEY % (p,upload_hash)] = load_expand_and_translate(join(structure.JS_DIR,'upload-specs.js'),**upload_info)[2]
+                REDIS.sadd(SHORTCUT_UPLOADS_KEY % (a,p), upload_hash)
                 print 'Upload URL /%s/%s/upload-specs.js' % (p,upload_hash)
                 
                 suite_info = {
@@ -74,6 +83,7 @@ def load_seed():
                 suite_hash = hashlib.sha256(suite_src).hexdigest()
                 suite_id = SUITE_KEY % (p,suite_hash)
                 REDIS.set(suite_id , json.dumps(suite_info))
+                REDIS.sadd(SHORTCUT_SUITES_KEY % (a,p), suite_hash)
                 print 'Project %s URL /%s/%s/introduction.html' % (p,p,suite_hash) 
             
                 for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
@@ -257,4 +267,17 @@ def describe_upload(project,upload_hash):
 		
 	return json.loads(REDIS[upload_path]), REDIS[upload_script]
 
-	
+def describe_project(account,project):
+    desc = {}
+    suites_set_key = SHORTCUT_SUITES_KEY % (account,project)
+    uploads_set_key = SHORTCUT_UPLOADS_KEY % (account,project)
+    desc["suites"] = [describe_suite(project,suite) for suite in REDIS.smembers(suites_set_key)]
+    desc["uploads"] = [describe_upload(project,upload) for upload in REDIS.smembers(uploads_set_key)]
+    desc["specs"] = REDIS.smembers(ALL_SPECS_KEY % (account,project))
+    
+    return desc
+
+def describe_projects(account):
+    projects = [describe_project(account,p) for p in REDIS.smembers(PROJECTS_KEY % account)]
+    
+    return projects
