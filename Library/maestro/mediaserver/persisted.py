@@ -257,7 +257,9 @@ def describe_suite(project,suite_hash):
 	if suite_id not in REDIS:
 		return None
 
-	return json.loads(REDIS[suite_id])
+	data = json.loads(REDIS[suite_id])
+	data["hash"] = suite_hash
+	return data
 	
 def describe_upload(project,upload_hash):
 	upload_path = UPLOAD_PATH_KEY % (project,upload_hash)
@@ -265,14 +267,18 @@ def describe_upload(project,upload_hash):
 	if upload_path not in REDIS:
 		return None, None
 		
-	return json.loads(REDIS[upload_path]), REDIS[upload_script]
+	data = json.loads(REDIS[upload_path])
+	data["hash"] = upload_hash
+	return data, REDIS[upload_script]
 
 def describe_project(account,project):
     desc = {}
     suites_set_key = SHORTCUT_SUITES_KEY % (account,project)
     uploads_set_key = SHORTCUT_UPLOADS_KEY % (account,project)
+    desc["account"] = account
+    desc["project"] = project
     desc["suites"] = [describe_suite(project,suite) for suite in REDIS.smembers(suites_set_key)]
-    desc["uploads"] = [describe_upload(project,upload) for upload in REDIS.smembers(uploads_set_key)]
+    desc["uploads"] = [describe_upload(project,upload)[0] for upload in REDIS.smembers(uploads_set_key)]
     desc["specs"] = REDIS.smembers(ALL_SPECS_KEY % (account,project))
     
     return desc

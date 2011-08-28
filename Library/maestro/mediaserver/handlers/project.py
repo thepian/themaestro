@@ -11,6 +11,29 @@ from mediaserver.persisted import *
 
 from base import *
 
+class ProjectOverviewHandler(tornado.web.RequestHandler):
+    def get(self,account,project):
+    	project_data = describe_project(account,project)
+    	specs = describe_specs(account,project)
+    	info = {
+    		"account": account,
+    		"project": ObjectLike(project_data),
+    		"specs": specs,
+            
+            "full_name": "Henrik Vendelbo",
+            "public_email": "hvendelbo.dev@googlemail.com",
+            "public_website": "http://www.thepian.org/perspective/",
+            "company_name": "Thepian Ltd",
+            "public_location": "UK",
+            "member_since": "Apr 10, 2009",
+            "public_projects": "28",
+            "private_projects": "9",
+            "followers": "4",
+			
+    	}
+        self.render("pagespec/project-overview.html",**info)
+
+
 # Related to a particular Suite
 class IntroductionHandler(tornado.web.RequestHandler):
     def get(self,project,suite_or_pipeline_id):
@@ -87,6 +110,17 @@ class SpecZipHandler(SpecRequestHandler):
            
 class SpecUploadHandler(tornado.web.RequestHandler):
 
+    def get(self,project,upload_id,path):
+        info,script = describe_upload(project,upload_id)
+        if not info:
+            raise tornado.web.HTTPError(404)
+
+        self.write("""
+var q = '%s';
+alert('Update received.');
+/*%s*/""" % (self.request.query,self.get_argument("script")))
+        self.flush()
+                
     def post(self,project,upload_id,path):
         info,script = describe_upload(project,upload_id)
         if not info:

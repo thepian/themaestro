@@ -56,6 +56,17 @@ class AccountOverviewHandler(tornado.web.RequestHandler):
     	info = {
     		"account": account,
     		"projects":[ObjectLike(p) for p in projects],
+            
+            "full_name": "Henrik Vendelbo",
+            "public_email": "hvendelbo.dev@googlemail.com",
+            "public_website": "http://www.thepian.org/perspective/",
+            "company_name": "Thepian Ltd",
+            "public_location": "UK",
+            "member_since": "Apr 10, 2009",
+            "public_projects": "28",
+            "private_projects": "9",
+            "followers": "4",
+			
     	}
         self.render("pagespec/account-overview.html",**info)
 
