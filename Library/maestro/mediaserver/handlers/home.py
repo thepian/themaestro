@@ -44,12 +44,6 @@ class SelfTestHandler(tornado.web.RequestHandler):
     def get(self,account,project,exec_name):
         self.render("pagespec/selftest.html")
 
-class KnownSpecsHandler(tornado.web.RequestHandler):
-    def get(self,account,project,exec_name):
-        specs = describe_specs(account,project)
-        self.render("pagespec/known-spec.html",
-            specs=specs)
-
 class AccountOverviewHandler(tornado.web.RequestHandler):
     def get(self,account):
     	projects = describe_projects(account)
