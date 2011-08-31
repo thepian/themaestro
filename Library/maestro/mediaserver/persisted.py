@@ -86,7 +86,7 @@ def load_seed():
                 REDIS.sadd(SHORTCUT_SUITES_KEY % (a,p), suite_hash)
                 print 'Project %s URL /%s/%s/introduction.html' % (p,p,suite_hash) 
             
-                for s in listdir(project, filters=(filters.fnmatch("*.pagespec.js"),)):
+                for s in listdir(project, filters=(filters.fnmatch("*.spec.js"),)):
                     src,expanded,translated = load_expand_and_translate(join(project,s))
                     h = hashlib.sha256(src).hexdigest()
                     idx = 0
