@@ -78,7 +78,7 @@ class ExampleZipHandler(SpecRequestHandler):
             tdata["suite"] = suite["suite"]
             tdata["exec_name"] = suite["exec_name"]
             suite_script_name = "%s-suite-%s" % (suite["suite"],suite["exec_name"])
-            tdata["suite_script_url"] = "%s://%s/%s/%s/%s.js" % (self.request.protocol,self.request.host,project,upload_id,suite_script_name)
+            tdata["suite_script_url"] = "%s://%s/%s/%s/%s.js" % (self.request.protocol,self.request.host,project,suite["hash"],suite_script_name)
             runner = self.render_string("pagespec/example/suite-runner.html", **tdata)
             zf.writestr("%s-suite-runner.html" % str(suite["suite"]), runner)
 	    for js_file in js_list:

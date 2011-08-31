@@ -7,6 +7,7 @@ from thepian.conf import structure, settings
 import tornado.web
 import tornado.template
 
+from mediaserver.results import *
 from mediaserver.persisted import *
 
 from base import *
@@ -39,22 +40,31 @@ class SuiteRunnerHandler(SpecRequestHandler):
 
 class SuiteRunnerScriptHandler(SpecRequestHandler):
     
-    def get(self,project,suite_or_pipeline_id):
+    def get(self,project,suite_or_pipeline_id,suite_name,exec_name):
         info = describe_suite(project,suite_or_pipeline_id)
         if not info:
             raise tornado.web.HTTPError(404)
+        account = info["account"]
+        specs_key = ALL_SPECS_KEY % (account,project)
+        if not info or specs_key not in REDIS:
+            raise tornado.web.HTTPError(404)
         else:
             try:
+                ids = REDIS.smembers(specs_key)
+                all_list = [(i,REDIS[TRANSLATED_SPEC_KEY % (account,project,i)]) for i in ids]
+                # print "~~~~~", all_list
+                bits = ['''{"id":"%s","describe":%s}''' % e for e in all_list]
+                specs = ",".join(bits)
+                info["specs"] = specs
+
                 info["xsrf_input_markup"] = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script
                 info["xsrf_token"] = self.xsrf_token
-                info["script_name"] = "'%s'" % self.upload_script_name
+                info["script_name"] = "'%s.js'" % info["exec_name"]
                 
                 script = load_expand_and_translate(join(structure.JS_DIR,'suite-runner.js'),**info)[2]
 
                 node_id = getNodeId(self,info["account"], project)  # node cookie
 
-                #self.run_script, 
-                
                 self.set_header('Content-Type', 'text/javascript')
                 self.write(script)
                 self.finish()
@@ -63,34 +73,42 @@ class SuiteRunnerScriptHandler(SpecRequestHandler):
                 print "execute handler problem", e
                 import traceback; traceback.print_exc()
                 
-    def get2(self, account, project, exec_name):
-        key = ALL_SPECS_KEY % (account,project)
-        if not key in REDIS:
+class SpecificRunHandler(tornado.web.RequestHandler):
+    def get(self,project,suite_or_pipeline_id,run):
+        info = describe_suite(project,suite_or_pipeline_id)
+        if not info:
             raise tornado.web.HTTPError(404)
-            # self.finish()
-        else:
-            try:
-                node_id = getNodeId(self,account, project)  # node cookie
+        info["run"] = run
+        info["SITE_TITLE"] = "pagespec.com"
+        info["MEDIA_URL"] = ""
+        info["messages"] = None
+        info["reload_url"] = "."
+        info["title"] = "Results for %s %s : %s" % (account,project,run)
+        info["parts"] = []
+        self.render("pagespec/results.html", **info)
+        
 
-                ids = REDIS.smembers(key)
-                all_list = [(i,REDIS[TRANSLATED_SPEC_KEY % (account,project,i)]) for i in ids]
-                bits = ['''{"id":"%s","describe":%s}''' % e for e in all_list]
-                specs = ",".join(bits)
-                xsrf_input_markup = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script
+    def post(self,project,suite_or_pipeline_id,run):
+        info = describe_suite(project,suite_or_pipeline_id)
+        if not info:
+            raise tornado.web.HTTPError(404)
+        # directory, file_name, test_path
+        try:
+            account = info["account"]
+            node_id = self.get_cookie("%s__%s__node" % (account,project),default=None)
+            # print "Processing results for run %s on node %s" % (run,node_id)
+            results = posted_results(self.request.arguments)
+            # print 'posted results: ', account,project,run, results
+            persist_results(results, account=account, project=project, run=run)
+            info["run"] = run
+            info["SITE_TITLE"] = "pagespec.com"
+            info["MEDIA_URL"] = ""
+            info["reload_url"] = "."
+            info["title"] = "Results for %s %s : %s" % (account,project,run)
+            info["no_results"] = len(results)
+            self.render("pagespec/progress-response.html",**info)
+        except Exception,e:
+            print e
+            import traceback; traceback.print_exc()
 
-                src, run_script = load_and_translate(self.run_script, 
-                    xsrf_input_markup = xsrf_input_markup, 
-                    xsrf_token = self.xsrf_token,
-                    exec_name = exec_name, account=account, project=project, 
-                    script_name = '"%s.js"' % exec_name, 
-                    specs = specs)
-                
-                print "Writing 'run_script' "
-                self.set_header('Content-Type', 'text/javascript')
-                self.write(run_script)
-                self.finish()
-            
-            except Exception, e:
-                print "execute handler problem", e
-                import traceback; traceback.print_exc()
-                
+
