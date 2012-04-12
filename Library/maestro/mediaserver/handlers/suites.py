@@ -59,7 +59,7 @@ class SuiteRunnerScriptHandler(SpecRequestHandler):
 
                 info["xsrf_input_markup"] = "'%s'" % self.xsrf_form_html().replace("'",'"')  # Session specific token passed to Script
                 info["xsrf_token"] = self.xsrf_token
-                info["script_name"] = "'%s.js'" % info["exec_name"]
+                info["script_name"] = "'%s-suite-%s.js'" % (suite_name,exec_name)
                 
                 script = load_expand_and_translate(join(structure.JS_DIR,'suite-runner.js'),**info)[2]
 

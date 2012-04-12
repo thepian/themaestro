@@ -163,11 +163,11 @@ def persist_results(results, account=None, project=None, run=None):
 
         elif r["example"] != "":
             ongoing_key = ONGOING_RUNS_KEY % (account,project,spec_id)
-            # print "adding ongoing", r["outcome"], "---", ongoing_key
+            # print "adding ongoing", r["outcome"], "---", ongoing_key, "Run", run
             REDIS.sadd(ongoing_key,run)
             example_names_id = ONGOING_EXAMPLE_NAMES_KEY % (account,project,spec_id,run)
             REDIS.sadd(example_names_id,r["example"])
-            # print "ongoing example:", example_names_id
+            # print "------- ongoing example:", example_names_id, r["example"]
             example_id = ONGOING_EXAMPLES_KEY % (account,project,spec_id,run,r["example"])
             if spec_id not in examples:
                 examples[spec_id] = {}
@@ -216,6 +216,7 @@ def move_to_completed(account, project, spec, run):
     REDIS.sadd(completed_runs_key,run)
     completed_key = COMPLETED_RUN_KEY % (account,project,spec,run)
     REDIS[completed_key] = json.dumps(examples)
+    # print "completed:::", completed_key, examples
 
     # remove the keys for ongoing
     if example_names_id in REDIS:
@@ -224,7 +225,9 @@ def move_to_completed(account, project, spec, run):
             del REDIS[example_id]
 
     ongoing_key = ONGOING_RUNS_KEY % (account,project,spec)
-    REDIS.srem(ongoing_key,run)
+    err = REDIS.srem(ongoing_key,run)
+    # print "error(%s)"%err, REDIS.smembers(ongoing_key), "removed key", run, "from", ongoing_key
+    REDIS.delete( ONGOING_RUN_KEY % (account,project,spec,run) )
     print "Moved to completed: ", spec, "*", run
 
 
@@ -246,9 +249,12 @@ def describe_specs(account,project):
 
         completed_runs_id = COMPLETED_RUNS_KEY % (account,project,spec_id)
         completed_runs = [e for e in REDIS.smembers(completed_runs_id)]
+        last_id = COMPLETED_RUN_KEY % (account,project,spec_id,completed_runs[-1])
+        last_completed = json.loads(REDIS[ last_id ])
 
-
-        specs.append({ "examples":examples, "info": info, "ongoing_runs": ongoing_runs, "completed_runs":completed_runs })
+        specs.append({ "examples":examples, "info": info, "ongoing_runs": ongoing_runs, 
+            "completed_runs":completed_runs,
+            "last_completed": last_completed })
 
     return specs
 
